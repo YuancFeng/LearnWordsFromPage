@@ -1,0 +1,26 @@
+
+{
+  "manifest_version": 3,
+  "name": "LingoRecall AI",
+  "version": "1.0.0",
+  "description": "Smart language learning assistant with AI word capture and context-aware review.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "contextMenus"
+  ],
+  "action": {
+    "default_popup": "index.html",
+    "default_icon": "icon.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
