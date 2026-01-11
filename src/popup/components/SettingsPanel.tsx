@@ -1,0 +1,180 @@
+/**
+ * LingoRecall AI - Settings Panel Component
+ * Story 4.1, 4.2, 4.3, 4.4 实现 - 设置页面主容器
+ *
+ * 包含 Tab 导航：API Key, Preferences, Blacklist, Tags
+ *
+ * @module popup/components/SettingsPanel
+ */
+
+import React, { useState } from 'react';
+import { ArrowLeft, Key, Settings, Shield, Tag } from 'lucide-react';
+import { APIKeySection } from './APIKeySection';
+import { PreferencesSection } from './PreferencesSection';
+import { BlacklistSection } from './BlacklistSection';
+import { TagManagement } from './TagManagement';
+import { Toast, useToast } from './Toast';
+
+/**
+ * 设置 Tab 类型
+ */
+type SettingsTab = 'api-key' | 'preferences' | 'blacklist' | 'tags';
+
+/**
+ * Tab 配置
+ */
+const TABS: {
+  id: SettingsTab;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  disabled?: boolean;
+}[] = [
+  { id: 'api-key', label: 'API Key', icon: Key },
+  { id: 'preferences', label: '偏好设置', icon: Settings },
+  { id: 'blacklist', label: '黑名单', icon: Shield },
+  { id: 'tags', label: '标签', icon: Tag },
+];
+
+/**
+ * SettingsPanel 属性
+ */
+export interface SettingsPanelProps {
+  /** 返回回调 */
+  onBack?: () => void;
+}
+
+/**
+ * 设置面板组件
+ * Story 4.1 - Task 1
+ */
+export function SettingsPanel({ onBack }: SettingsPanelProps): React.ReactElement {
+  // 当前选中的 Tab
+  const [activeTab, setActiveTab] = useState<SettingsTab>('api-key');
+  // Toast 通知
+  const toast = useToast();
+
+  /**
+   * 处理 Tab 切换
+   */
+  const handleTabChange = (tabId: SettingsTab) => {
+    const tab = TABS.find((t) => t.id === tabId);
+    if (tab?.disabled) {
+      toast.info('此功能即将推出');
+      return;
+    }
+    setActiveTab(tabId);
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-gray-50">
+      {/* 顶部标题栏 */}
+      <header className="flex items-center gap-2 px-4 py-3 bg-white border-b border-gray-200">
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="p-1 -ml-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+            aria-label="返回"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        )}
+        <h1 className="text-lg font-semibold text-gray-900">设置</h1>
+      </header>
+
+      {/* Tab 导航 */}
+      <nav className="flex bg-white border-b border-gray-200" role="tablist">
+        {TABS.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          const isDisabled = tab.disabled;
+
+          return (
+            <button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              disabled={isDisabled}
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={`panel-${tab.id}`}
+              className={`
+                flex-1 flex items-center justify-center gap-1.5
+                px-3 py-2.5
+                text-sm font-medium
+                border-b-2 -mb-px
+                transition-colors
+                ${
+                  isActive
+                    ? 'text-blue-600 border-blue-600'
+                    : isDisabled
+                      ? 'text-gray-300 border-transparent cursor-not-allowed'
+                      : 'text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300'
+                }
+              `}
+            >
+              <Icon className="w-4 h-4" />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Tab 内容区域 */}
+      <main className="flex-1 overflow-auto">
+        {/* API Key Tab */}
+        <div
+          id="panel-api-key"
+          role="tabpanel"
+          aria-labelledby="tab-api-key"
+          className={activeTab === 'api-key' ? 'p-4' : 'hidden'}
+        >
+          <APIKeySection
+            onSaveSuccess={() => toast.success('API Key 保存成功')}
+            onClearSuccess={() => toast.success('API Key 已清除')}
+            onError={(error) => toast.error(error)}
+          />
+        </div>
+
+        {/* Preferences Tab - Story 4.2 */}
+        <div
+          id="panel-preferences"
+          role="tabpanel"
+          aria-labelledby="tab-preferences"
+          className={activeTab === 'preferences' ? 'p-4' : 'hidden'}
+        >
+          <PreferencesSection
+            onSaveSuccess={() => toast.success('设置已保存')}
+            onError={(error) => toast.error(error)}
+          />
+        </div>
+
+        {/* Blacklist Tab - Story 4.3 */}
+        <div
+          id="panel-blacklist"
+          role="tabpanel"
+          aria-labelledby="tab-blacklist"
+          className={activeTab === 'blacklist' ? 'p-4' : 'hidden'}
+        >
+          <BlacklistSection
+            onSaveSuccess={() => toast.success('黑名单已更新')}
+            onError={(error) => toast.error(error)}
+          />
+        </div>
+
+        {/* Tags Tab - Story 4.4 */}
+        <div
+          id="panel-tags"
+          role="tabpanel"
+          aria-labelledby="tab-tags"
+          className={activeTab === 'tags' ? 'p-4' : 'hidden'}
+        >
+          <TagManagement />
+        </div>
+      </main>
+
+      {/* Toast 容器 */}
+      <toast.ToastContainer />
+    </div>
+  );
+}
+
+export default SettingsPanel;

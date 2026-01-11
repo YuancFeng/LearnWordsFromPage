@@ -1,0 +1,87 @@
+# generated: 2026-01-08
+# project: LingoRecall AI
+# project_key: lingorecall-ai
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-01-08
+project: LingoRecall AI
+project_key: lingorecall-ai
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # ===== Epic 1: 智能划词翻译（核心 MVP）=====
+  # 用户成果: 用户可以在任意网页选中文字，立即获得 AI 语境分析结果
+  # FRs 覆盖: FR-1.1, FR-1.2, FR-1.3, FR-1.4, FR-2.1
+  # Verified: 2026-01-11 - Build ✅, Tests 148/148 ✅
+  epic-1: in-progress
+  1-1-configure-extension-multientry-build: in-progress
+  1-2-establish-messaging-infrastructure: in-progress
+  1-3-implement-text-selection-listener: in-progress
+  1-4-implement-shadow-dom-ui-isolation: in-progress
+  1-5-implement-xpath-selection-extraction: in-progress
+  1-6-integrate-ai-context-analysis: done
+  epic-1-retrospective: optional
+
+  # ===== Epic 2: 词汇保存与跳回原文（核心差异化 🌟）=====
+  # 用户成果: 用户可以保存词汇，并随时一键跳回原文位置查看上下文
+  # FRs 覆盖: FR-1.5, FR-2.2, FR-3.1, FR-3.5
+  epic-2: done
+  2-1-save-words-to-local-database: done
+  2-2-view-vocabulary-list: done
+  2-3-jump-back-to-source-page: done
+  2-4-highlight-locate-source-position: done
+  2-5-basic-vocabulary-search: done
+  epic-2-retrospective: optional
+
+  # ===== Epic 3: 艾宾浩斯智能复习 =====
+  # 用户成果: 用户可以按科学记忆曲线收到复习提醒，通过卡片界面高效复习
+  # FRs 覆盖: FR-2.3, FR-2.4, FR-3.2
+  epic-3: in-progress
+  3-1-auto-calculate-review-time: done  # Verified 2026-01-11: Tests pass, integrated with alarms
+  3-2-pending-review-notification: review  # Completed 2026-01-11: Badge module created, all tests pass
+  3-3-review-card-interface: review  # Completed 2026-01-11: All components implemented, 181 tests pass
+  3-4-review-result-feedback: review  # Completed 2026-01-11: All ACs implemented, 194 tests pass
+  epic-3-retrospective: optional
+
+  # ===== Epic 4: 词库增强与个性化设置 =====
+  # 用户成果: 用户可以搜索、筛选、标签管理词汇，配置 API Key 和偏好设置
+  # FRs 覆盖: FR-3.3, FR-3.4
+  epic-4: in-progress
+  4-1-api-key-configuration: review  # Completed 2026-01-11: All ACs implemented, 235 tests pass
+  4-2-preferences-management: review  # Completed 2026-01-11: All ACs implemented, 290 tests pass
+  4-3-website-blacklist-management: review  # Completed 2026-01-11: All ACs implemented, 316 tests pass
+  4-4-tag-creation-management: ready-for-dev
+  4-5-advanced-search-filter: ready-for-dev
+  4-6-vocabulary-tag-association: ready-for-dev
+  epic-4-retrospective: optional
