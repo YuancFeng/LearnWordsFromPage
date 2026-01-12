@@ -35,42 +35,42 @@ so that I can review these words anytime, even offline.
 ## Tasks / Subtasks
 
 ### Task 1: Implement IndexedDB Database Layer (AC: #3)
-- [ ] 1.1 Create `src/shared/storage/db.ts` with database initialization
-- [ ] 1.2 Define database schema with version 1
-- [ ] 1.3 Implement `initDatabase()` function with upgrade handling
-- [ ] 1.4 Create words Object Store with keyPath "id"
-- [ ] 1.5 Create tags Object Store with keyPath "id"
-- [ ] 1.6 Add index: byCreatedAt on `createdAt` field
-- [ ] 1.7 Add index: byNextReviewAt on `nextReviewAt` field
-- [ ] 1.8 Add index: byTagId on `tagIds` field with multiEntry: true
-- [ ] 1.9 Add index: bySourceUrl on `sourceUrl` field
+- [x] 1.1 Create `src/shared/storage/db.ts` with database initialization
+- [x] 1.2 Define database schema with version 1
+- [x] 1.3 Implement `initDatabase()` function with upgrade handling
+- [x] 1.4 Create words Object Store with keyPath "id"
+- [x] 1.5 Create tags Object Store with keyPath "id"
+- [x] 1.6 Add index: byCreatedAt on `createdAt` field
+- [x] 1.7 Add index: byNextReviewAt on `nextReviewAt` field
+- [x] 1.8 Add index: byTagId on `tagIds` field with multiEntry: true
+- [x] 1.9 Add index: bySourceUrl on `sourceUrl` field
 
 ### Task 2: Implement Word Save Service (AC: #1)
-- [ ] 2.1 Create `src/shared/storage/wordService.ts`
-- [ ] 2.2 Implement `saveWord(word: WordRecord): Promise<Response<void>>`
-- [ ] 2.3 Generate UUID for word id using `crypto.randomUUID()`
-- [ ] 2.4 Set default values: createdAt, nextReviewAt (now + 1 day), reviewCount=0, interval=1
-- [ ] 2.5 Return unified Response structure
+- [x] 2.1 Create `src/shared/storage/wordService.ts`
+- [x] 2.2 Implement `saveWord(word: WordRecord): Promise<Response<void>>`
+- [x] 2.3 Generate UUID for word id using `crypto.randomUUID()`
+- [x] 2.4 Set default values: createdAt, nextReviewAt (now + 1 day), reviewCount=0, interval=1
+- [x] 2.5 Return unified Response structure
 
 ### Task 3: Implement Duplicate Detection (AC: #2)
-- [ ] 3.1 Implement `findDuplicateWord(text, sourceUrl, xpath): Promise<WordRecord | null>`
-- [ ] 3.2 Use compound query: text + sourceUrl + xpath
-- [ ] 3.3 Return existing word if found, null otherwise
-- [ ] 3.4 Integrate duplicate check into saveWord flow
+- [x] 3.1 Implement `findDuplicateWord(text, sourceUrl, xpath): Promise<WordRecord | null>`
+- [x] 3.2 Use compound query: text + sourceUrl + xpath
+- [x] 3.3 Return existing word if found, null otherwise
+- [x] 3.4 Integrate duplicate check into saveWord flow
 
 ### Task 4: Implement Service Worker Message Handler (AC: #1, #2)
-- [ ] 4.1 Create `src/background/handlers/wordHandlers.ts`
-- [ ] 4.2 Implement `handleSaveWord(payload): Promise<Response<void>>`
-- [ ] 4.3 Check for duplicates before saving
-- [ ] 4.4 Return appropriate error for duplicate attempts
-- [ ] 4.5 Register handler in Service Worker message router
+- [x] 4.1 Create `src/background/handlers/wordHandlers.ts`
+- [x] 4.2 Implement `handleSaveWord(payload): Promise<Response<void>>`
+- [x] 4.3 Check for duplicates before saving
+- [x] 4.4 Return appropriate error for duplicate attempts
+- [x] 4.5 Register handler in Service Worker message router
 
 ### Task 5: Implement Save Button UI and Toast (AC: #1, #2)
-- [ ] 5.1 Update `AnalysisPopup.tsx` to include Save button
-- [ ] 5.2 Implement `handleSave()` that sends SAVE_WORD message
-- [ ] 5.3 Create Toast component for success/error feedback
-- [ ] 5.4 Handle loading state during save operation
-- [ ] 5.5 Display appropriate message for duplicate detection
+- [x] 5.1 Update `AnalysisPopup.tsx` to include Save button
+- [x] 5.2 Implement `handleSave()` that sends SAVE_WORD message
+- [x] 5.3 Create Toast component for success/error feedback
+- [x] 5.4 Handle loading state during save operation
+- [x] 5.5 Display appropriate message for duplicate detection
 
 ## Dev Notes
 
@@ -286,6 +286,10 @@ GPT-5 (Codex CLI)
 3. 重复保存错误码对齐为 DUPLICATE_WORD
 4. 新增 IndexedDB 存储层单元测试覆盖建库、默认字段与重复检测
 5. 测试环境引入 fake-indexeddb，确保 IndexedDB 可用
+6. 保存仅在分析结果完整时可触发，避免空字段写入
+7. 保存前校验 sourceLocation，缺失时阻止写入
+8. saveWord 在同一事务内完成重复检测与写入，降低并发重复风险
+9. 测试: `npm test -- src/shared/storage/wordService.test.ts`
 
 ### File List
 

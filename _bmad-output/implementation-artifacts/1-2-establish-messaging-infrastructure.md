@@ -1,6 +1,6 @@
 # Story 1.2: Establish Messaging Infrastructure
 
-Status: in-progress
+Status: done
 
 ## Story
 

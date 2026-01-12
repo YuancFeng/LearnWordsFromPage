@@ -1,6 +1,6 @@
 # Story 1.3: Implement Text Selection Listener
 
-Status: in-progress
+Status: done
 
 ## Story
 

@@ -1,6 +1,6 @@
 # Story 4.4: Tag Creation & Management
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -36,53 +36,53 @@ so that I can categorize my vocabulary by topic.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Define Tag data model (AC: #1, #4)
-  - [ ] 1.1: Create `src/shared/types/tag.ts` with Tag interface
-  - [ ] 1.2: Define preset color palette constant
-  - [ ] 1.3: Add Tag type to IndexedDB schema
+- [x] Task 1: Define Tag data model (AC: #1, #4)
+  - [x] 1.1: Create `src/shared/types/tag.ts` with Tag interface
+  - [x] 1.2: Define preset color palette constant
+  - [x] 1.3: Add Tag type to IndexedDB schema
 
-- [ ] Task 2: Implement IndexedDB tags store (AC: #1, #2, #3)
-  - [ ] 2.1: Add `tags` Object Store to database schema
-  - [ ] 2.2: Implement `createTag(tag: Tag)` function
-  - [ ] 2.3: Implement `updateTag(id: string, updates: Partial<Tag>)` function
-  - [ ] 2.4: Implement `deleteTag(id: string)` function with cascade logic
-  - [ ] 2.5: Implement `getAllTags()` function
+- [x] Task 2: Implement IndexedDB tags store (AC: #1, #2, #3)
+  - [x] 2.1: Add `tags` Object Store to database schema
+  - [x] 2.2: Implement `createTag(tag: Tag)` function
+  - [x] 2.3: Implement `updateTag(id: string, updates: Partial<Tag>)` function
+  - [x] 2.4: Implement `deleteTag(id: string)` function with cascade logic
+  - [x] 2.5: Implement `getAllTags()` function
 
-- [ ] Task 3: Create useTags hook (AC: #1, #2, #3)
-  - [ ] 3.1: Create `src/hooks/useTags.ts`
-  - [ ] 3.2: Implement CRUD operations with loading states
-  - [ ] 3.3: Handle real-time updates
-  - [ ] 3.4: Implement cascade delete logic
+- [x] Task 3: Create useTags hook (AC: #1, #2, #3)
+  - [x] 3.1: Create `src/hooks/useTags.ts`
+  - [x] 3.2: Implement CRUD operations with loading states
+  - [x] 3.3: Handle real-time updates
+  - [x] 3.4: Implement cascade delete logic
 
-- [ ] Task 4: Create TagManagement component (AC: #1, #2, #3)
-  - [ ] 4.1: Create `src/popup/components/TagManagement.tsx`
-  - [ ] 4.2: Implement tag list display with color indicators
-  - [ ] 4.3: Add create button with inline form
-  - [ ] 4.4: Add edit and delete buttons for each tag
+- [x] Task 4: Create TagManagement component (AC: #1, #2, #3)
+  - [x] 4.1: Create `src/popup/components/TagManagement.tsx`
+  - [x] 4.2: Implement tag list display with color indicators
+  - [x] 4.3: Add create button with inline form
+  - [x] 4.4: Add edit and delete buttons for each tag
 
-- [ ] Task 5: Create TagEditModal component (AC: #2, #4)
-  - [ ] 5.1: Create `src/popup/components/TagEditModal.tsx`
-  - [ ] 5.2: Implement name input field
-  - [ ] 5.3: Implement color picker with presets
-  - [ ] 5.4: Add custom HEX color input option
+- [x] Task 5: Create TagEditModal component (AC: #2, #4)
+  - [x] 5.1: Create `src/popup/components/TagEditModal.tsx`
+  - [x] 5.2: Implement name input field
+  - [x] 5.3: Implement color picker with presets
+  - [x] 5.4: Add custom HEX color input option
 
-- [ ] Task 6: Implement ColorPicker component (AC: #4)
-  - [ ] 6.1: Create `src/popup/components/ColorPicker.tsx`
-  - [ ] 6.2: Display 8-12 preset color swatches
-  - [ ] 6.3: Add HEX input field with validation
-  - [ ] 6.4: Show selected color preview
+- [x] Task 6: Implement ColorPicker component (AC: #4)
+  - [x] 6.1: Create `src/popup/components/ColorPicker.tsx`
+  - [x] 6.2: Display 8-12 preset color swatches
+  - [x] 6.3: Add HEX input field with validation
+  - [x] 6.4: Show selected color preview
 
-- [ ] Task 7: Implement cascade delete for vocabulary (AC: #3)
-  - [ ] 7.1: Query words with deleted tagId
-  - [ ] 7.2: Update each word's tagIds array
-  - [ ] 7.3: Use transaction for atomic operation
-  - [ ] 7.4: Handle errors gracefully
+- [x] Task 7: Implement cascade delete for vocabulary (AC: #3)
+  - [x] 7.1: Query words with deleted tagId
+  - [x] 7.2: Update each word's tagIds array
+  - [x] 7.3: Use transaction for atomic operation
+  - [x] 7.4: Handle errors gracefully
 
-- [ ] Task 8: Write unit tests
-  - [ ] 8.1: Test tag CRUD operations
-  - [ ] 8.2: Test cascade delete functionality
-  - [ ] 8.3: Test color picker HEX validation
-  - [ ] 8.4: Test UI component interactions
+- [x] Task 8: Write unit tests
+  - [x] 8.1: Test tag CRUD operations
+  - [x] 8.2: Test cascade delete functionality
+  - [x] 8.3: Test color picker HEX validation
+  - [x] 8.4: Test UI component interactions
 
 ## Dev Notes
 
@@ -535,3 +535,85 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
 - PRD: `/Users/fengyuanchang/Projects_WSL/LearnWordsFromPage/_bmad-output/planning-artifacts/prd.md` - Section "6.2 Tag"
 - Epics: `/Users/fengyuanchang/Projects_WSL/LearnWordsFromPage/_bmad-output/planning-artifacts/epics.md` - Story 4.4
 - Project Context: `/Users/fengyuanchang/Projects_WSL/LearnWordsFromPage/_bmad-output/planning-artifacts/project-context.md` - Storage Layer Rules
+
+---
+
+## Dev Agent Record
+
+### Implementation Summary
+
+All tasks for Story 4.4 (Tag Creation & Management) have been completed. The implementation includes:
+
+1. **Tag Data Model** (`src/shared/types/tag.ts`): Tag interface with id, name, color, createdAt fields. 12 preset colors defined. Validation functions for HEX color and tag name.
+
+2. **IndexedDB Tags Store** (`src/shared/storage/tagStore.ts`): Full CRUD operations with:
+   - `createTag`: Creates tag with UUID, validates name uniqueness (case-insensitive)
+   - `updateTag`: Updates name/color with validation
+   - `deleteTag`: Deletes tag with cascade update to remove tagId from associated words
+   - `getAllTags`: Returns tags sorted by createdAt descending
+   - `getTagsByIds`: Batch fetch multiple tags
+
+3. **useTags Hook** (`src/hooks/useTags.ts`): React hook providing:
+   - Loading/error states
+   - CRUD operations (addTag, editTag, removeTag)
+   - Real-time state updates
+   - reloadTags for manual refresh
+
+4. **UI Components**:
+   - `TagManagement.tsx`: Tag list with create/edit/delete buttons
+   - `TagEditModal.tsx`: Modal for creating/editing tags
+   - `ColorPicker.tsx`: 12 preset colors + custom HEX input
+
+5. **Cascade Delete**: When a tag is deleted, its ID is removed from all associated words' tagIds array using atomic IndexedDB transaction.
+
+### Test Coverage (77 new tests)
+
+- `tagStore.test.ts`: 27 tests for CRUD operations and cascade delete
+- `useTags.test.ts`: 13 tests for hook state management
+- `ColorPicker.test.tsx`: 18 tests for color selection UI
+- `TagManagement.test.tsx`: 19 tests for tag management component
+
+Total project tests: 502 (all passing)
+
+### Verification
+
+- `npm run build`: ✅ Success
+- `npm run test`: ✅ 502/502 tests passing
+- `npm run lint`: ✅ No errors (some expected warnings)
+
+---
+
+## File List
+
+### Created Files
+
+| File | Purpose |
+|------|---------|
+| `src/shared/types/tag.ts` | Tag interface, PRESET_COLORS, validation functions |
+| `src/shared/types/tag.test.ts` | Tag type validation tests |
+| `src/shared/storage/tagStore.ts` | Tag CRUD operations with cascade delete |
+| `src/shared/storage/tagStore.test.ts` | Tag store unit tests (27 tests) |
+| `src/hooks/useTags.ts` | React hook for tag state management |
+| `src/hooks/useTags.test.ts` | useTags hook tests (13 tests) |
+| `src/popup/components/TagManagement.tsx` | Tag list and management UI |
+| `src/popup/components/TagManagement.test.tsx` | TagManagement component tests (19 tests) |
+| `src/popup/components/TagEditModal.tsx` | Create/Edit tag modal |
+| `src/popup/components/ColorPicker.tsx` | Color selection component |
+| `src/popup/components/ColorPicker.test.tsx` | ColorPicker component tests (18 tests) |
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `src/shared/storage/db.ts` | Added `tags` object store to schema |
+| `src/shared/storage/index.ts` | Re-exported tag store functions |
+
+---
+
+## Change Log
+
+| Date | Change | Author |
+|------|--------|--------|
+| 2026-01-11 | Initial implementation of all tasks (Tasks 1-7) | Dev Agent |
+| 2026-01-11 | Added comprehensive unit tests (Task 8) - 77 new tests | Dev Agent |
+| 2026-01-11 | All 502 tests passing, build successful, ready for review | Dev Agent |

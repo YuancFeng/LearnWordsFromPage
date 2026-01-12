@@ -170,7 +170,7 @@ export function ShadowApp({ state, callbacks = {} }: ShadowAppProps): React.Reac
           onAnalyze={handleAnalyze}
           onSave={handleSave}
           isLoading={true}
-          showSaveButton={true}
+          showSaveButton={false}
           isClosing={isClosing}
         />
         {toastElement}
@@ -202,7 +202,7 @@ export function ShadowApp({ state, callbacks = {} }: ShadowAppProps): React.Reac
         onAnalyze={handleAnalyze}
         onSave={handleSave}
         isLoading={isAnalyzing}
-        showSaveButton={true}
+        showSaveButton={false}
         isClosing={isClosing}
       />
       {toastElement}

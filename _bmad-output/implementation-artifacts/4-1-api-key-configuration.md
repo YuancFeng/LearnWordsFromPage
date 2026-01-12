@@ -1,6 +1,6 @@
 # Story 4.1: API Key Configuration
 
-Status: review
+Status: done
 
 ## Story
 

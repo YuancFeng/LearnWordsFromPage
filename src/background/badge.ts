@@ -92,6 +92,10 @@ export async function checkAndUpdateBadge(): Promise<void> {
   } catch (error) {
     console.error('[LingoRecall] Failed to update badge:', error);
     // 出错时清空 Badge，避免显示过期数据
-    await updateBadge(0);
+    try {
+      await updateBadge(0);
+    } catch (clearError) {
+      console.error('[LingoRecall] Failed to clear badge after error:', clearError);
+    }
   }
 }

@@ -1,6 +1,6 @@
 # Story 3.2: 待复习词汇提醒
 
-Status: review
+Status: done
 
 ## Story
 
@@ -329,18 +329,53 @@ describe('badge', () => {
 - badge.test.ts: 19 个测试
 - alarms.test.ts: 13 个测试
 
+### Review Fixes (2026-01-12)
+
+1. `src/background/alarms.ts` 增加 Alarm 触发异常兜底，避免中断后续触发。
+2. `src/background/index.ts` 安装/更新后立即同步 Badge 状态。
+3. `src/background/badge.ts` 清空 Badge 失败场景增加二次异常保护。
+4. 文件清单补充当前工作区的 out-of-scope 变更。
+
 ---
 
 ## File List
 
 ### New Files
-- `src/background/badge.ts` - Badge 管理模块
+- `src/background/badge.ts` - Badge 管理模块（含错误兜底修复）
 - `src/background/badge.test.ts` - Badge 模块测试
 
 ### Modified Files
-- `src/background/alarms.ts` - 重构：移除 Badge 逻辑，导入 badge 模块
+- `src/background/alarms.ts` - Alarm 触发兜底，避免异常中断
 - `src/background/alarms.test.ts` - 更新颜色测试从 #FF6B6B 到 #EF4444
-- `src/background/index.ts` - UPDATE_WORD handler 添加 Badge 更新调用
+- `src/background/index.ts` - UPDATE_WORD 后更新 Badge + 安装/更新后同步 Badge
+- `_bmad-output/implementation-artifacts/3-2-pending-review-notification.md` - Review 修复记录与状态更新
+
+### Out-of-scope 工作区变更（仅审查上下文）
+- `src/content/components/ShadowApp.tsx`
+- `src/content/index.ts`
+- `src/popup/components/VocabularyList.tsx`
+- `src/shared/storage/wordService.ts`
+- `src/hooks/useTags.test.ts`
+- `src/popup/components/BatchActionBar.tsx`
+- `src/popup/components/BatchTagSelector.tsx`
+- `src/popup/components/ColorPicker.test.tsx`
+- `src/popup/components/TagManagement.test.tsx`
+- `src/shared/storage/tagStore.test.ts`
+- `_bmad-output/implementation-artifacts/1-1-configure-extension-multientry-build.md`
+- `_bmad-output/implementation-artifacts/1-2-establish-messaging-infrastructure.md`
+- `_bmad-output/implementation-artifacts/1-3-implement-text-selection-listener.md`
+- `_bmad-output/implementation-artifacts/1-4-implement-shadow-dom-ui-isolation.md`
+- `_bmad-output/implementation-artifacts/1-5-implement-xpath-selection-extraction.md`
+- `_bmad-output/implementation-artifacts/2-1-save-words-to-local-database.md`
+- `_bmad-output/implementation-artifacts/3-3-review-card-interface.md`
+- `_bmad-output/implementation-artifacts/3-4-review-result-feedback.md`
+- `_bmad-output/implementation-artifacts/4-1-api-key-configuration.md`
+- `_bmad-output/implementation-artifacts/4-2-preferences-management.md`
+- `_bmad-output/implementation-artifacts/4-3-website-blacklist-management.md`
+- `_bmad-output/implementation-artifacts/4-4-tag-creation-management.md`
+- `_bmad-output/implementation-artifacts/4-5-advanced-search-filter.md`
+- `_bmad-output/implementation-artifacts/4-6-vocabulary-tag-association.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
 
 ---
 
@@ -348,4 +383,5 @@ describe('badge', () => {
 
 | Date | Change | Author |
 |------|--------|--------|
+| 2026-01-12 | Review 修复 - Alarm 兜底、安装/更新后同步 Badge、清空 Badge 异常保护、文件清单更新 | Dev Agent (Amelia) |
 | 2026-01-11 | Story 3.2 实现完成 - Badge 管理模块创建、颜色规范更新、复习后实时更新 | Dev Agent (Amelia) |

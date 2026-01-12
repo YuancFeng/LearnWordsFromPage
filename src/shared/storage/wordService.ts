@@ -37,23 +37,6 @@ export async function saveWord(
   try {
     const db = await getDatabase();
 
-    // AC2: 检查重复
-    const duplicate = await findDuplicateWord(
-      wordData.text,
-      wordData.sourceUrl,
-      wordData.xpath
-    );
-
-    if (duplicate) {
-      return {
-        success: false,
-        error: {
-          code: ErrorCode.DUPLICATE_WORD,
-          message: '该词汇已保存',
-        },
-      };
-    }
-
     // 生成完整的词汇记录
     // Story 3.1 - 使用艾宾浩斯算法初始化复习参数
     const reviewParams = initializeReviewParams();
@@ -69,32 +52,80 @@ export async function saveWord(
     };
 
     return new Promise((resolve) => {
-      const tx = db.transaction(STORES.words, 'readwrite');
-      const store = tx.objectStore(STORES.words);
-      const request = store.add(word);
-
-      request.onsuccess = () => {
-        console.log('[LingoRecall] Word saved successfully:', word.id);
-        resolve({
-          success: true,
-          data: { id: word.id },
-        });
+      let resolved = false;
+      const finalize = (response: Response<{ id: string }>) => {
+        if (resolved) {
+          return;
+        }
+        resolved = true;
+        resolve(response);
       };
 
-      request.onerror = () => {
-        console.error('[LingoRecall] Failed to save word:', request.error);
-        resolve({
+      const tx = db.transaction(STORES.words, 'readwrite');
+      const store = tx.objectStore(STORES.words);
+      const index = store.index(INDEXES.bySourceUrl);
+
+      const cursorRequest = index.openCursor(IDBKeyRange.only(wordData.sourceUrl));
+
+      cursorRequest.onsuccess = (event) => {
+        const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
+
+        if (cursor) {
+          const existing = cursor.value as WordRecord;
+          if (existing.text === wordData.text && existing.xpath === wordData.xpath) {
+            finalize({
+              success: false,
+              error: {
+                code: ErrorCode.DUPLICATE_WORD,
+                message: '该词汇已保存',
+              },
+            });
+            return;
+          }
+
+          cursor.continue();
+          return;
+        }
+
+        const request = store.add(word);
+
+        request.onsuccess = () => {
+          console.log('[LingoRecall] Word saved successfully:', word.id);
+          finalize({
+            success: true,
+            data: { id: word.id },
+          });
+        };
+
+        request.onerror = () => {
+          console.error('[LingoRecall] Failed to save word:', request.error);
+          finalize({
+            success: false,
+            error: {
+              code: ErrorCode.STORAGE_ERROR,
+              message: request.error?.message || '保存失败',
+            },
+          });
+        };
+      };
+
+      cursorRequest.onerror = () => {
+        console.error('[LingoRecall] findDuplicateWord error:', cursorRequest.error);
+        finalize({
           success: false,
           error: {
             code: ErrorCode.STORAGE_ERROR,
-            message: request.error?.message || '保存失败',
+            message: cursorRequest.error?.message || '保存失败',
           },
         });
       };
 
       tx.onerror = () => {
+        if (resolved) {
+          return;
+        }
         console.error('[LingoRecall] Transaction error:', tx.error);
-        resolve({
+        finalize({
           success: false,
           error: {
             code: ErrorCode.STORAGE_ERROR,

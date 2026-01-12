@@ -1,6 +1,6 @@
 # Story 1.5: Implement XPath Selection Extraction
 
-Status: in-progress
+Status: done
 
 ## Story
 

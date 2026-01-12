@@ -40,7 +40,11 @@ import {
 import { ErrorCode } from '../shared/types/errors';
 
 // Story 1.5: XPath 提取功能
-import { extractSourceLocation, type SourceLocation } from './extraction';
+import {
+  extractSourceLocation,
+  extractSourceLocationFromRange,
+  type SourceLocation,
+} from './extraction';
 
 // Story 2.4: 高亮定位功能
 import { locateTextByXPath } from './xpath';
@@ -473,12 +477,31 @@ async function handleSave(): Promise<void> {
 
   console.log('[LingoRecall] Saving:', currentSelection.text);
 
-  // Build context from SourceLocation if available
-  const sourceLocation = currentSelection.sourceLocation;
-  const context = sourceLocation
-    ? `${sourceLocation.contextBefore}${currentSelection.text}${sourceLocation.contextAfter}`
-    : getSelectionContext(currentSelection.range);
   const analysisResult = currentAnalysisResult;
+  const hasAnalysis = Boolean(
+    analysisResult &&
+      analysisResult.meaning.trim() &&
+      analysisResult.pronunciation.trim() &&
+      analysisResult.partOfSpeech.trim()
+  );
+
+  if (!hasAnalysis) {
+    showToast('请先完成分析再保存词汇', 'warning');
+    return;
+  }
+
+  const sourceLocation =
+    currentSelection.sourceLocation ?? extractSourceLocationFromRange(currentSelection.range);
+
+  if (!sourceLocation || !sourceLocation.xpath) {
+    showToast('无法获取词汇位置信息，保存失败', 'error');
+    return;
+  }
+
+  const rawContext = `${sourceLocation.contextBefore}${currentSelection.text}${sourceLocation.contextAfter}`;
+  const context = rawContext.trim()
+    ? rawContext
+    : getSelectionContext(currentSelection.range);
 
   try {
     const fallbackIndex = context.indexOf(currentSelection.text);
@@ -491,16 +514,16 @@ async function handleSave(): Promise<void> {
 
     const response = await sendMessage(MessageTypes.SAVE_WORD, {
       text: currentSelection.text,
-      meaning: analysisResult?.meaning || '',
-      pronunciation: analysisResult?.pronunciation || '',
-      partOfSpeech: analysisResult?.partOfSpeech || '',
+      meaning: analysisResult.meaning,
+      pronunciation: analysisResult.pronunciation,
+      partOfSpeech: analysisResult.partOfSpeech,
       exampleSentence: context,
-      sourceUrl: window.location.href,
-      sourceTitle: document.title,
-      xpath: sourceLocation?.xpath || '',
-      textOffset: sourceLocation?.textOffset ?? 0,
-      contextBefore: sourceLocation?.contextBefore || fallbackBefore,
-      contextAfter: sourceLocation?.contextAfter || fallbackAfter,
+      sourceUrl: sourceLocation.sourceUrl,
+      sourceTitle: sourceLocation.sourceTitle,
+      xpath: sourceLocation.xpath,
+      textOffset: sourceLocation.textOffset,
+      contextBefore: sourceLocation.contextBefore || fallbackBefore,
+      contextAfter: sourceLocation.contextAfter || fallbackAfter,
     });
 
     if (response.success) {

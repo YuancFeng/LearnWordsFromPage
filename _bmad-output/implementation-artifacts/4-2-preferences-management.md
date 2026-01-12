@@ -1,6 +1,6 @@
 # Story 4.2: Preferences Management
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 

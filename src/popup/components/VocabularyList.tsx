@@ -11,7 +11,7 @@
  */
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { BookOpen, Trash2, ExternalLink, Clock, AlertCircle, Loader2, ChevronDown, ChevronUp, GraduationCap, Settings } from 'lucide-react';
+import { BookOpen, Trash2, ExternalLink, Clock, AlertCircle, Loader2, ChevronDown, ChevronUp, GraduationCap, Settings, CheckSquare } from 'lucide-react';
 import { useSearch } from '../../hooks/useSearch';
 import { useDueCount } from '../../hooks/useDueCount';
 import { useTags } from '../../hooks/useTags';
@@ -23,6 +23,8 @@ import { TagFilter } from './TagFilter';
 import { HighlightedText } from './HighlightedText';
 import { TagBadgeList } from './TagBadge';
 import { TagSelector, TagSelectorButton } from './TagSelector';
+import { BatchActionBar } from './BatchActionBar';
+import { BatchTagSelector } from './BatchTagSelector';
 import { MessageTypes } from '../../shared/messaging/types';
 import type { WordRecord, JumpToSourcePayload } from '../../shared/messaging/types';
 import type { Tag } from '../../shared/types/tag';
@@ -81,6 +83,9 @@ function WordCard({
   allTags = [],
   onUpdateTags,
   onManageTags,
+  isSelectionMode = false,
+  isSelected = false,
+  onSelectionToggle,
 }: {
   word: WordRecord;
   onJumpToSource?: (word: WordRecord) => void;
@@ -89,6 +94,12 @@ function WordCard({
   allTags?: Tag[];
   onUpdateTags?: (wordId: string, tagId: string, isSelected: boolean) => void;
   onManageTags?: () => void;
+  /** Story 4.6 - AC4: 是否处于批量选择模式 */
+  isSelectionMode?: boolean;
+  /** Story 4.6 - AC4: 是否被选中 */
+  isSelected?: boolean;
+  /** Story 4.6 - AC4: 选中状态切换回调 */
+  onSelectionToggle?: () => void;
 }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -192,20 +203,53 @@ function WordCard({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-all">
-      <button
-        type="button"
-        onClick={handleToggle}
-        className="w-full text-left"
-        aria-expanded={isExpanded}
-        aria-label={isExpanded ? 'Collapse word details' : 'Expand word details'}
-      >
-        <div className="flex justify-between items-start gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-xl font-bold text-gray-900">
-                <HighlightedText text={word.text} keyword={searchKeyword} />
-              </h3>
+    <div
+      className={`bg-white rounded-2xl border p-5 shadow-sm hover:shadow-md transition-all ${
+        isSelectionMode && isSelected
+          ? 'border-blue-400 bg-blue-50/50'
+          : 'border-gray-200'
+      }`}
+      data-testid={`word-card-${word.id}`}
+    >
+      {/* Story 4.6 - AC4: 选择模式下的 checkbox 和内容 */}
+      <div className="flex gap-3">
+        {isSelectionMode && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectionToggle?.();
+            }}
+            className={`flex-shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-colors mt-0.5 ${
+              isSelected
+                ? 'bg-blue-500 border-blue-500 text-white'
+                : 'border-gray-300 hover:border-blue-400'
+            }`}
+            aria-label={isSelected ? '取消选中' : '选中'}
+            data-testid={`word-checkbox-${word.id}`}
+          >
+            {isSelected && (
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+          </button>
+        )}
+
+        <div className="flex-1 min-w-0">
+          <button
+            type="button"
+            onClick={isSelectionMode ? () => onSelectionToggle?.() : handleToggle}
+            className="w-full text-left"
+            aria-expanded={isExpanded}
+            aria-label={isExpanded ? 'Collapse word details' : 'Expand word details'}
+          >
+            <div className="flex justify-between items-start gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-xl font-bold text-gray-900">
+                    <HighlightedText text={word.text} keyword={searchKeyword} />
+                  </h3>
               {word.partOfSpeech && (
                 <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">
                   {word.partOfSpeech}
@@ -353,6 +397,8 @@ function WordCard({
           </div>
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -380,6 +426,7 @@ function EmptyState(): React.ReactElement {
  * Story 2.5 - AC1: 搜索, AC2: 排序, AC3: 空结果状态
  * Story 3.3 - AC1: 添加复习入口
  * Story 4.5 - AC1: 搜索高亮, AC2: 标签筛选
+ * Story 4.6 - AC4: 批量添加标签
  */
 export function VocabularyList({
   onJumpToSource,
@@ -407,6 +454,12 @@ export function VocabularyList({
 
   // 待复习词汇数量 - Story 3.3
   const { dueCount } = useDueCount();
+
+  // Story 4.6 - AC4: 批量选择状态
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedWordIds, setSelectedWordIds] = useState<Set<string>>(new Set());
+  const [showBatchTagSelector, setShowBatchTagSelector] = useState(false);
+  const [isBatchProcessing, setIsBatchProcessing] = useState(false);
 
   // 排序状态 - Story 2.5 AC2
   const [sortOption, setSortOption] = useState<SortOption>('recent');
@@ -530,6 +583,89 @@ export function VocabularyList({
   );
 
   /**
+   * Story 4.6 - AC4: 切换词汇选中状态
+   */
+  const handleToggleWordSelection = useCallback((wordId: string) => {
+    setSelectedWordIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(wordId)) {
+        next.delete(wordId);
+      } else {
+        next.add(wordId);
+      }
+      return next;
+    });
+  }, []);
+
+  /**
+   * Story 4.6 - AC4: 切换批量选择模式
+   */
+  const handleToggleSelectionMode = useCallback(() => {
+    setIsSelectionMode((prev) => {
+      if (prev) {
+        // 退出选择模式时清空选中
+        setSelectedWordIds(new Set());
+      }
+      return !prev;
+    });
+  }, []);
+
+  /**
+   * Story 4.6 - AC4: 清除选中
+   */
+  const handleClearSelection = useCallback(() => {
+    setSelectedWordIds(new Set());
+    setIsSelectionMode(false);
+  }, []);
+
+  /**
+   * Story 4.6 - AC4: 批量添加标签
+   */
+  const handleBatchAddTags = useCallback(
+    async (tagIds: string[]) => {
+      if (selectedWordIds.size === 0 || tagIds.length === 0) return;
+
+      setIsBatchProcessing(true);
+      try {
+        // 为每个选中的词汇添加标签
+        const updatePromises = Array.from(selectedWordIds).map(async (wordId) => {
+          const word = searchResults?.find((w) => w.id === wordId);
+          if (!word) return;
+
+          // 合并现有标签和新标签（去重）
+          const currentTagIds = word.tagIds || [];
+          const mergedTagIds = [...new Set([...currentTagIds, ...tagIds])];
+
+          // 如果没有变化则跳过
+          if (mergedTagIds.length === currentTagIds.length) return;
+
+          return chrome.runtime.sendMessage({
+            type: MessageTypes.UPDATE_WORD,
+            payload: {
+              id: wordId,
+              updates: { tagIds: mergedTagIds },
+            },
+          });
+        });
+
+        await Promise.all(updatePromises);
+
+        // 刷新数据
+        setSearchQuery(searchQuery);
+
+        // 清除选中状态
+        setSelectedWordIds(new Set());
+        setIsSelectionMode(false);
+      } catch (err) {
+        console.error('[LingoRecall] Batch add tags error:', err);
+      } finally {
+        setIsBatchProcessing(false);
+      }
+    },
+    [selectedWordIds, searchResults, searchQuery, setSearchQuery]
+  );
+
+  /**
    * 对词汇列表进行排序和标签筛选
    * Story 2.5 - AC2: 排序逻辑
    * Story 4.5 - AC2: 标签筛选
@@ -614,7 +750,7 @@ export function VocabularyList({
 
     // 词汇列表
     return (
-      <div className="grid gap-4">
+      <div className={`grid gap-4 ${isSelectionMode ? 'pb-20' : ''}`}>
         {sortedWords.map((word) => (
           <WordCard
             key={word.id}
@@ -625,6 +761,9 @@ export function VocabularyList({
             allTags={tags}
             onUpdateTags={handleUpdateWordTags}
             onManageTags={onOpenSettings}
+            isSelectionMode={isSelectionMode}
+            isSelected={selectedWordIds.has(word.id)}
+            onSelectionToggle={() => handleToggleWordSelection(word.id)}
           />
         ))}
       </div>
@@ -648,6 +787,23 @@ export function VocabularyList({
 
         {/* 按钮组 */}
         <div className="flex items-center gap-2">
+          {/* Story 4.6 - AC4: 批量选择按钮 */}
+          {totalCount > 0 && tags.length > 0 && (
+            <button
+              onClick={handleToggleSelectionMode}
+              className={`p-2 rounded-xl transition-colors ${
+                isSelectionMode
+                  ? 'text-blue-600 bg-blue-50 hover:bg-blue-100'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+              }`}
+              type="button"
+              aria-label={isSelectionMode ? '取消批量选择' : '批量选择'}
+              data-testid="batch-select-toggle"
+            >
+              <CheckSquare size={20} />
+            </button>
+          )}
+
           {/* 设置按钮 - Story 4.1 */}
           {onOpenSettings && (
             <button
@@ -729,6 +885,23 @@ export function VocabularyList({
 
       {/* Content */}
       {renderContent()}
+
+      {/* Story 4.6 - AC4: 批量操作工具栏 */}
+      <BatchActionBar
+        selectedCount={selectedWordIds.size}
+        onAddTags={() => setShowBatchTagSelector(true)}
+        onClearSelection={handleClearSelection}
+        isProcessing={isBatchProcessing}
+      />
+
+      {/* Story 4.6 - AC4: 批量标签选择弹窗 */}
+      <BatchTagSelector
+        isOpen={showBatchTagSelector}
+        allTags={tags}
+        wordCount={selectedWordIds.size}
+        onClose={() => setShowBatchTagSelector(false)}
+        onConfirm={handleBatchAddTags}
+      />
     </div>
   );
 }

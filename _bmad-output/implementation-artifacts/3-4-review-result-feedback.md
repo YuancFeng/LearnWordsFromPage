@@ -1,6 +1,6 @@
 # Story 3.4: 复习结果反馈
 
-Status: review
+Status: done
 
 ## Story
 

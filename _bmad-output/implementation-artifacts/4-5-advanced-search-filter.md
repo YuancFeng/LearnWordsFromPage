@@ -1,6 +1,6 @@
 # Story 4.5: Advanced Search & Filter
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -35,57 +35,57 @@ so that I can efficiently locate target words in a large vocabulary collection.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create SearchBar component (AC: #1)
-  - [ ] 1.1: Create `src/popup/components/SearchBar.tsx`
-  - [ ] 1.2: Implement debounced search input (300ms)
-  - [ ] 1.3: Add clear search button
-  - [ ] 1.4: Add search icon
+- [x] Task 1: Create SearchBar component (AC: #1)
+  - [x] 1.1: Create `src/popup/components/SearchBar.tsx`
+  - [x] 1.2: Implement debounced search input (300ms)
+  - [x] 1.3: Add clear search button
+  - [x] 1.4: Add search icon
 
-- [ ] Task 2: Implement search logic (AC: #1)
-  - [ ] 2.1: Create `src/shared/utils/searchUtils.ts`
-  - [ ] 2.2: Implement case-insensitive search on `text` and `meaning` fields
-  - [ ] 2.3: Create highlight matching function
-  - [ ] 2.4: Optimize search for large datasets
+- [x] Task 2: Implement search logic (AC: #1)
+  - [x] 2.1: Create `src/hooks/useVocabularyFilter.ts` (matchesKeyword function)
+  - [x] 2.2: Implement case-insensitive search on `text` and `meaning` fields
+  - [x] 2.3: Create highlight matching function
+  - [x] 2.4: Optimize search for large datasets (useMemo)
 
-- [ ] Task 3: Create TagFilter component (AC: #2)
-  - [ ] 3.1: Create `src/popup/components/TagFilter.tsx`
-  - [ ] 3.2: Display all available tags as selectable chips
-  - [ ] 3.3: Support multi-select (toggle selection)
-  - [ ] 3.4: Show selected tag badges
+- [x] Task 3: Create TagFilter component (AC: #2)
+  - [x] 3.1: Create `src/popup/components/TagFilter.tsx`
+  - [x] 3.2: Display all available tags as selectable chips
+  - [x] 3.3: Support multi-select (toggle selection)
+  - [x] 3.4: Show selected tag badges
 
-- [ ] Task 4: Implement tag filtering logic (AC: #2)
-  - [ ] 4.1: Filter words by `tagIds` array intersection
-  - [ ] 4.2: Support "AND" logic for multiple tags (word must have all selected tags)
-  - [ ] 4.3: Optimize with IndexedDB `byTagId` index
+- [x] Task 4: Implement tag filtering logic (AC: #2)
+  - [x] 4.1: Filter words by `tagIds` array intersection
+  - [x] 4.2: Support "AND" logic for multiple tags (word must have all selected tags)
+  - [x] 4.3: Optimize with IndexedDB `byTagId` index
 
-- [ ] Task 5: Create FilterControls component (AC: #3)
-  - [ ] 5.1: Create `src/popup/components/FilterControls.tsx`
-  - [ ] 5.2: Display active filter count
-  - [ ] 5.3: Add "Clear Filters" button
-  - [ ] 5.4: Show active filter summary
+- [x] Task 5: Create FilterControls component (AC: #3)
+  - [x] 5.1: Integrated in `src/popup/components/VocabularyList.tsx` (lines 710-726)
+  - [x] 5.2: Display active filter count
+  - [x] 5.3: Add "Clear Filters" button
+  - [x] 5.4: Show active filter summary
 
-- [ ] Task 6: Implement combined search and filter (AC: #1, #2, #3)
-  - [ ] 6.1: Create `useVocabularySearch` hook
-  - [ ] 6.2: Combine keyword search with tag filter
-  - [ ] 6.3: Memoize filtered results for performance
-  - [ ] 6.4: Handle loading states
+- [x] Task 6: Implement combined search and filter (AC: #1, #2, #3)
+  - [x] 6.1: Create `useVocabularyFilter` hook
+  - [x] 6.2: Combine keyword search with tag filter
+  - [x] 6.3: Memoize filtered results for performance
+  - [x] 6.4: Handle loading states
 
-- [ ] Task 7: Create EmptyState component (AC: #4)
-  - [ ] 7.1: Create `src/popup/components/EmptyState.tsx`
-  - [ ] 7.2: Display message for no search results
-  - [ ] 7.3: Display message for no vocabulary (different from no results)
-  - [ ] 7.4: Add clear filters action in empty state
+- [x] Task 7: Create EmptyState component (AC: #4)
+  - [x] 7.1: EmptyState in `VocabularyList.tsx`, NoResults in `src/popup/components/NoResults.tsx`
+  - [x] 7.2: Display message for no search results
+  - [x] 7.3: Display message for no vocabulary (different from no results)
+  - [x] 7.4: Add clear filters action in empty state
 
-- [ ] Task 8: Implement text highlighting (AC: #1)
-  - [ ] 8.1: Create `highlightText` utility function
-  - [ ] 8.2: Wrap matching text in `<mark>` elements
-  - [ ] 8.3: Apply highlight styles
+- [x] Task 8: Implement text highlighting (AC: #1)
+  - [x] 8.1: Create `highlightText` in `src/popup/components/HighlightedText.tsx`
+  - [x] 8.2: Wrap matching text in `<mark>` elements
+  - [x] 8.3: Apply highlight styles
 
-- [ ] Task 9: Write unit tests
-  - [ ] 9.1: Test search matching logic
-  - [ ] 9.2: Test tag filtering logic
-  - [ ] 9.3: Test combined search + filter
-  - [ ] 9.4: Test highlight function
+- [x] Task 9: Write unit tests
+  - [x] 9.1: Test search matching logic (`useVocabularyFilter.test.ts`)
+  - [x] 9.2: Test tag filtering logic (`TagFilter.test.tsx`)
+  - [x] 9.3: Test combined search + filter (`useVocabularyFilter.test.ts`)
+  - [x] 9.4: Test highlight function (`HighlightedText.test.tsx`)
 
 ## Dev Notes
 
@@ -471,3 +471,52 @@ function escapeRegExp(string: string): string {
 - PRD: `/Users/fengyuanchang/Projects_WSL/LearnWordsFromPage/_bmad-output/planning-artifacts/prd.md` - Section "3.4 Epic 4: Vocabulary Management"
 - Epics: `/Users/fengyuanchang/Projects_WSL/LearnWordsFromPage/_bmad-output/planning-artifacts/epics.md` - Story 4.5
 - Project Context: `/Users/fengyuanchang/Projects_WSL/LearnWordsFromPage/_bmad-output/planning-artifacts/project-context.md` - NFR Performance Requirements
+
+---
+
+## Dev Agent Record
+
+### Implementation Plan
+Story 4.5 功能在之前的开发迭代中已经完全实现。本次 Dev Agent 验证了所有 AC 均已满足：
+
+1. **AC1 (关键词搜索高亮)**: SearchBar + HighlightedText 组件实现完整
+2. **AC2 (多标签筛选)**: TagFilter + useVocabularyFilter 实现 AND 逻辑
+3. **AC3 (清除筛选)**: VocabularyList 中内联实现清除全部筛选功能
+4. **AC4 (空结果消息)**: EmptyState + NoResults 组件处理不同空状态
+
+### Completion Notes
+- 所有 9 个任务及其子任务已完成
+- 502 个测试全部通过
+- Build 成功无警告
+- Task 5 (FilterControls) 采用内联方式集成在 VocabularyList 中，避免过度组件化
+- Task 2 (searchUtils) 功能整合到 useVocabularyFilter hook 中，遵循项目现有模式
+
+### Debug Log
+无错误或调试问题。
+
+---
+
+## File List
+
+### New Files
+- `src/popup/components/SearchBar.tsx` - 搜索栏组件
+- `src/popup/components/SearchBar.test.tsx` - SearchBar 测试
+- `src/popup/components/TagFilter.tsx` - 标签筛选组件
+- `src/popup/components/TagFilter.test.tsx` - TagFilter 测试
+- `src/popup/components/HighlightedText.tsx` - 文本高亮组件
+- `src/popup/components/HighlightedText.test.tsx` - HighlightedText 测试
+- `src/popup/components/NoResults.tsx` - 搜索无结果组件
+- `src/popup/components/NoResults.test.tsx` - NoResults 测试
+- `src/hooks/useVocabularyFilter.ts` - 词汇筛选 Hook
+- `src/hooks/useVocabularyFilter.test.ts` - useVocabularyFilter 测试
+
+### Modified Files
+- `src/popup/components/VocabularyList.tsx` - 集成搜索、筛选、高亮功能
+
+---
+
+## Change Log
+
+| Date | Changes | Author |
+|------|---------|--------|
+| 2026-01-12 | Story 4.5 验证完成，所有任务已实现，502 测试通过 | Dev Agent (Amelia) |

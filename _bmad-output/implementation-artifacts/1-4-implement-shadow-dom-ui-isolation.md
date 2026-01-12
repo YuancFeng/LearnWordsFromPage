@@ -1,6 +1,6 @@
 # Story 1.4: Implement Shadow DOM UI Isolation
 
-Status: in-progress
+Status: done
 
 ## Story
 

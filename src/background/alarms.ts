@@ -65,7 +65,13 @@ export async function handleReviewAlarm(alarm: chrome.alarms.Alarm): Promise<voi
   }
 
   console.log(`[LingoRecall] Review alarm triggered: ${alarm.name}`);
-  await checkAndUpdateBadge();
+
+  // 避免 Badge 更新异常导致未处理的 Promise 拒绝
+  try {
+    await checkAndUpdateBadge();
+  } catch (error) {
+    console.error('[LingoRecall] Failed to update badge on alarm:', error);
+  }
 }
 
 // Re-export checkAndUpdateBadge for backward compatibility

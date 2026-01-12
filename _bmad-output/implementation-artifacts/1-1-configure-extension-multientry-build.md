@@ -1,6 +1,6 @@
 # Story 1.1: Configure Extension Multi-Entry Build
 
-Status: in-progress
+Status: done
 
 ## Story
 
