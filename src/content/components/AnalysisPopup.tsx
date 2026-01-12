@@ -12,17 +12,24 @@
 import React, { useEffect, useState, type CSSProperties } from 'react';
 
 /**
+ * 分析模式类型
+ */
+export type AnalysisMode = 'word' | 'translate';
+
+/**
  * AI 分析结果接口
  */
 export interface AIAnalysisResult {
-  /** 词汇含义（中文） */
+  /** 词汇含义（中文）或翻译结果 */
   meaning: string;
-  /** IPA 音标 */
+  /** IPA 音标（翻译模式为空） */
   pronunciation: string;
-  /** 词性 */
+  /** 词性（翻译模式为空） */
   partOfSpeech: string;
-  /** 语境用法说明 */
+  /** 语境用法说明（翻译模式为空） */
   usage: string;
+  /** 分析模式 */
+  mode?: AnalysisMode;
 }
 
 /**
@@ -39,12 +46,18 @@ interface AnalysisPopupProps {
   onSave: () => void;
   /** 关闭回调 */
   onClose: () => void;
+  /** 是否为翻译模式（可选，可从 result.mode 推断） */
+  isTranslateMode?: boolean;
 }
 
-/** 弹窗宽度 */
-const POPUP_WIDTH = 320;
-/** 最大高度 */
-const MAX_HEIGHT = 400;
+/** 弹窗宽度 - 单词模式 */
+const POPUP_WIDTH_WORD = 320;
+/** 弹窗宽度 - 翻译模式（更宽以显示长文本） */
+const POPUP_WIDTH_TRANSLATE = 420;
+/** 最大高度 - 单词模式 */
+const MAX_HEIGHT_WORD = 400;
+/** 最大高度 - 翻译模式 */
+const MAX_HEIGHT_TRANSLATE = 500;
 
 /**
  * 设计令牌
@@ -86,12 +99,12 @@ const tokens = {
 
 /**
  * 样式定义
+ * 注意：width 和 maxHeight 会在组件中动态覆盖
  */
 const styles: Record<string, CSSProperties> = {
   container: {
     position: 'fixed',
-    width: `${POPUP_WIDTH}px`,
-    maxHeight: `${MAX_HEIGHT}px`,
+    // width 和 maxHeight 在组件中根据模式动态设置
     backgroundColor: tokens.colors.background,
     borderRadius: tokens.borderRadius.lg,
     boxShadow: tokens.shadow,
@@ -138,7 +151,7 @@ const styles: Record<string, CSSProperties> = {
   body: {
     padding: tokens.spacing.lg,
     overflowY: 'auto' as const,
-    maxHeight: `${MAX_HEIGHT - 140}px`,
+    // maxHeight 在组件中根据模式动态设置
   },
   section: {
     marginBottom: tokens.spacing.md,
@@ -192,27 +205,34 @@ const styles: Record<string, CSSProperties> = {
 
 /**
  * 计算弹窗位置，确保在视口内
+ * @param position - 初始位置
+ * @param isTranslateMode - 是否为翻译模式
  */
-function calculatePosition(position: { x: number; y: number }): { x: number; y: number } {
+function calculatePosition(
+  position: { x: number; y: number },
+  isTranslateMode: boolean = false
+): { x: number; y: number } {
   const padding = 16;
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
+  const popupWidth = isTranslateMode ? POPUP_WIDTH_TRANSLATE : POPUP_WIDTH_WORD;
+  const maxHeight = isTranslateMode ? MAX_HEIGHT_TRANSLATE : MAX_HEIGHT_WORD;
 
   let x = position.x;
   let y = position.y + 8; // 向下偏移 8px
 
   // 水平边界检查
-  if (x + POPUP_WIDTH + padding > viewportWidth) {
-    x = viewportWidth - POPUP_WIDTH - padding;
+  if (x + popupWidth + padding > viewportWidth) {
+    x = viewportWidth - popupWidth - padding;
   }
   if (x < padding) {
     x = padding;
   }
 
   // 垂直边界检查
-  if (y + MAX_HEIGHT + padding > viewportHeight) {
+  if (y + maxHeight + padding > viewportHeight) {
     // 显示在选择区域上方
-    y = position.y - MAX_HEIGHT - 8;
+    y = position.y - maxHeight - 8;
   }
   if (y < padding) {
     y = padding;
@@ -253,10 +273,18 @@ export function AnalysisPopup({
   selectedText,
   onSave,
   onClose,
+  isTranslateMode: isTranslateModeProp,
 }: AnalysisPopupProps) {
   const [opacity, setOpacity] = useState(0);
   const [isHoveringSave, setIsHoveringSave] = useState(false);
   const [isHoveringClose, setIsHoveringClose] = useState(false);
+
+  // 确定是否为翻译模式：优先使用 prop，其次从 result.mode 推断
+  const isTranslateMode = isTranslateModeProp ?? result.mode === 'translate';
+
+  // 根据模式计算尺寸
+  const popupWidth = isTranslateMode ? POPUP_WIDTH_TRANSLATE : POPUP_WIDTH_WORD;
+  const maxHeight = isTranslateMode ? MAX_HEIGHT_TRANSLATE : MAX_HEIGHT_WORD;
 
   // 淡入动画
   useEffect(() => {
@@ -265,12 +293,19 @@ export function AnalysisPopup({
     });
   }, []);
 
-  const adjustedPosition = calculatePosition(position);
+  const adjustedPosition = calculatePosition(position, isTranslateMode);
+
+  // 截断显示的选中文本（翻译模式下可能很长）
+  const displayText = isTranslateMode && selectedText.length > 50
+    ? selectedText.substring(0, 50) + '...'
+    : selectedText;
 
   return (
     <div
       style={{
         ...styles.container,
+        width: `${popupWidth}px`,
+        maxHeight: `${maxHeight}px`,
         left: `${adjustedPosition.x}px`,
         top: `${adjustedPosition.y}px`,
         opacity,
@@ -281,8 +316,14 @@ export function AnalysisPopup({
       {/* Header */}
       <div style={styles.header}>
         <div style={styles.headerContent}>
-          <div style={styles.word}>{selectedText}</div>
-          {result.pronunciation && (
+          <div style={{
+            ...styles.word,
+            // 翻译模式使用较小字体
+            fontSize: isTranslateMode ? tokens.fontSize.sm : tokens.fontSize.md,
+          }}>
+            {displayText}
+          </div>
+          {!isTranslateMode && result.pronunciation && (
             <div style={styles.pronunciation}>{result.pronunciation}</div>
           )}
         </div>
@@ -301,20 +342,23 @@ export function AnalysisPopup({
       </div>
 
       {/* Body */}
-      <div style={styles.body}>
-        {/* 词性 */}
-        {result.partOfSpeech && (
+      <div style={{
+        ...styles.body,
+        maxHeight: `${maxHeight - 140}px`,
+      }}>
+        {/* 词性 - 仅在单词模式显示 */}
+        {!isTranslateMode && result.partOfSpeech && (
           <span style={styles.partOfSpeech}>{result.partOfSpeech}</span>
         )}
 
-        {/* 含义 */}
-        <div style={styles.section}>
-          <div style={styles.label}>释义</div>
+        {/* 含义/翻译 */}
+        <div style={isTranslateMode || !result.usage ? styles.sectionLast : styles.section}>
+          <div style={styles.label}>{isTranslateMode ? '翻译' : '释义'}</div>
           <div style={styles.value}>{result.meaning}</div>
         </div>
 
-        {/* 用法 */}
-        {result.usage && (
+        {/* 用法 - 仅在单词模式显示 */}
+        {!isTranslateMode && result.usage && (
           <div style={styles.sectionLast}>
             <div style={styles.label}>用法</div>
             <div style={styles.value}>{result.usage}</div>
@@ -322,22 +366,24 @@ export function AnalysisPopup({
         )}
       </div>
 
-      {/* Footer */}
-      <div style={styles.footer}>
-        <button
-          style={{
-            ...styles.saveButton,
-            backgroundColor: isHoveringSave ? tokens.colors.successHover : tokens.colors.success,
-          }}
-          onClick={onSave}
-          onMouseEnter={() => setIsHoveringSave(true)}
-          onMouseLeave={() => setIsHoveringSave(false)}
-          title="保存到词汇库"
-        >
-          <SaveIcon />
-          保存词汇
-        </button>
-      </div>
+      {/* Footer - 仅在单词模式显示保存按钮 */}
+      {!isTranslateMode && (
+        <div style={styles.footer}>
+          <button
+            style={{
+              ...styles.saveButton,
+              backgroundColor: isHoveringSave ? tokens.colors.successHover : tokens.colors.success,
+            }}
+            onClick={onSave}
+            onMouseEnter={() => setIsHoveringSave(true)}
+            onMouseLeave={() => setIsHoveringSave(false)}
+            title="保存到词汇库"
+          >
+            <SaveIcon />
+            保存词汇
+          </button>
+        </div>
+      )}
     </div>
   );
 }

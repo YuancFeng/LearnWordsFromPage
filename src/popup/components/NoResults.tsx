@@ -39,24 +39,24 @@ export function NoResults({ query, onClear }: NoResultsProps): React.ReactElemen
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       {/* 搜索图标 */}
-      <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
-        <SearchX size={40} className="text-gray-300" />
+      <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
+        <SearchX size={40} className="text-gray-300 dark:text-gray-600" />
       </div>
 
       {/* 主标题 */}
-      <h3 className="text-xl font-bold text-gray-900 mb-2">
+      <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
         No matching words found
       </h3>
 
       {/* 搜索关键词提示 */}
-      <p className="text-gray-400 mb-6 max-w-xs">
-        No words match "<span className="font-medium text-gray-600">{query}</span>"
+      <p className="text-gray-400 dark:text-gray-500 mb-6 max-w-xs">
+        No words match "<span className="font-medium text-gray-600 dark:text-gray-300">{query}</span>"
       </p>
 
       {/* 清除搜索按钮 */}
       <button
         onClick={onClear}
-        className="px-6 py-2.5 bg-blue-50 text-blue-600 text-sm font-bold rounded-xl hover:bg-blue-100 transition-colors"
+        className="px-6 py-2.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-bold rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
         type="button"
       >
         Clear Search

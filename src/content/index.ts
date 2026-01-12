@@ -19,6 +19,7 @@ import {
   type HighlightWordPayload,
   type AnalyzeWordResult,
   type SettingsChangedPayload,
+  type AnalysisMode,
 } from '../shared/messaging';
 
 import { type Settings, DEFAULT_SETTINGS } from '../shared/types/settings';
@@ -52,6 +53,40 @@ import { findTextByContext } from './textMatcher';
 import { highlightAndScroll, clearHighlights } from './highlight';
 
 console.log('[LingoRecall] Content script loaded');
+
+// ============================================================
+// Global Error Handler for Extension Context Invalidation
+// ============================================================
+
+/**
+ * 检查是否为扩展上下文失效错误
+ */
+function isContextInvalidatedError(error: unknown): boolean {
+  if (error instanceof Error) {
+    return error.message.includes('Extension context invalidated') ||
+           error.message.includes('context invalidated') ||
+           error.message.includes('Extension context was invalidated');
+  }
+  return false;
+}
+
+/**
+ * 全局错误处理器
+ * 捕获未处理的扩展上下文失效错误，避免在 Chrome 扩展错误面板显示
+ */
+window.addEventListener('error', (event) => {
+  if (isContextInvalidatedError(event.error)) {
+    event.preventDefault();
+    console.warn('[LingoRecall] Extension context invalidated (global handler)');
+  }
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  if (isContextInvalidatedError(event.reason)) {
+    event.preventDefault();
+    console.warn('[LingoRecall] Extension context invalidated in promise (global handler)');
+  }
+});
 
 // ============================================================
 // Content Script Message Handlers
@@ -93,57 +128,75 @@ registerHandler(MessageTypes.HIGHLIGHT_WORD, async (message) => {
   // 清除之前的高亮
   clearHighlights();
 
-  // 策略 1: XPath + textOffset 精确定位 (AC1)
-  if (xpath) {
-    console.log('[LingoRecall] Trying XPath location:', xpath);
-    const range = locateTextByXPath(xpath, textOffset, textLength);
+  // 尝试定位文本，支持重试机制（SPA 的 DOM 可能需要时间稳定）
+  const maxRetries = 4;
+  const retryDelayMs = 600;
 
-    if (range) {
-      // 验证定位的文本是否匹配
-      const locatedText = range.toString();
-      if (locatedText === text) {
-        console.log('[LingoRecall] XPath location successful');
-        const result = highlightAndScroll(range);
+  // 初始延迟：给 SPA DOM 时间完成渲染（特别是从后台切换到前台时）
+  console.log('[LingoRecall] Waiting 300ms for initial DOM stabilization...');
+  await new Promise((resolve) => setTimeout(resolve, 300));
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    console.log(`[LingoRecall] Location attempt ${attempt}/${maxRetries}`);
+
+    // 策略 1: XPath + textOffset 精确定位 (AC1)
+    if (xpath) {
+      console.log('[LingoRecall] Trying XPath location:', xpath);
+      const range = locateTextByXPath(xpath, textOffset, textLength);
+
+      if (range) {
+        // 验证定位的文本是否匹配
+        const locatedText = range.toString();
+        if (locatedText === text) {
+          console.log('[LingoRecall] XPath location successful');
+          const result = highlightAndScroll(range);
+          return {
+            success: true,
+            data: {
+              success: result.success,
+              scrolledTo: result.scrolledTo,
+              method: 'xpath',
+            },
+          };
+        } else {
+          console.log('[LingoRecall] XPath text mismatch:', locatedText, '!==', text);
+        }
+      } else {
+        console.log('[LingoRecall] XPath location failed');
+      }
+    }
+
+    // 策略 2: Context 上下文匹配回退 (AC2)
+    if (contextBefore !== undefined && contextAfter !== undefined) {
+      console.log('[LingoRecall] Trying context fallback');
+      const contextResult = findTextByContext(contextBefore || '', text, contextAfter || '');
+
+      if (contextResult.found && contextResult.range) {
+        console.log('[LingoRecall] Context match successful, method:', contextResult.method);
+        const result = highlightAndScroll(contextResult.range);
         return {
           success: true,
           data: {
             success: result.success,
             scrolledTo: result.scrolledTo,
-            method: 'xpath',
+            method: `context-${contextResult.method}`,
+            confidence: contextResult.confidence,
           },
         };
       } else {
-        console.log('[LingoRecall] XPath text mismatch:', locatedText, '!==', text);
+        console.log('[LingoRecall] Context match failed');
       }
-    } else {
-      console.log('[LingoRecall] XPath location failed');
+    }
+
+    // 如果不是最后一次尝试，等待后重试
+    if (attempt < maxRetries) {
+      console.log(`[LingoRecall] Waiting ${retryDelayMs}ms before retry...`);
+      await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
     }
   }
 
-  // 策略 2: Context 上下文匹配回退 (AC2)
-  if (contextBefore !== undefined && contextAfter !== undefined) {
-    console.log('[LingoRecall] Trying context fallback');
-    const contextResult = findTextByContext(contextBefore || '', text, contextAfter || '');
-
-    if (contextResult.found && contextResult.range) {
-      console.log('[LingoRecall] Context match successful, method:', contextResult.method);
-      const result = highlightAndScroll(contextResult.range);
-      return {
-        success: true,
-        data: {
-          success: result.success,
-          scrolledTo: result.scrolledTo,
-          method: `context-${contextResult.method}`,
-          confidence: contextResult.confidence,
-        },
-      };
-    } else {
-      console.log('[LingoRecall] Context match failed');
-    }
-  }
-
-  // 策略 3: 定位失败，显示 Toast 通知 (AC3)
-  console.log('[LingoRecall] All location methods failed');
+  // 所有重试都失败，显示 Toast 通知 (AC3)
+  console.log('[LingoRecall] All location attempts failed');
   showToast('Cannot locate this word on the current page, content may have changed', 'warning');
 
   return {
@@ -240,8 +293,64 @@ export function getContentSettings(): Settings {
 
 /** Selection length constraints per Story 1.3 */
 const MIN_SELECTION_LENGTH = 1;
-/** 最大选择长度：支持词汇和短语（增加到 200 字符以支持较长句子） */
-const MAX_SELECTION_LENGTH = 200;
+/** 最大选择长度：支持词汇、短语和段落翻译（增加到 2000 字符） */
+const MAX_SELECTION_LENGTH = 2000;
+/** 单词/短语模式的长度阈值，超过此长度视为段落翻译模式 */
+const PARAGRAPH_THRESHOLD = 100;
+
+// ============================================================
+// Chinese Text Detection
+// ============================================================
+
+/**
+ * 中文字符 Unicode 范围:
+ * - CJK 统一表意文字 (基本): \u4e00-\u9fff
+ * - CJK 扩展 A: \u3400-\u4dbf
+ */
+const CHINESE_REGEX = /[\u4e00-\u9fff\u3400-\u4dbf]/g;
+
+/**
+ * 检测文本是否主要是中文
+ * 当中文字符占比超过 50% 时，认为是中文文本
+ *
+ * @param text - 待检测的文本
+ * @returns 是否主要是中文文本
+ */
+function isPredominantlyChinese(text: string): boolean {
+  const trimmed = text.trim();
+  if (!trimmed) return false;
+
+  // 统计中文字符数量
+  const chineseMatches = trimmed.match(CHINESE_REGEX);
+  const chineseCount = chineseMatches ? chineseMatches.length : 0;
+
+  // 排除空格后的有效字符数
+  const nonWhitespace = trimmed.replace(/\s/g, '');
+  const totalChars = nonWhitespace.length;
+
+  if (totalChars === 0) return false;
+
+  // 中文占比超过 50% 视为中文文本
+  const chineseRatio = chineseCount / totalChars;
+  return chineseRatio > 0.5;
+}
+
+/**
+ * 根据选中文本确定分析模式
+ * - 短文本（< 100 字符）: 单词/短语分析模式
+ * - 长文本（>= 100 字符）: 段落翻译模式
+ *
+ * @param text - 选中的文本
+ * @returns 分析模式
+ */
+function getAnalysisMode(text: string): AnalysisMode {
+  const trimmed = text.trim();
+  // 如果文本长度超过阈值，使用翻译模式
+  if (trimmed.length >= PARAGRAPH_THRESHOLD) {
+    return 'translate';
+  }
+  return 'word';
+}
 /** Button offset in pixels from selection top-right */
 const BUTTON_OFFSET_PX = 8;
 
@@ -310,6 +419,17 @@ function handleMouseUp(event: MouseEvent): void {
       return;
     }
 
+    // 检查是否跳过中文文本
+    if (currentSettings.skipChineseText && isPredominantlyChinese(text)) {
+      console.log('[LingoRecall] Skipping Chinese text selection');
+      if (currentSelection) {
+        currentSelection = null;
+        currentAnalysisResult = null;
+        hideUI();
+      }
+      return;
+    }
+
     const range = selection.getRangeAt(0);
     const position = getButtonPosition(range);
 
@@ -356,6 +476,17 @@ function handleKeyUp(event: KeyboardEvent): void {
 
   const text = selection.toString();
   if (!isValidSelection(text)) {
+    if (currentSelection) {
+      currentSelection = null;
+      currentAnalysisResult = null;
+      hideUI();
+    }
+    return;
+  }
+
+  // 检查是否跳过中文文本
+  if (currentSettings.skipChineseText && isPredominantlyChinese(text)) {
+    console.log('[LingoRecall] Skipping Chinese text selection (keyboard)');
     if (currentSelection) {
       currentSelection = null;
       currentAnalysisResult = null;
@@ -429,7 +560,9 @@ async function handleAnalyze(): Promise<void> {
     return;
   }
 
-  console.log('[LingoRecall] Analyzing:', currentSelection.text);
+  // 确定分析模式
+  const mode = getAnalysisMode(currentSelection.text);
+  console.log('[LingoRecall] Analyzing:', currentSelection.text.substring(0, 50), '...', `(mode: ${mode})`);
 
   // Show loading state
   showLoading();
@@ -442,12 +575,13 @@ async function handleAnalyze(): Promise<void> {
     : getSelectionContext(currentSelection.range);
 
   try {
-    // Send message to service worker
+    // Send message to service worker with analysis mode
     const response = await sendMessage(MessageTypes.ANALYZE_WORD, {
       text: currentSelection.text,
       context,
       url: window.location.href,
       xpath: sourceLocation?.xpath || '',
+      mode,
     });
 
     if (response.success && response.data) {
@@ -455,13 +589,29 @@ async function handleAnalyze(): Promise<void> {
       // Show result popup
       showResult(response.data);
     } else {
-      // Handle error - show friendly message
-      console.error('[LingoRecall] Analysis failed:', response.error);
-      showError(response.error?.message || 'AI 分析失败，请重试');
+      // 特殊处理扩展上下文失效错误（使用 warn 而非 error 避免在 Chrome 扩展错误面板显示）
+      if (response.error?.code === ErrorCode.EXTENSION_CONTEXT_INVALIDATED) {
+        console.warn('[LingoRecall] Extension context invalidated, user should refresh page');
+        showError('扩展已更新，请刷新页面后重试');
+      } else {
+        // Handle other errors - show friendly message
+        console.error('[LingoRecall] Analysis failed:', response.error);
+        showError(response.error?.message || 'AI 分析失败，请重试');
+      }
     }
   } catch (error) {
-    console.error('[LingoRecall] Analysis error:', error);
-    showError('AI 分析失败，请重试');
+    // 检查是否为扩展上下文失效错误（使用 warn 避免在 Chrome 扩展错误面板显示）
+    const isContextError = error instanceof Error &&
+        (error.message.includes('Extension context invalidated') ||
+         error.message.includes('context invalidated'));
+
+    if (isContextError) {
+      console.warn('[LingoRecall] Extension context invalidated, user should refresh page');
+      showError('扩展已更新，请刷新页面后重试');
+    } else {
+      console.error('[LingoRecall] Analysis error:', error);
+      showError('AI 分析失败，请重试');
+    }
   }
 }
 
@@ -473,6 +623,13 @@ async function handleAnalyze(): Promise<void> {
 async function handleSave(): Promise<void> {
   if (!currentSelection) {
     console.warn('[LingoRecall] No selection to save');
+    return;
+  }
+
+  // 翻译模式下不支持保存
+  const mode = getAnalysisMode(currentSelection.text);
+  if (mode === 'translate') {
+    showToast('翻译内容不支持保存到词汇库', 'info');
     return;
   }
 
@@ -535,17 +692,30 @@ async function handleSave(): Promise<void> {
       currentSelection = null;
       currentAnalysisResult = null;
     } else {
-      console.error('[LingoRecall] Save failed:', response.error);
       // AC2: 显示重复检测或其他错误提示
-      if (response.error?.code === ErrorCode.DUPLICATE_WORD) {
+      if (response.error?.code === ErrorCode.EXTENSION_CONTEXT_INVALIDATED) {
+        console.warn('[LingoRecall] Extension context invalidated during save');
+        showToast('扩展已更新，请刷新页面后重试', 'error');
+      } else if (response.error?.code === ErrorCode.DUPLICATE_WORD) {
         showToast('该词汇已保存', 'warning');
       } else {
+        console.error('[LingoRecall] Save failed:', response.error);
         showToast(response.error?.message || '保存失败', 'error');
       }
     }
   } catch (error) {
-    console.error('[LingoRecall] Save error:', error);
-    showToast('保存失败，请重试', 'error');
+    // 检查是否为扩展上下文失效错误（使用 warn 避免在 Chrome 扩展错误面板显示）
+    const isContextError = error instanceof Error &&
+        (error.message.includes('Extension context invalidated') ||
+         error.message.includes('context invalidated'));
+
+    if (isContextError) {
+      console.warn('[LingoRecall] Extension context invalidated during save');
+      showToast('扩展已更新，请刷新页面后重试', 'error');
+    } else {
+      console.error('[LingoRecall] Save error:', error);
+      showToast('保存失败，请重试', 'error');
+    }
   }
 }
 

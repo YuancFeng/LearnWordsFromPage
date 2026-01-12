@@ -38,6 +38,9 @@ export enum ErrorCode {
   PAGE_INACCESSIBLE = 'PAGE_INACCESSIBLE',
   TAB_ERROR = 'TAB_ERROR',
 
+  // 扩展上下文错误
+  EXTENSION_CONTEXT_INVALIDATED = 'EXTENSION_CONTEXT_INVALIDATED',
+
   // 通用错误
   UNKNOWN = 'UNKNOWN',
   HANDLER_NOT_FOUND = 'HANDLER_NOT_FOUND',
@@ -71,6 +74,7 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.ELEMENT_NOT_FOUND]: 'Element not found on page',
   [ErrorCode.PAGE_INACCESSIBLE]: 'Source page is inaccessible',
   [ErrorCode.TAB_ERROR]: 'Failed to manage browser tab',
+  [ErrorCode.EXTENSION_CONTEXT_INVALIDATED]: '扩展已更新，请刷新页面后重试',
   [ErrorCode.UNKNOWN]: 'An unknown error occurred',
   [ErrorCode.HANDLER_NOT_FOUND]: 'Message handler not found',
 };

@@ -154,7 +154,7 @@ export function TagBadgeList({
         <span
           className={`
             inline-flex items-center rounded-full font-medium
-            bg-gray-100 text-gray-600
+            bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400
             ${size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-2.5 py-1 text-sm'}
           `}
           title={tags

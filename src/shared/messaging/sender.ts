@@ -10,6 +10,54 @@ import type { Message, MessageType, PayloadMap, Response, ResponseDataMap } from
 const DEFAULT_TIMEOUT = 30000;
 
 /**
+ * 检查扩展上下文是否仍然有效
+ * 当扩展被重新加载或更新时，旧的 content script 上下文会失效
+ */
+function isExtensionContextValid(): boolean {
+  try {
+    // 尝试访问 chrome.runtime.id，如果上下文失效会抛出错误
+    // 同时检查 chrome.runtime 本身是否存在
+    if (typeof chrome === 'undefined' || !chrome.runtime) {
+      return false;
+    }
+    return Boolean(chrome.runtime.id);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 安全获取 chrome.runtime.lastError
+ * 在上下文失效时访问 lastError 也可能抛出错误
+ */
+function getLastError(): string | null {
+  try {
+    if (!isExtensionContextValid()) {
+      return 'Extension context invalidated';
+    }
+    return chrome.runtime.lastError?.message || null;
+  } catch {
+    return 'Extension context invalidated';
+  }
+}
+
+/**
+ * 检查错误是否为扩展上下文失效错误
+ */
+function isContextInvalidatedError(error: unknown): boolean {
+  if (error instanceof Error) {
+    return error.message.includes('Extension context invalidated') ||
+           error.message.includes('context invalidated') ||
+           error.message.includes('Extension context was invalidated');
+  }
+  if (typeof error === 'string') {
+    return error.includes('Extension context invalidated') ||
+           error.includes('context invalidated');
+  }
+  return false;
+}
+
+/**
  * 生成唯一请求 ID
  */
 function generateRequestId(): string {
@@ -30,6 +78,18 @@ export async function sendMessage<T extends MessageType>(
 ): Promise<Response<ResponseDataMap[T]>> {
   const requestId = generateRequestId();
 
+  // 首先检查扩展上下文是否有效
+  if (!isExtensionContextValid()) {
+    return {
+      success: false,
+      error: {
+        code: ErrorCode.EXTENSION_CONTEXT_INVALIDATED,
+        message: '扩展已更新，请刷新页面后重试',
+      },
+      requestId,
+    };
+  }
+
   const message: Message<T> = {
     type,
     payload,
@@ -38,6 +98,16 @@ export async function sendMessage<T extends MessageType>(
   };
 
   return new Promise((resolve) => {
+    // 创建上下文失效响应的辅助函数
+    const createInvalidatedResponse = () => ({
+      success: false as const,
+      error: {
+        code: ErrorCode.EXTENSION_CONTEXT_INVALIDATED,
+        message: '扩展已更新，请刷新页面后重试',
+      },
+      requestId,
+    });
+
     // 设置超时计时器
     const timer = setTimeout(() => {
       resolve({
@@ -50,33 +120,88 @@ export async function sendMessage<T extends MessageType>(
       });
     }, timeout);
 
-    // 发送消息
-    chrome.runtime.sendMessage(message, (response: Response<ResponseDataMap[T]>) => {
-      clearTimeout(timer);
-
-      // 检查 Chrome runtime 错误
-      if (chrome.runtime.lastError) {
-        resolve({
-          success: false,
-          error: {
-            code: ErrorCode.NETWORK_ERROR,
-            message: chrome.runtime.lastError.message || 'Communication error',
-          },
-          requestId,
-        });
+    try {
+      // 再次检查上下文（可能在构建消息期间失效）
+      if (!isExtensionContextValid()) {
+        clearTimeout(timer);
+        resolve(createInvalidatedResponse());
         return;
       }
 
-      // 返回响应
-      resolve(response || {
-        success: false,
-        error: {
-          code: ErrorCode.UNKNOWN,
-          message: 'No response received',
-        },
-        requestId,
+      // 发送消息
+      chrome.runtime.sendMessage(message, (response: Response<ResponseDataMap[T]>) => {
+        clearTimeout(timer);
+
+        // 在回调中也包装 try-catch，因为访问 chrome.runtime.lastError 也可能抛出
+        try {
+          // 再次检查上下文有效性（回调执行时可能已失效）
+          if (!isExtensionContextValid()) {
+            resolve(createInvalidatedResponse());
+            return;
+          }
+
+          // 安全获取 lastError
+          const lastError = getLastError();
+          if (lastError) {
+            // 检查是否为上下文失效错误
+            if (isContextInvalidatedError(lastError)) {
+              resolve(createInvalidatedResponse());
+              return;
+            }
+
+            resolve({
+              success: false,
+              error: {
+                code: ErrorCode.NETWORK_ERROR,
+                message: lastError,
+              },
+              requestId,
+            });
+            return;
+          }
+
+          // 返回响应
+          resolve(response || {
+            success: false,
+            error: {
+              code: ErrorCode.UNKNOWN,
+              message: 'No response received',
+            },
+            requestId,
+          });
+        } catch (callbackError) {
+          // 回调内部发生异常
+          if (isContextInvalidatedError(callbackError)) {
+            resolve(createInvalidatedResponse());
+          } else {
+            resolve({
+              success: false,
+              error: {
+                code: ErrorCode.UNKNOWN,
+                message: callbackError instanceof Error ? callbackError.message : 'Callback error',
+              },
+              requestId,
+            });
+          }
+        }
       });
-    });
+    } catch (error) {
+      clearTimeout(timer);
+
+      // 捕获同步抛出的异常（如上下文失效）
+      if (isContextInvalidatedError(error)) {
+        resolve(createInvalidatedResponse());
+      } else {
+        resolve({
+          success: false,
+          error: {
+            code: ErrorCode.UNKNOWN,
+            message: error instanceof Error ? error.message : 'Unknown error',
+          },
+          requestId,
+        });
+      }
+    }
   });
 }
 

@@ -5,10 +5,12 @@
  * @module popup/components/APIKeySection
  */
 
-import React, { useState, useCallback } from 'react';
-import { Eye, EyeOff, Save, Trash2, Key, ExternalLink } from 'lucide-react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { Eye, EyeOff, Save, Trash2, Key, ExternalLink, Server, Settings2 } from 'lucide-react';
 import { useAIConfig } from '../../hooks/useAIConfig';
 import { ConfirmDialog } from './ConfirmDialog';
+import { getSettings, saveSettings } from '../../shared/storage/config';
+import { AI_PROVIDER_OPTIONS, type AIProviderType } from '../../shared/types/settings';
 
 /**
  * APIKeySection 属性
@@ -48,6 +50,44 @@ export function APIKeySection({
   const [inputValue, setInputValue] = useState('');
   // 确认对话框状态
   const [showConfirm, setShowConfirm] = useState(false);
+
+  // AI Provider 配置状态
+  const [aiProvider, setAiProvider] = useState<AIProviderType>('gemini');
+  const [customEndpoint, setCustomEndpoint] = useState('');
+  const [customModel, setCustomModel] = useState('');
+  const [providerSaving, setProviderSaving] = useState(false);
+
+  // 加载当前设置
+  useEffect(() => {
+    getSettings().then((result) => {
+      if (result.success && result.data) {
+        setAiProvider(result.data.aiProvider);
+        setCustomEndpoint(result.data.customApiEndpoint);
+        setCustomModel(result.data.customModelName);
+      }
+    });
+  }, []);
+
+  /**
+   * 保存 Provider 配置
+   */
+  const handleSaveProviderConfig = useCallback(async () => {
+    setProviderSaving(true);
+    try {
+      const result = await saveSettings({
+        aiProvider,
+        customApiEndpoint: customEndpoint,
+        customModelName: customModel,
+      });
+      if (result.success) {
+        onSaveSuccess?.();
+      } else {
+        onError?.(result.error?.message ?? '保存配置失败');
+      }
+    } finally {
+      setProviderSaving(false);
+    }
+  }, [aiProvider, customEndpoint, customModel, onSaveSuccess, onError]);
 
   /**
    * 处理保存 API Key
@@ -107,14 +147,91 @@ export function APIKeySection({
 
   return (
     <div className="space-y-4">
+      {/* AI Provider 选择 */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+          <Settings2 className="w-4 h-4" />
+          <h3 className="font-medium">AI Provider</h3>
+        </div>
+        <select
+          value={aiProvider}
+          onChange={(e) => setAiProvider(e.target.value as AIProviderType)}
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          {AI_PROVIDER_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label} - {opt.description}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* OpenAI 兼容配置 */}
+      {aiProvider === 'openai-compatible' && (
+        <div className="space-y-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+            <Server className="w-4 h-4" />
+            <span className="text-sm font-medium">自定义 API 配置</span>
+          </div>
+
+          {/* API 端点 */}
+          <div className="space-y-1">
+            <label className="text-xs text-gray-600 dark:text-gray-400">API 端点 URL</label>
+            <input
+              type="text"
+              value={customEndpoint}
+              onChange={(e) => setCustomEndpoint(e.target.value)}
+              placeholder="http://localhost:8080/v1/chat/completions"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <p className="text-xs text-gray-400 dark:text-gray-500">
+              支持 CLI Proxy、Ollama、LM Studio 等 OpenAI 兼容 API
+            </p>
+          </div>
+
+          {/* 模型名称 */}
+          <div className="space-y-1">
+            <label className="text-xs text-gray-600 dark:text-gray-400">模型名称</label>
+            <input
+              type="text"
+              value={customModel}
+              onChange={(e) => setCustomModel(e.target.value)}
+              placeholder="gpt-4 / claude-3-opus / llama3"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* 保存配置按钮 */}
+          <button
+            onClick={handleSaveProviderConfig}
+            disabled={providerSaving || !customEndpoint.trim()}
+            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-green-500 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {providerSaving ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                <span>保存中...</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                <span>保存配置</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
       {/* 标题和说明 */}
       <div className="space-y-1">
-        <div className="flex items-center gap-2 text-gray-700">
+        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
           <Key className="w-4 h-4" />
-          <h3 className="font-medium">Gemini API Key</h3>
+          <h3 className="font-medium">API Key</h3>
         </div>
-        <p className="text-xs text-gray-500">
-          配置您的 Gemini API Key 以启用 AI 词汇分析功能
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          {aiProvider === 'gemini'
+            ? '配置您的 Gemini API Key 以启用 AI 词汇分析功能'
+            : '配置自定义 API 的访问密钥（如不需要可留空）'}
         </p>
       </div>
 
@@ -134,10 +251,11 @@ export function APIKeySection({
                 w-full px-3 py-2 pr-10
                 border rounded-md
                 text-sm
-                placeholder:text-gray-400
+                bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+                placeholder:text-gray-400 dark:placeholder:text-gray-500
                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed
-                ${error ? 'border-red-300' : 'border-gray-300'}
+                disabled:bg-gray-50 dark:disabled:bg-gray-900 disabled:text-gray-500 dark:disabled:text-gray-400 disabled:cursor-not-allowed
+                ${error ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'}
               `}
               aria-label="API Key"
               aria-describedby={error ? 'api-key-error' : undefined}
@@ -148,7 +266,7 @@ export function APIKeySection({
               <button
                 type="button"
                 onClick={toggleShowKey}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                 aria-label={showKey ? '隐藏 API Key' : '显示 API Key'}
               >
                 {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -190,7 +308,7 @@ export function APIKeySection({
             <button
               onClick={() => setShowConfirm(true)}
               disabled={isSaving}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-md hover:bg-red-100 dark:hover:bg-red-900/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Trash2 className="w-4 h-4" />
               <span>清除</span>
@@ -199,7 +317,7 @@ export function APIKeySection({
         </div>
 
         {/* 获取 API Key 链接 */}
-        {!hasKey && (
+        {!hasKey && aiProvider === 'gemini' && (
           <a
             href="https://aistudio.google.com/app/apikey"
             target="_blank"

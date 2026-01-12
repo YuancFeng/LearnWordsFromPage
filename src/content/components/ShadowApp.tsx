@@ -13,20 +13,27 @@ import { AnalysisPopup, AnalysisError } from './AnalysisPopup';
 import { Toast, type ToastType } from './Toast';
 
 /**
+ * 分析模式类型
+ */
+export type AnalysisMode = 'word' | 'translate';
+
+/**
  * Analysis result from AI
  * Will be populated by Story 1.6
  */
 export interface AnalysisResult {
-  /** Word meaning/definition */
+  /** Word meaning/definition or translation */
   meaning: string;
-  /** Pronunciation guide */
+  /** Pronunciation guide (empty in translate mode) */
   pronunciation: string;
-  /** Part of speech (noun, verb, etc.) */
+  /** Part of speech (empty in translate mode) */
   partOfSpeech: string;
-  /** Usage example */
+  /** Usage example (empty in translate mode) */
   usage: string;
   /** Additional context */
   context?: string;
+  /** Analysis mode */
+  mode?: AnalysisMode;
 }
 
 /**

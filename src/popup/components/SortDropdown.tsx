@@ -122,8 +122,8 @@ export function SortDropdown({
         onKeyDown={handleKeyDown}
         className={`
           flex items-center gap-2 px-3 py-2.5 text-sm font-medium
-          bg-white border border-gray-200 rounded-xl
-          hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500
+          bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl
+          hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500
           transition-colors
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         `}
@@ -134,13 +134,13 @@ export function SortDropdown({
         type="button"
       >
         <ArrowUpDown size={14} className="text-gray-400" />
-        <span className="text-gray-700 whitespace-nowrap">{SORT_LABELS[value]}</span>
+        <span className="text-gray-700 dark:text-gray-200 whitespace-nowrap">{SORT_LABELS[value]}</span>
       </button>
 
       {/* 下拉菜单 */}
       {isOpen && (
         <div
-          className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden"
+          className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 overflow-hidden"
           role="listbox"
           aria-label="排序选项"
         >
@@ -151,7 +151,7 @@ export function SortDropdown({
               className={`
                 w-full flex items-center justify-between px-4 py-2.5 text-sm text-left
                 transition-colors
-                ${value === option ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-50'}
+                ${value === option ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-medium' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'}
               `}
               role="option"
               aria-selected={value === option}
@@ -159,7 +159,7 @@ export function SortDropdown({
             >
               <span>{SORT_LABELS[option]}</span>
               {value === option && (
-                <Check size={14} className="text-blue-600" />
+                <Check size={14} className="text-blue-600 dark:text-blue-400" />
               )}
             </button>
           ))}

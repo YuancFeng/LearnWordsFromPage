@@ -108,6 +108,15 @@ export function PreferencesSection({
           onChange={(checked) => handleSettingChange('reviewReminder', checked)}
           testId="toggle-review-reminder"
         />
+
+        {/* 跳过中文文本开关 */}
+        <ToggleSwitch
+          label="跳过中文内容"
+          description="选中中文文本时不显示翻译弹窗"
+          checked={settings.skipChineseText}
+          onChange={(checked) => handleSettingChange('skipChineseText', checked)}
+          testId="toggle-skip-chinese"
+        />
       </div>
 
       {/* AC3: 主题设置 */}

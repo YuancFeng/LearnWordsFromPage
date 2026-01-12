@@ -30,7 +30,7 @@ export interface ToastProps {
 }
 
 /**
- * 类型对应的样式配置
+ * 类型对应的样式配置（支持 dark mode）
  */
 const TYPE_STYLES: Record<
   ToastType,
@@ -42,27 +42,27 @@ const TYPE_STYLES: Record<
   }
 > = {
   success: {
-    bg: 'bg-green-50',
-    border: 'border-green-200',
-    text: 'text-green-800',
+    bg: 'bg-green-50 dark:bg-green-900/30',
+    border: 'border-green-200 dark:border-green-700',
+    text: 'text-green-800 dark:text-green-300',
     icon: CheckCircle,
   },
   error: {
-    bg: 'bg-red-50',
-    border: 'border-red-200',
-    text: 'text-red-800',
+    bg: 'bg-red-50 dark:bg-red-900/30',
+    border: 'border-red-200 dark:border-red-700',
+    text: 'text-red-800 dark:text-red-300',
     icon: XCircle,
   },
   warning: {
-    bg: 'bg-yellow-50',
-    border: 'border-yellow-200',
-    text: 'text-yellow-800',
+    bg: 'bg-yellow-50 dark:bg-yellow-900/30',
+    border: 'border-yellow-200 dark:border-yellow-700',
+    text: 'text-yellow-800 dark:text-yellow-300',
     icon: AlertCircle,
   },
   info: {
-    bg: 'bg-blue-50',
-    border: 'border-blue-200',
-    text: 'text-blue-800',
+    bg: 'bg-blue-50 dark:bg-blue-900/30',
+    border: 'border-blue-200 dark:border-blue-700',
+    text: 'text-blue-800 dark:text-blue-300',
     icon: Info,
   },
 };

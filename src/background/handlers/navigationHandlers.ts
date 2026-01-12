@@ -65,29 +65,11 @@ export async function handleJumpToSource(
   };
 
   try {
-    // 先检查是否已有打开的标签页，避免误伤已打开页面
+    // 先检查是否已有打开的标签页
     const existingTab = await findTabByUrl(sourceUrl);
 
-    // 进行 URL 可访问性检查，避免 404 页面误跳转
-    const accessCheck = await checkUrlAccessible(sourceUrl);
-    const hasStatus = typeof accessCheck.status === 'number' && accessCheck.status > 0;
-    const hasErrorStatus = hasStatus && accessCheck.status >= 400;
-    const isUnknownFailure = !accessCheck.ok && !hasStatus;
-
-    if (hasErrorStatus || (isUnknownFailure && !existingTab?.id)) {
-      return {
-        success: false,
-        error: {
-          code: ErrorCode.PAGE_INACCESSIBLE,
-          message: inaccessibleMessage,
-          details: {
-            status: accessCheck.status,
-            error: accessCheck.error,
-          },
-        },
-      };
-    }
-
+    // AC1: 如果已有标签页打开，直接切换，跳过可访问性检查
+    // 原因：用户可能已登录该网站，fetch 检查会返回 403，但页面实际可访问
     if (existingTab?.id) {
       // AC1: 先确保页面加载完成，再发送高亮消息
       const loaded = await waitForTabLoad(existingTab.id, 10000);
@@ -101,6 +83,14 @@ export async function handleJumpToSource(
           },
         };
       }
+
+      // 先切换到标签页，确保 SPA 的 DOM 完全渲染
+      // Twitter 等 SPA 在后台标签页时可能暂停渲染
+      await switchToTab(existingTab.id);
+
+      // 等待 SPA DOM 稳定（切换标签页后页面需要时间完成渲染）
+      // Twitter 等复杂 SPA 需要较长时间重新渲染
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       const highlightResponse = await sendMessageToTab<Response<HighlightWordResult>>(existingTab.id, {
         type: MessageTypes.HIGHLIGHT_WORD,
@@ -118,14 +108,33 @@ export async function handleJumpToSource(
         };
       }
 
-      // 高亮请求成功后再切换标签页，保证错误提示可见
-      await switchToTab(existingTab.id);
-
+      // 标签页已在前面切换，直接返回成功
       return {
         success: true,
         data: {
           tabId: existingTab.id,
           status: 'switched',
+        },
+      };
+    }
+
+    // AC2: 创建新标签页前，检查 URL 是否明确不存在（404/410）
+    // 注意：只拦截"页面不存在"错误，允许"需要登录"（403）等情况
+    console.log('[LingoRecall] No existing tab, checking URL accessibility:', sourceUrl);
+    const accessCheck = await checkUrlAccessible(sourceUrl);
+    const pageNotFound = accessCheck.status === 404 || accessCheck.status === 410;
+
+    if (pageNotFound) {
+      console.log('[LingoRecall] Page not found (404/410):', sourceUrl);
+      return {
+        success: false,
+        error: {
+          code: ErrorCode.PAGE_INACCESSIBLE,
+          message: inaccessibleMessage,
+          details: {
+            status: accessCheck.status,
+            error: accessCheck.error,
+          },
         },
       };
     }

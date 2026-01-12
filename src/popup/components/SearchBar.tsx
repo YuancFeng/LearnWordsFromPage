@@ -111,10 +111,11 @@ export function SearchBar({
           disabled={disabled}
           className={`
             w-full pl-10 pr-24 py-2.5 text-sm
-            bg-white border border-gray-200 rounded-xl
+            bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl
+            text-gray-900 dark:text-gray-100
             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-            placeholder:text-gray-400
-            disabled:bg-gray-50 disabled:cursor-not-allowed
+            placeholder:text-gray-400 dark:placeholder:text-gray-500
+            disabled:bg-gray-50 dark:disabled:bg-gray-900 disabled:cursor-not-allowed
             transition-all duration-200
           `}
           aria-label="搜索词汇"
@@ -138,7 +139,7 @@ export function SearchBar({
             <span
               className={`
                 text-xs font-medium px-2 py-0.5 rounded-full
-                ${matchCount > 0 ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-500'}
+                ${matchCount > 0 ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}
               `}
               aria-label={`找到 ${matchCount} 个结果，共 ${totalCount} 个词汇`}
             >
@@ -150,11 +151,11 @@ export function SearchBar({
           {showClearButton && !isSearching && (
             <button
               onClick={handleClearClick}
-              className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               aria-label="清除搜索"
               type="button"
             >
-              <X size={14} className="text-gray-400 hover:text-gray-600" />
+              <X size={14} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
             </button>
           )}
         </div>

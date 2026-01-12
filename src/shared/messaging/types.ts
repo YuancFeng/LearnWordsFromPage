@@ -45,20 +45,29 @@ export type MessageType = typeof MessageTypes[keyof typeof MessageTypes];
 // Payload Definitions
 // ============================================================
 
+/**
+ * 分析模式类型
+ * 'word' - 单词/短语分析模式（默认）
+ * 'translate' - 段落翻译模式
+ */
+export type AnalysisMode = 'word' | 'translate';
+
 // 分析词汇请求
 export interface AnalyzeWordPayload {
   text: string;           // 选中的文本
   context: string;        // 上下文（前后各 50 字符）
   url: string;            // 页面 URL
   xpath: string;          // XPath 定位
+  mode?: AnalysisMode;    // 分析模式（可选，默认 'word'）
 }
 
 // 分析词汇响应数据
 export interface AnalyzeWordResult {
-  meaning: string;
-  pronunciation: string;
-  partOfSpeech: string;
-  usage: string;
+  meaning: string;        // 词汇含义或翻译结果
+  pronunciation: string;  // IPA 音标（翻译模式为空）
+  partOfSpeech: string;   // 词性（翻译模式为空）
+  usage: string;          // 用法说明（翻译模式为空）
+  mode?: AnalysisMode;    // 返回使用的分析模式
 }
 
 // 保存词汇请求

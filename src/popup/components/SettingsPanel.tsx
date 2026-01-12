@@ -66,23 +66,23 @@ export function SettingsPanel({ onBack }: SettingsPanelProps): React.ReactElemen
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-50">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 transition-colors">
       {/* 顶部标题栏 */}
-      <header className="flex items-center gap-2 px-4 py-3 bg-white border-b border-gray-200">
+      <header className="flex items-center gap-2 px-4 py-3 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
         {onBack && (
           <button
             onClick={onBack}
-            className="p-1 -ml-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+            className="p-1 -ml-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
             aria-label="返回"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
         )}
-        <h1 className="text-lg font-semibold text-gray-900">设置</h1>
+        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">设置</h1>
       </header>
 
       {/* Tab 导航 */}
-      <nav className="flex bg-white border-b border-gray-200" role="tablist">
+      <nav className="flex bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700" role="tablist">
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -104,10 +104,10 @@ export function SettingsPanel({ onBack }: SettingsPanelProps): React.ReactElemen
                 transition-colors
                 ${
                   isActive
-                    ? 'text-blue-600 border-blue-600'
+                    ? 'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400'
                     : isDisabled
-                      ? 'text-gray-300 border-transparent cursor-not-allowed'
-                      : 'text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300'
+                      ? 'text-gray-300 dark:text-gray-600 border-transparent cursor-not-allowed'
+                      : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
                 }
               `}
             >

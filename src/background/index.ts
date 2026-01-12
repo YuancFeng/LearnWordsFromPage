@@ -37,15 +37,16 @@ import { handleReviewWord } from './handlers/wordHandlers';
 import { setupReviewAlarm, handleReviewAlarm, checkAndUpdateBadge } from './alarms';
 
 import {
-  analyzeWord,
+  analyzeWordUnified,
+  buildAIConfig,
   type AnalyzeWordRequest,
   type AIAnalysisResult,
-} from '../services/geminiService';
+} from '../services/aiService';
 
 import { ErrorCode } from '../shared/types/errors';
 import { matchesBlacklist } from '../shared/utils/urlMatcher';
-import { DEFAULT_SETTINGS } from '../shared/types/settings';
-import { STORAGE_KEYS } from '../shared/storage/config';
+import { DEFAULT_SETTINGS, mergeWithDefaults } from '../shared/types/settings';
+import { STORAGE_KEYS, getSettings, getApiKey } from '../shared/storage/config';
 
 import {
   getDatabase,
@@ -66,29 +67,54 @@ console.log('[LingoRecall] Service worker started');
 
 /**
  * ANALYZE_WORD handler
- * 分析选中的词汇，调用 Gemini AI API 获取语境分析结果
+ * 分析选中的词汇，调用 AI API 获取语境分析结果
  * Story 1.6 实现
+ * 支持 Gemini 和 OpenAI 兼容 API
  */
 registerHandler(MessageTypes.ANALYZE_WORD, async (message): Promise<Response<AIAnalysisResult>> => {
   const payload = message.payload as AnalyzeWordRequest;
   console.log('[LingoRecall] ANALYZE_WORD:', payload.text);
 
   try {
-    // 从 storage 获取 API Key
-    const storage = await chrome.storage.local.get(['apiKey', 'aiModel']);
+    // 从 storage 获取设置和 API Key
+    const [settingsResult, apiKeyResult] = await Promise.all([
+      getSettings(),
+      getApiKey(),
+    ]);
 
-    if (!storage.apiKey) {
+    const settings = settingsResult.success && settingsResult.data
+      ? settingsResult.data
+      : mergeWithDefaults(null);
+
+    const apiKey = apiKeyResult.success ? apiKeyResult.data || '' : '';
+
+    // 对于 Gemini provider，API Key 必须存在
+    if (settings.aiProvider === 'gemini' && !apiKey) {
       return {
         success: false,
         error: {
           code: ErrorCode.AI_INVALID_KEY,
-          message: '请先在设置中配置 API Key',
+          message: '请先在设置中配置 Gemini API Key',
         },
       };
     }
 
-    // 调用 Gemini API
-    const result = await analyzeWord(payload, storage.apiKey, storage.aiModel);
+    // 对于 OpenAI 兼容 API，需要配置端点
+    if (settings.aiProvider === 'openai-compatible' && !settings.customApiEndpoint) {
+      return {
+        success: false,
+        error: {
+          code: ErrorCode.AI_INVALID_KEY,
+          message: '请先在设置中配置自定义 API 端点',
+        },
+      };
+    }
+
+    // 构建 AI 配置
+    const aiConfig = buildAIConfig(settings, apiKey);
+
+    // 调用统一 AI 服务
+    const result = await analyzeWordUnified(payload, aiConfig);
 
     return {
       success: true,
@@ -114,6 +140,12 @@ registerHandler(MessageTypes.ANALYZE_WORD, async (message): Promise<Response<AIA
     } else if (errorMessage.includes('NETWORK')) {
       errorCode = ErrorCode.NETWORK_ERROR;
       userMessage = '网络错误，请检查网络连接';
+    } else if (errorMessage.includes('ENDPOINT_NOT_FOUND')) {
+      errorCode = ErrorCode.AI_API_ERROR;
+      userMessage = 'API 端点无效，请检查配置';
+    } else if (errorMessage.includes('INVALID_CONFIG')) {
+      errorCode = ErrorCode.INVALID_INPUT;
+      userMessage = '配置无效，请检查设置';
     }
 
     return {

@@ -20,12 +20,27 @@
 export type ThemeType = 'light' | 'dark' | 'system';
 
 /**
+ * AI Provider 类型
+ * - gemini: Google Gemini API (默认)
+ * - openai-compatible: OpenAI 兼容 API (CLI Proxy, Ollama, etc.)
+ */
+export type AIProviderType = 'gemini' | 'openai-compatible';
+
+/**
  * 主题选项列表（用于 UI 下拉菜单）
  */
 export const THEME_OPTIONS: ReadonlyArray<{ value: ThemeType; label: string }> = Object.freeze([
   { value: 'light', label: '浅色' },
   { value: 'dark', label: '深色' },
   { value: 'system', label: '跟随系统' },
+]);
+
+/**
+ * AI Provider 选项列表
+ */
+export const AI_PROVIDER_OPTIONS: ReadonlyArray<{ value: AIProviderType; label: string; description: string }> = Object.freeze([
+  { value: 'gemini', label: 'Gemini', description: 'Google Gemini API' },
+  { value: 'openai-compatible', label: 'OpenAI 兼容', description: 'CLI Proxy / Ollama / 其他兼容 API' },
 ]);
 
 // ============================================================
@@ -59,6 +74,13 @@ export interface Settings {
   reviewReminder: boolean;
 
   /**
+   * 跳过中文文本
+   * 选中中文内容时不显示翻译弹窗（用户默认会中文）
+   * @default true
+   */
+  skipChineseText: boolean;
+
+  /**
    * UI 主题设置
    * AC3: Theme Selection
    * @default 'system'
@@ -72,6 +94,27 @@ export interface Settings {
    * @default ['*.paypal.com', '*.alipay.com', '*bank*']
    */
   blacklistUrls: string[];
+
+  /**
+   * AI Provider 类型
+   * @default 'gemini'
+   */
+  aiProvider: AIProviderType;
+
+  /**
+   * 自定义 API 端点 URL
+   * 仅当 aiProvider 为 'openai-compatible' 时使用
+   * @example 'http://localhost:8080/v1/chat/completions'
+   * @default ''
+   */
+  customApiEndpoint: string;
+
+  /**
+   * 自定义模型名称
+   * @example 'gpt-4', 'claude-3-opus', 'llama3'
+   * @default ''
+   */
+  customModelName: string;
 }
 
 // ============================================================
@@ -90,8 +133,12 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
   enableDoubleClick: true,
   enableHoverIcon: true,
   reviewReminder: true,
+  skipChineseText: true,
   theme: 'system' as ThemeType,
   blacklistUrls: Object.freeze(['*.paypal.com', '*.alipay.com', '*bank*']) as unknown as string[],
+  aiProvider: 'gemini' as AIProviderType,
+  customApiEndpoint: '',
+  customModelName: '',
 });
 
 // ============================================================
@@ -105,6 +152,15 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
  */
 export function isValidTheme(value: unknown): value is ThemeType {
   return value === 'light' || value === 'dark' || value === 'system';
+}
+
+/**
+ * 检查是否为有效的 AI Provider 类型
+ * @param value - 待检查的值
+ * @returns 是否为有效的 AIProviderType
+ */
+export function isValidAIProvider(value: unknown): value is AIProviderType {
+  return value === 'gemini' || value === 'openai-compatible';
 }
 
 /**
@@ -123,9 +179,13 @@ export function isValidSettings(value: unknown): value is Settings {
     typeof settings.enableDoubleClick === 'boolean' &&
     typeof settings.enableHoverIcon === 'boolean' &&
     typeof settings.reviewReminder === 'boolean' &&
+    typeof settings.skipChineseText === 'boolean' &&
     isValidTheme(settings.theme) &&
     Array.isArray(settings.blacklistUrls) &&
-    settings.blacklistUrls.every((url) => typeof url === 'string')
+    settings.blacklistUrls.every((url) => typeof url === 'string') &&
+    isValidAIProvider(settings.aiProvider) &&
+    typeof settings.customApiEndpoint === 'string' &&
+    typeof settings.customModelName === 'string'
   );
 }
 
@@ -149,9 +209,13 @@ export function mergeWithDefaults(partial: Partial<Settings> | null | undefined)
     enableDoubleClick: partial.enableDoubleClick ?? DEFAULT_SETTINGS.enableDoubleClick,
     enableHoverIcon: partial.enableHoverIcon ?? DEFAULT_SETTINGS.enableHoverIcon,
     reviewReminder: partial.reviewReminder ?? DEFAULT_SETTINGS.reviewReminder,
+    skipChineseText: partial.skipChineseText ?? DEFAULT_SETTINGS.skipChineseText,
     theme: isValidTheme(partial.theme) ? partial.theme : DEFAULT_SETTINGS.theme,
     blacklistUrls: Array.isArray(partial.blacklistUrls)
       ? partial.blacklistUrls
       : [...DEFAULT_SETTINGS.blacklistUrls],
+    aiProvider: isValidAIProvider(partial.aiProvider) ? partial.aiProvider : DEFAULT_SETTINGS.aiProvider,
+    customApiEndpoint: typeof partial.customApiEndpoint === 'string' ? partial.customApiEndpoint : DEFAULT_SETTINGS.customApiEndpoint,
+    customModelName: typeof partial.customModelName === 'string' ? partial.customModelName : DEFAULT_SETTINGS.customModelName,
   };
 }

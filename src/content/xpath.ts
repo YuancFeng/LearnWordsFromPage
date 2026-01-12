@@ -338,13 +338,15 @@ export function locateTextByXPath(
 ): Range | null {
   const element = evaluateXPath(xpath);
   if (!element) {
-    console.warn('[LingoRecall] XPath evaluation returned null:', xpath);
+    // XPath 失效是预期行为（SPA 动态 DOM），降级为 log 级别避免错误面板显示
+    console.log('[LingoRecall] XPath evaluation returned null (will fallback to context match):', xpath);
     return null;
   }
 
   const textLocation = getTextNodeAtOffset(element, textOffset);
   if (!textLocation) {
-    console.warn('[LingoRecall] Could not find text node at offset:', textOffset);
+    // 文本节点偏移失败也是 DOM 变化的预期情况
+    console.log('[LingoRecall] Could not find text node at offset (will fallback to context match):', textOffset);
     return null;
   }
 

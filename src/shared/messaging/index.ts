@@ -14,6 +14,7 @@ export {
   type ResponseDataMap,
   type AnalyzeWordPayload,
   type AnalyzeWordResult,
+  type AnalysisMode,
   type SaveWordPayload,
   type WordRecord,
   type GetWordsPayload,
