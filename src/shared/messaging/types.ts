@@ -18,6 +18,7 @@ export const MessageTypes = {
   SAVE_WORD: 'SAVE_WORD',
   GET_WORDS: 'GET_WORDS',
   GET_DUE_WORDS: 'GET_DUE_WORDS',
+  GET_DUE_COUNT: 'GET_DUE_COUNT',
   UPDATE_WORD: 'UPDATE_WORD',
   DELETE_WORD: 'DELETE_WORD',
 
@@ -215,6 +216,7 @@ export type PayloadMap = {
   [MessageTypes.SAVE_WORD]: SaveWordPayload;
   [MessageTypes.GET_WORDS]: GetWordsPayload;
   [MessageTypes.GET_DUE_WORDS]: void;
+  [MessageTypes.GET_DUE_COUNT]: void;
   [MessageTypes.UPDATE_WORD]: UpdateWordPayload;
   [MessageTypes.DELETE_WORD]: DeleteWordPayload;
   [MessageTypes.HIGHLIGHT_TEXT]: HighlightTextPayload;
@@ -234,6 +236,7 @@ export type ResponseDataMap = {
   [MessageTypes.SAVE_WORD]: { id: string };
   [MessageTypes.GET_WORDS]: WordRecord[];
   [MessageTypes.GET_DUE_WORDS]: WordRecord[];
+  [MessageTypes.GET_DUE_COUNT]: number;
   [MessageTypes.UPDATE_WORD]: void;
   [MessageTypes.DELETE_WORD]: void;
   [MessageTypes.HIGHLIGHT_TEXT]: { success: boolean };

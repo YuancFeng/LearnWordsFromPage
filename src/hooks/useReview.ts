@@ -12,9 +12,8 @@ import {
   MessageTypes,
   sendMessage,
   type WordRecord,
-  type UpdateWordPayload,
 } from '../shared/messaging';
-import { calculateNextReview, type ReviewResult } from '../shared/utils/ebbinghaus';
+import { type ReviewResult } from '../shared/utils/ebbinghaus';
 
 /**
  * 复习统计数据
@@ -93,43 +92,23 @@ export function useReview(): UseReviewResult {
   const submitReview = useCallback(
     async (wordId: string, result: ReviewResult): Promise<boolean> => {
       try {
-        // 找到对应的词汇获取当前 reviewCount
-        const word = dueWords.find((w) => w.id === wordId);
-        if (!word) {
-          console.error('[LingoRecall] Word not found:', wordId);
-          return false;
-        }
-
-        // 计算新的复习参数
-        const newReviewParams = calculateNextReview(word.reviewCount, result);
-
-        // 构建更新 payload
-        const updates: UpdateWordPayload['updates'] = {
-          nextReviewAt: newReviewParams.nextReviewAt,
-          reviewCount: newReviewParams.reviewCount,
-          interval: newReviewParams.interval,
-        };
-
-        const response = await sendMessage(MessageTypes.UPDATE_WORD, {
-          id: wordId,
-          updates,
+        const response = await sendMessage(MessageTypes.REVIEW_WORD, {
+          wordId,
+          result,
         });
 
         if (response.success) {
-          console.log(
-            `[LingoRecall] Review submitted: ${wordId} - ${result}, next: ${new Date(newReviewParams.nextReviewAt).toLocaleDateString()}`
-          );
           return true;
-        } else {
-          console.error('[LingoRecall] Submit review failed:', response.error);
-          return false;
         }
+
+        console.error('[LingoRecall] Submit review failed:', response.error);
+        return false;
       } catch (err) {
         console.error('[LingoRecall] Submit review error:', err);
         return false;
       }
     },
-    [dueWords]
+    []
   );
 
   /**

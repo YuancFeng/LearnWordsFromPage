@@ -67,6 +67,16 @@ export function ReviewCard({
             {word.text}
           </span>
           <span className="text-gray-400 mt-4 text-sm">点击显示答案</span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onFlip();
+            }}
+            className="mt-4 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 active:bg-blue-200 transition-colors"
+          >
+            显示答案
+          </button>
         </div>
 
         {/* 卡片背面 */}

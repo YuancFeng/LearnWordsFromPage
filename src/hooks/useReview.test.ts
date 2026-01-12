@@ -10,6 +10,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { useReview } from './useReview';
 import { MessageTypes } from '../shared/messaging';
 import type { WordRecord } from '../shared/messaging';
+import { ErrorCode } from '../shared/types/errors';
 
 // Mock chrome API
 const mockChrome = {
@@ -125,7 +126,7 @@ describe('useReview', () => {
       const { sendMessage } = await import('../shared/messaging');
       vi.mocked(sendMessage).mockResolvedValue({
         success: false,
-        error: { code: 'STORAGE_ERROR', message: 'Database error' },
+        error: { code: ErrorCode.STORAGE_ERROR, message: 'Database error' },
       });
 
       const { result } = renderHook(() => useReview());
@@ -153,7 +154,7 @@ describe('useReview', () => {
   });
 
   describe('submitReview', () => {
-    it('should update word with new review params when remembered', async () => {
+    it('should submit review result when remembered', async () => {
       const { sendMessage } = await import('../shared/messaging');
       vi.mocked(sendMessage)
         .mockResolvedValueOnce({ success: true, data: mockWords })
@@ -172,19 +173,12 @@ describe('useReview', () => {
 
       expect(success).toBe(true);
       expect(sendMessage).toHaveBeenCalledWith(
-        MessageTypes.UPDATE_WORD,
-        expect.objectContaining({
-          id: '1',
-          updates: expect.objectContaining({
-            reviewCount: expect.any(Number),
-            nextReviewAt: expect.any(Number),
-            interval: expect.any(Number),
-          }),
-        })
+        MessageTypes.REVIEW_WORD,
+        { wordId: '1', result: 'remembered' }
       );
     });
 
-    it('should reset review params when forgotten', async () => {
+    it('should submit review result when forgotten', async () => {
       const { sendMessage } = await import('../shared/messaging');
       vi.mocked(sendMessage)
         .mockResolvedValueOnce({ success: true, data: mockWords })
@@ -201,33 +195,29 @@ describe('useReview', () => {
       });
 
       expect(sendMessage).toHaveBeenCalledWith(
-        MessageTypes.UPDATE_WORD,
-        expect.objectContaining({
-          id: '1',
-          updates: expect.objectContaining({
-            reviewCount: 0,
-            interval: 1,
-          }),
-        })
+        MessageTypes.REVIEW_WORD,
+        { wordId: '1', result: 'forgotten' }
       );
     });
 
-    it('should return false when word not found', async () => {
+    it('should return false when submit fails', async () => {
       const { sendMessage } = await import('../shared/messaging');
-      vi.mocked(sendMessage).mockResolvedValueOnce({
-        success: true,
-        data: mockWords,
-      });
+      vi.mocked(sendMessage)
+        .mockResolvedValueOnce({ success: true, data: mockWords })
+        .mockResolvedValueOnce({
+          success: false,
+          error: { code: ErrorCode.STORAGE_ERROR, message: 'Submit failed' },
+        });
 
       const { result } = renderHook(() => useReview());
 
       await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
+        expect(result.current.dueWords.length).toBeGreaterThan(0);
       });
 
       let success: boolean = true;
       await act(async () => {
-        success = await result.current.submitReview('non-existent', 'remembered');
+        success = await result.current.submitReview('1', 'remembered');
       });
 
       expect(success).toBe(false);

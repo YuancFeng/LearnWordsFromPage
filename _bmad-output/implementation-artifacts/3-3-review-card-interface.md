@@ -1,6 +1,6 @@
 # Story 3.3: 复习卡片界面
 
-Status: review
+Status: done
 
 ## Story
 
@@ -496,6 +496,44 @@ describe('ReviewCard', () => {
 - 181 个测试全部通过 (+14 新测试)
 - Build: 成功
 
+### Review Fixes (2026-01-12)
+
+- AC2: ReviewCard 正面补充“显示答案”按钮并触发翻转（src/popup/components/ReviewCard.tsx）
+- Task 7: useReview 改为发送 REVIEW_WORD，复习调度交由 Service Worker（src/hooks/useReview.ts）
+- 性能: useDueCount 改为 GET_DUE_COUNT + countDueWords（src/hooks/useDueCount.ts, src/background/index.ts, src/shared/messaging/types.ts）
+- 测试: 新增 ReviewCard/ReviewPage/ReviewComplete 组件测试，更新 useReview.test.ts
+- 测试运行: `npm test` (vitest run)
+
+### Out-of-Scope Dirty Files (pre-existing, not modified in this fix)
+
+- `_bmad-output/implementation-artifacts/1-1-configure-extension-multientry-build.md`
+- `_bmad-output/implementation-artifacts/1-2-establish-messaging-infrastructure.md`
+- `_bmad-output/implementation-artifacts/1-3-implement-text-selection-listener.md`
+- `_bmad-output/implementation-artifacts/1-4-implement-shadow-dom-ui-isolation.md`
+- `_bmad-output/implementation-artifacts/1-5-implement-xpath-selection-extraction.md`
+- `_bmad-output/implementation-artifacts/2-1-save-words-to-local-database.md`
+- `_bmad-output/implementation-artifacts/3-2-pending-review-notification.md`
+- `_bmad-output/implementation-artifacts/3-4-review-result-feedback.md`
+- `_bmad-output/implementation-artifacts/4-1-api-key-configuration.md`
+- `_bmad-output/implementation-artifacts/4-2-preferences-management.md`
+- `_bmad-output/implementation-artifacts/4-3-website-blacklist-management.md`
+- `_bmad-output/implementation-artifacts/4-4-tag-creation-management.md`
+- `_bmad-output/implementation-artifacts/4-5-advanced-search-filter.md`
+- `_bmad-output/implementation-artifacts/4-6-vocabulary-tag-association.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `src/background/alarms.ts`
+- `src/background/badge.ts`
+- `src/content/components/ShadowApp.tsx`
+- `src/content/index.ts`
+- `src/popup/components/VocabularyList.tsx`
+- `src/shared/storage/wordService.ts`
+- `src/hooks/useTags.test.ts`
+- `src/popup/components/BatchActionBar.tsx`
+- `src/popup/components/BatchTagSelector.tsx`
+- `src/popup/components/ColorPicker.test.tsx`
+- `src/popup/components/TagManagement.test.tsx`
+- `src/shared/storage/tagStore.test.ts`
+
 ---
 
 ## File List
@@ -509,12 +547,16 @@ describe('ReviewCard', () => {
 - `src/hooks/useDueCount.ts` - 待复习数量 Hook
 - `src/hooks/useReview.test.ts` - useReview Hook 测试
 - `src/shared/storage/db.getDueWords.test.ts` - getDueWords 函数测试
+- `src/popup/components/ReviewCard.test.tsx` - ReviewCard 组件测试
+- `src/popup/components/ReviewPage.test.tsx` - ReviewPage 组件测试
+- `src/popup/components/ReviewComplete.test.tsx` - ReviewComplete 组件测试
 
 ### Modified Files
 - `index.tsx` - 更新入口点，使用 App 组件
 - `src/shared/storage/db.ts` - 添加 getDueWords 函数
 - `src/shared/storage/index.ts` - 导出 getDueWords
-- `src/background/index.ts` - 实现 GET_DUE_WORDS handler
+- `src/shared/messaging/types.ts` - 消息类型定义更新
+- `src/background/index.ts` - 实现 GET_DUE_WORDS/GET_DUE_COUNT handler
 - `src/popup/components/VocabularyList.tsx` - 添加"开始复习"按钮和待复习数量 Badge
 
 ---
@@ -524,3 +566,4 @@ describe('ReviewCard', () => {
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-01-11 | Story 3.3 实现完成 - 复习卡片界面、翻转动画、进度跟踪、空状态处理 | Dev Agent (Amelia) |
+| 2026-01-12 | Review 修复 - 显示答案按钮、Review 调度回归、GET_DUE_COUNT、补齐组件测试 | Dev Agent (Amelia) |

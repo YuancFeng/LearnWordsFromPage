@@ -38,10 +38,10 @@ export function useDueCount(): UseDueCountResult {
   const fetchDueCount = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await sendMessage(MessageTypes.GET_DUE_WORDS, undefined as void);
+      const response = await sendMessage(MessageTypes.GET_DUE_COUNT, undefined as void);
 
-      if (response.success && response.data) {
-        setDueCount(response.data.length);
+      if (response.success && typeof response.data === 'number') {
+        setDueCount(response.data);
       } else {
         setDueCount(0);
       }

@@ -55,6 +55,7 @@ import {
   deleteWord as deleteWordService,
   searchWords,
   getDueWords,
+  countDueWords,
 } from '../shared/storage';
 
 console.log('[LingoRecall] Service worker started');
@@ -220,6 +221,32 @@ registerHandler(MessageTypes.GET_DUE_WORDS, async (): Promise<Response<WordRecor
 });
 
 /**
+ * GET_DUE_COUNT handler
+ * 获取待复习词汇数量
+ * Story 3.3 - 用于 Badge 数量展示
+ */
+registerHandler(MessageTypes.GET_DUE_COUNT, async (): Promise<Response<number>> => {
+  console.log('[LingoRecall] GET_DUE_COUNT');
+
+  try {
+    const count = await countDueWords();
+    return {
+      success: true,
+      data: count,
+    };
+  } catch (error) {
+    console.error('[LingoRecall] GET_DUE_COUNT error:', error);
+    return {
+      success: false,
+      error: {
+        code: ErrorCode.STORAGE_ERROR,
+        message: error instanceof Error ? error.message : '获取待复习数量失败',
+      },
+    };
+  }
+});
+
+/**
  * UPDATE_WORD handler
  * 更新词汇记录
  * Story 2.1 实现
@@ -343,6 +370,14 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     console.log('[LingoRecall] Review alarm setup complete');
   } catch (error) {
     console.error('[LingoRecall] Failed to setup review alarm:', error);
+  }
+
+  // Story 3.2 - Task 6: 安装/更新后立即同步 Badge 状态
+  try {
+    await checkAndUpdateBadge();
+    console.log('[LingoRecall] Badge updated on install/update');
+  } catch (error) {
+    console.error('[LingoRecall] Failed to update badge on install/update:', error);
   }
 });
 
