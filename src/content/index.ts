@@ -240,7 +240,8 @@ export function getContentSettings(): Settings {
 
 /** Selection length constraints per Story 1.3 */
 const MIN_SELECTION_LENGTH = 1;
-const MAX_SELECTION_LENGTH = 50;
+/** 最大选择长度：支持词汇和短语（增加到 200 字符以支持较长句子） */
+const MAX_SELECTION_LENGTH = 200;
 /** Button offset in pixels from selection top-right */
 const BUTTON_OFFSET_PX = 8;
 
@@ -701,9 +702,11 @@ async function init(): Promise<void> {
   });
 
   // Set up selection event listeners
-  document.addEventListener('mouseup', handleMouseUp, true);
-  document.addEventListener('keyup', handleKeyUp, true);
-  document.addEventListener('click', handleDocumentClick, true);
+  // 使用 bubble phase (false) 而不是 capture phase (true)
+  // 这样可以避免被页面 JS 在 capture phase 阻止事件
+  document.addEventListener('mouseup', handleMouseUp, false);
+  document.addEventListener('keyup', handleKeyUp, false);
+  document.addEventListener('click', handleDocumentClick, false);
 
   // Story 1.3 + 1.5 已实现:
   // - 文本选择监听

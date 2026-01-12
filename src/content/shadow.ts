@@ -231,7 +231,11 @@ export function updateUI(state: Partial<UIState>): void {
  */
 export function setCallbacks(callbacks: UICallbacks): void {
   currentCallbacks = { ...currentCallbacks, ...callbacks };
-  renderUI();
+  // Only render if reactRoot exists - avoids "React root not initialized" warning
+  // during initial setup when callbacks are set before first UI display
+  if (reactRoot) {
+    renderUI();
+  }
 }
 
 /**
