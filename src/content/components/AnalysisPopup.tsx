@@ -402,6 +402,73 @@ interface AnalysisErrorProps {
   onClose: () => void;
 }
 
+/** 错误类型配置 */
+interface ErrorConfig {
+  icon: 'network' | 'api' | 'timeout' | 'config' | 'generic';
+  title: string;
+  color: string;
+  suggestion: string;
+}
+
+/**
+ * 根据错误信息获取友好的错误配置
+ */
+function getErrorConfig(message: string): ErrorConfig {
+  const lowerMsg = message.toLowerCase();
+
+  if (lowerMsg.includes('网络') || lowerMsg.includes('network') || lowerMsg.includes('连接')) {
+    return {
+      icon: 'network',
+      title: '网络连接失败',
+      color: '#F59E0B',
+      suggestion: '请检查网络连接后重试',
+    };
+  }
+
+  if (lowerMsg.includes('超时') || lowerMsg.includes('timeout')) {
+    return {
+      icon: 'timeout',
+      title: '请求超时',
+      color: '#F59E0B',
+      suggestion: 'AI 响应较慢，请稍后重试',
+    };
+  }
+
+  if (lowerMsg.includes('api') || lowerMsg.includes('key') || lowerMsg.includes('密钥') || lowerMsg.includes('无效')) {
+    return {
+      icon: 'api',
+      title: 'API 配置错误',
+      color: '#EF4444',
+      suggestion: '请检查 API Key 或端点设置',
+    };
+  }
+
+  if (lowerMsg.includes('配置') || lowerMsg.includes('config') || lowerMsg.includes('端点')) {
+    return {
+      icon: 'config',
+      title: '配置错误',
+      color: '#EF4444',
+      suggestion: '请在扩展设置中检查配置',
+    };
+  }
+
+  if (lowerMsg.includes('刷新') || lowerMsg.includes('更新')) {
+    return {
+      icon: 'generic',
+      title: '扩展已更新',
+      color: '#3B82F6',
+      suggestion: '请刷新页面后重试',
+    };
+  }
+
+  return {
+    icon: 'generic',
+    title: '分析失败',
+    color: '#EF4444',
+    suggestion: message || '请稍后重试',
+  };
+}
+
 /**
  * 错误样式
  */
@@ -410,13 +477,22 @@ const errorStyles: Record<string, CSSProperties> = {
     padding: tokens.spacing.lg,
     textAlign: 'center' as const,
   },
-  icon: {
-    width: '48px',
-    height: '48px',
+  iconContainer: {
+    width: '56px',
+    height: '56px',
     margin: '0 auto 12px',
-    color: '#EF4444',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  message: {
+  title: {
+    fontSize: tokens.fontSize.md,
+    fontWeight: 600,
+    color: tokens.colors.text,
+    marginBottom: tokens.spacing.xs,
+  },
+  suggestion: {
     fontSize: tokens.fontSize.sm,
     color: tokens.colors.textSecondary,
     marginBottom: tokens.spacing.lg,
@@ -433,6 +509,7 @@ const errorStyles: Record<string, CSSProperties> = {
     fontSize: tokens.fontSize.sm,
     fontWeight: 500,
     cursor: 'pointer',
+    transition: 'all 0.15s ease',
   },
   closeBtn: {
     backgroundColor: tokens.colors.border,
@@ -445,20 +522,58 @@ const errorStyles: Record<string, CSSProperties> = {
 };
 
 /**
- * 错误图标
+ * 错误图标组件
  */
-function ErrorIcon() {
-  return (
-    <svg style={errorStyles.icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 8v4M12 16h.01" />
-    </svg>
-  );
+function ErrorIcon({ type, color }: { type: string; color: string }) {
+  const iconStyle: CSSProperties = {
+    width: '28px',
+    height: '28px',
+    color: color,
+  };
+
+  switch (type) {
+    case 'network':
+      return (
+        <svg style={iconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.58 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01" />
+        </svg>
+      );
+    case 'timeout':
+      return (
+        <svg style={iconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+      );
+    case 'api':
+      return (
+        <svg style={iconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          <circle cx="12" cy="16" r="1" />
+        </svg>
+      );
+    case 'config':
+      return (
+        <svg style={iconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+      );
+    default:
+      return (
+        <svg style={iconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+      );
+  }
 }
 
 /**
  * AnalysisError 组件
- * 显示错误信息
+ * 显示友好的错误信息
  */
 export function AnalysisError({
   position,
@@ -467,6 +582,10 @@ export function AnalysisError({
   onClose,
 }: AnalysisErrorProps) {
   const [opacity, setOpacity] = useState(0);
+  const [isHoveringRetry, setIsHoveringRetry] = useState(false);
+  const [isHoveringClose, setIsHoveringClose] = useState(false);
+
+  const errorConfig = getErrorConfig(message);
 
   useEffect(() => {
     requestAnimationFrame(() => {
@@ -480,6 +599,7 @@ export function AnalysisError({
     <div
       style={{
         ...styles.container,
+        width: `${POPUP_WIDTH_WORD}px`,
         left: `${adjustedPosition.x}px`,
         top: `${adjustedPosition.y}px`,
         opacity,
@@ -488,18 +608,45 @@ export function AnalysisError({
       onClick={(e) => e.stopPropagation()}
     >
       <div style={errorStyles.container}>
-        <ErrorIcon />
-        <div style={errorStyles.message}>{message}</div>
+        {/* 图标容器 */}
+        <div
+          style={{
+            ...errorStyles.iconContainer,
+            backgroundColor: `${errorConfig.color}15`,
+          }}
+        >
+          <ErrorIcon type={errorConfig.icon} color={errorConfig.color} />
+        </div>
+
+        {/* 错误标题 */}
+        <div style={errorStyles.title}>{errorConfig.title}</div>
+
+        {/* 建议信息 */}
+        <div style={errorStyles.suggestion}>{errorConfig.suggestion}</div>
+
+        {/* 操作按钮 */}
         <div style={errorStyles.buttons}>
           <button
-            style={{ ...errorStyles.button, ...errorStyles.closeBtn }}
+            style={{
+              ...errorStyles.button,
+              ...errorStyles.closeBtn,
+              backgroundColor: isHoveringClose ? '#D1D5DB' : tokens.colors.border,
+            }}
             onClick={onClose}
+            onMouseEnter={() => setIsHoveringClose(true)}
+            onMouseLeave={() => setIsHoveringClose(false)}
           >
             关闭
           </button>
           <button
-            style={{ ...errorStyles.button, ...errorStyles.retryBtn }}
+            style={{
+              ...errorStyles.button,
+              ...errorStyles.retryBtn,
+              backgroundColor: isHoveringRetry ? '#2563EB' : tokens.colors.primary,
+            }}
             onClick={onRetry}
+            onMouseEnter={() => setIsHoveringRetry(true)}
+            onMouseLeave={() => setIsHoveringRetry(false)}
           >
             重试
           </button>

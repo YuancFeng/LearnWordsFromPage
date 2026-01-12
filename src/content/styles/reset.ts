@@ -167,11 +167,33 @@ export const SHADOW_STYLES = `
 
   /* Pulse animation for loading states */
   @keyframes lingorecall-pulse {
-    0%, 100% {
-      opacity: 1;
+    0% {
+      transform: scale(1);
+      opacity: 0.4;
     }
     50% {
-      opacity: 0.5;
+      transform: scale(1.15);
+      opacity: 0.2;
+    }
+    100% {
+      transform: scale(1.3);
+      opacity: 0;
+    }
+  }
+
+  /* Dot animation for loading text */
+  @keyframes lingorecall-dots {
+    0%, 20% {
+      content: '';
+    }
+    40% {
+      content: '.';
+    }
+    60% {
+      content: '..';
+    }
+    80%, 100% {
+      content: '...';
     }
   }
 

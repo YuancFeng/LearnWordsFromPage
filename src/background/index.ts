@@ -45,7 +45,7 @@ import {
 
 import { ErrorCode } from '../shared/types/errors';
 import { matchesBlacklist } from '../shared/utils/urlMatcher';
-import { DEFAULT_SETTINGS, mergeWithDefaults } from '../shared/types/settings';
+import { DEFAULT_SETTINGS, mergeWithDefaults, type Settings } from '../shared/types/settings';
 import { STORAGE_KEYS, getSettings, getApiKey } from '../shared/storage/config';
 
 import {
@@ -62,6 +62,81 @@ import {
 console.log('[LingoRecall] Service worker started');
 
 // ============================================================
+// Performance Optimization: Config Cache
+// 配置缓存，避免每次请求都读取 storage
+// ============================================================
+
+interface ConfigCache {
+  settings: Settings | null;
+  apiKey: string | null;
+  lastUpdate: number;
+}
+
+const configCache: ConfigCache = {
+  settings: null,
+  apiKey: null,
+  lastUpdate: 0,
+};
+
+/** 配置缓存 TTL (5分钟) */
+const CONFIG_CACHE_TTL_MS = 5 * 60 * 1000;
+
+/**
+ * 获取缓存的配置（带自动刷新）
+ */
+async function getCachedConfig(): Promise<{ settings: Settings; apiKey: string }> {
+  const now = Date.now();
+
+  // 如果缓存有效，直接返回
+  if (
+    configCache.settings !== null &&
+    configCache.apiKey !== null &&
+    now - configCache.lastUpdate < CONFIG_CACHE_TTL_MS
+  ) {
+    return {
+      settings: configCache.settings,
+      apiKey: configCache.apiKey,
+    };
+  }
+
+  // 并行加载配置
+  const [settingsResult, apiKeyResult] = await Promise.all([
+    getSettings(),
+    getApiKey(),
+  ]);
+
+  const settings = settingsResult.success && settingsResult.data
+    ? settingsResult.data
+    : mergeWithDefaults(null);
+
+  const apiKey = apiKeyResult.success ? apiKeyResult.data || '' : '';
+
+  // 更新缓存
+  configCache.settings = settings;
+  configCache.apiKey = apiKey;
+  configCache.lastUpdate = now;
+
+  console.log('[LingoRecall] Config cache refreshed');
+
+  return { settings, apiKey };
+}
+
+/**
+ * 监听配置变更，及时更新缓存
+ */
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName !== 'local') return;
+
+  if (STORAGE_KEYS.SETTINGS in changes || STORAGE_KEYS.API_KEY in changes) {
+    // 清除缓存，下次请求时重新加载
+    configCache.settings = null;
+    configCache.apiKey = null;
+    configCache.lastUpdate = 0;
+    console.log('[LingoRecall] Config cache invalidated due to storage change');
+  }
+});
+
+// ============================================================
 // Register Message Handlers
 // ============================================================
 
@@ -73,20 +148,14 @@ console.log('[LingoRecall] Service worker started');
  */
 registerHandler(MessageTypes.ANALYZE_WORD, async (message): Promise<Response<AIAnalysisResult>> => {
   const payload = message.payload as AnalyzeWordRequest;
+  const startTime = performance.now();
   console.log('[LingoRecall] ANALYZE_WORD:', payload.text);
 
   try {
-    // 从 storage 获取设置和 API Key
-    const [settingsResult, apiKeyResult] = await Promise.all([
-      getSettings(),
-      getApiKey(),
-    ]);
-
-    const settings = settingsResult.success && settingsResult.data
-      ? settingsResult.data
-      : mergeWithDefaults(null);
-
-    const apiKey = apiKeyResult.success ? apiKeyResult.data || '' : '';
+    // 使用缓存的配置（性能优化：避免每次请求都读取 storage）
+    const { settings, apiKey } = await getCachedConfig();
+    const configTime = performance.now() - startTime;
+    console.log(`[LingoRecall] Config loaded in ${configTime.toFixed(1)}ms`);
 
     // 对于 Gemini provider，API Key 必须存在
     if (settings.aiProvider === 'gemini' && !apiKey) {

@@ -10,6 +10,7 @@
 import React from 'react';
 import { FloatingButton } from './FloatingButton';
 import { AnalysisPopup, AnalysisError } from './AnalysisPopup';
+import { LoadingPopup } from './LoadingPopup';
 import { Toast, type ToastType } from './Toast';
 
 /**
@@ -78,6 +79,8 @@ export interface UICallbacks {
   onSave?: () => void;
   /** Called when user closes the popup */
   onClose?: () => void;
+  /** Called when user cancels analysis */
+  onCancel?: () => void;
   /** Called when toast should be dismissed */
   onToastClose?: () => void;
 }
@@ -103,7 +106,7 @@ export function ShadowApp({ state, callbacks = {} }: ShadowAppProps): React.Reac
     isClosing,
     toast,
   } = state;
-  const { onAnalyze, onSave, onClose, onToastClose } = callbacks;
+  const { onAnalyze, onSave, onClose, onCancel, onToastClose } = callbacks;
 
   // Default handlers for development/debugging
   const handleAnalyze = () => {
@@ -127,6 +130,17 @@ export function ShadowApp({ state, callbacks = {} }: ShadowAppProps): React.Reac
       onClose();
     } else {
       console.log('[LingoRecall] Close popup');
+    }
+  };
+
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    } else if (onClose) {
+      // 默认使用 onClose 作为取消行为
+      onClose();
+    } else {
+      console.log('[LingoRecall] Cancel analysis');
     }
   };
 
@@ -168,17 +182,18 @@ export function ShadowApp({ state, callbacks = {} }: ShadowAppProps): React.Reac
     );
   }
 
-  // Loading state - show loading on button (Story 1.6)
+  // Loading state - show loading popup with animation (Story 1.6)
   if (isAnalyzing && !analysisResult) {
+    // 判断是否为翻译模式（文本长度 >= 100）
+    const isTranslateMode = selectedText.length >= 100;
+
     return (
       <>
-        <FloatingButton
+        <LoadingPopup
           position={buttonPosition}
-          onAnalyze={handleAnalyze}
-          onSave={handleSave}
-          isLoading={true}
-          showSaveButton={false}
-          isClosing={isClosing}
+          selectedText={selectedText}
+          onCancel={handleCancel}
+          isTranslateMode={isTranslateMode}
         />
         {toastElement}
       </>

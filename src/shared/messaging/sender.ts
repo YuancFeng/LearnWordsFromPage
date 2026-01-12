@@ -10,51 +10,24 @@ import type { Message, MessageType, PayloadMap, Response, ResponseDataMap } from
 const DEFAULT_TIMEOUT = 30000;
 
 /**
- * 检查扩展上下文是否仍然有效
- * 当扩展被重新加载或更新时，旧的 content script 上下文会失效
- */
-function isExtensionContextValid(): boolean {
-  try {
-    // 尝试访问 chrome.runtime.id，如果上下文失效会抛出错误
-    // 同时检查 chrome.runtime 本身是否存在
-    if (typeof chrome === 'undefined' || !chrome.runtime) {
-      return false;
-    }
-    return Boolean(chrome.runtime.id);
-  } catch {
-    return false;
-  }
-}
-
-/**
- * 安全获取 chrome.runtime.lastError
- * 在上下文失效时访问 lastError 也可能抛出错误
- */
-function getLastError(): string | null {
-  try {
-    if (!isExtensionContextValid()) {
-      return 'Extension context invalidated';
-    }
-    return chrome.runtime.lastError?.message || null;
-  } catch {
-    return 'Extension context invalidated';
-  }
-}
-
-/**
  * 检查错误是否为扩展上下文失效错误
+ * 只检查实际的错误消息，不做预先判断
  */
 function isContextInvalidatedError(error: unknown): boolean {
-  if (error instanceof Error) {
-    return error.message.includes('Extension context invalidated') ||
-           error.message.includes('context invalidated') ||
-           error.message.includes('Extension context was invalidated');
-  }
-  if (typeof error === 'string') {
-    return error.includes('Extension context invalidated') ||
-           error.includes('context invalidated');
-  }
-  return false;
+  const errorStr = error instanceof Error ? error.message : String(error || '');
+  return errorStr.includes('Extension context invalidated') ||
+         errorStr.includes('context invalidated') ||
+         errorStr.includes('Extension context was invalidated');
+}
+
+/**
+ * 检查是否为连接错误（扩展重新加载后的典型错误）
+ */
+function isConnectionError(error: string): boolean {
+  return error.includes('Could not establish connection') ||
+         error.includes('Receiving end does not exist') ||
+         error.includes('Extension context invalidated') ||
+         error.includes('context invalidated');
 }
 
 /**
@@ -66,6 +39,8 @@ function generateRequestId(): string {
 
 /**
  * 从 Content Script 发送消息到 Service Worker
+ * 采用乐观策略：先尝试发送，只在失败时处理错误
+ *
  * @param type 消息类型
  * @param payload 消息负载
  * @param timeout 超时时间（默认 30 秒）
@@ -78,17 +53,15 @@ export async function sendMessage<T extends MessageType>(
 ): Promise<Response<ResponseDataMap[T]>> {
   const requestId = generateRequestId();
 
-  // 首先检查扩展上下文是否有效
-  if (!isExtensionContextValid()) {
-    return {
-      success: false,
-      error: {
-        code: ErrorCode.EXTENSION_CONTEXT_INVALIDATED,
-        message: '扩展已更新，请刷新页面后重试',
-      },
-      requestId,
-    };
-  }
+  // 创建上下文失效响应的辅助函数
+  const createInvalidatedResponse = () => ({
+    success: false as const,
+    error: {
+      code: ErrorCode.EXTENSION_CONTEXT_INVALIDATED,
+      message: '扩展已更新，请刷新页面后重试',
+    },
+    requestId,
+  });
 
   const message: Message<T> = {
     type,
@@ -98,16 +71,6 @@ export async function sendMessage<T extends MessageType>(
   };
 
   return new Promise((resolve) => {
-    // 创建上下文失效响应的辅助函数
-    const createInvalidatedResponse = () => ({
-      success: false as const,
-      error: {
-        code: ErrorCode.EXTENSION_CONTEXT_INVALIDATED,
-        message: '扩展已更新，请刷新页面后重试',
-      },
-      requestId,
-    });
-
     // 设置超时计时器
     const timer = setTimeout(() => {
       resolve({
@@ -121,39 +84,35 @@ export async function sendMessage<T extends MessageType>(
     }, timeout);
 
     try {
-      // 再次检查上下文（可能在构建消息期间失效）
-      if (!isExtensionContextValid()) {
+      // 检查 chrome.runtime 是否存在
+      if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.sendMessage) {
         clearTimeout(timer);
         resolve(createInvalidatedResponse());
         return;
       }
 
-      // 发送消息
+      // 直接尝试发送消息，不做预先检查
       chrome.runtime.sendMessage(message, (response: Response<ResponseDataMap[T]>) => {
         clearTimeout(timer);
 
-        // 在回调中也包装 try-catch，因为访问 chrome.runtime.lastError 也可能抛出
         try {
-          // 再次检查上下文有效性（回调执行时可能已失效）
-          if (!isExtensionContextValid()) {
-            resolve(createInvalidatedResponse());
-            return;
-          }
-
-          // 安全获取 lastError
-          const lastError = getLastError();
+          // 检查 lastError
+          const lastError = chrome.runtime.lastError;
           if (lastError) {
-            // 检查是否为上下文失效错误
-            if (isContextInvalidatedError(lastError)) {
+            const errorMessage = lastError.message || '';
+
+            // 检查是否为连接错误（表示扩展已重新加载）
+            if (isConnectionError(errorMessage)) {
               resolve(createInvalidatedResponse());
               return;
             }
 
+            // 其他错误
             resolve({
               success: false,
               error: {
                 code: ErrorCode.NETWORK_ERROR,
-                message: lastError,
+                message: errorMessage || 'Unknown communication error',
               },
               requestId,
             });

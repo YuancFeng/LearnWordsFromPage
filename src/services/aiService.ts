@@ -2,12 +2,17 @@
  * LingoRecall AI - Unified AI Service
  * 统一的 AI 服务接口，支持多种 Provider
  *
+ * 性能优化：
+ * 1. 内存缓存 - 减少重复 API 调用
+ * 2. 配置缓存 - 避免每次请求读取 storage
+ *
  * @module services/aiService
  */
 
 import type { Settings, AIProviderType } from '../shared/types/settings';
 import { analyzeWord as analyzeWordGemini, type AIAnalysisResult, type AnalyzeWordRequest, type AnalysisMode } from './geminiService';
 import { analyzeWordOpenAI } from './openaiCompatibleService';
+import { getCachedAnalysis, setCachedAnalysis, getCacheStats } from './analysisCache';
 
 export type { AIAnalysisResult, AnalyzeWordRequest, AnalysisMode };
 
@@ -38,7 +43,7 @@ export function buildAIConfig(settings: Settings, apiKey: string): AIServiceConf
 }
 
 /**
- * 统一的单词分析接口
+ * 统一的单词分析接口（带缓存）
  *
  * @param request - 分析请求
  * @param config - AI 配置
@@ -48,24 +53,49 @@ export async function analyzeWordUnified(
   request: AnalyzeWordRequest,
   config: AIServiceConfig
 ): Promise<AIAnalysisResult> {
+  const startTime = performance.now();
+  const mode = request.mode || 'word';
+
+  // 1. 检查缓存
+  const cached = getCachedAnalysis(request.text, mode);
+  if (cached) {
+    const elapsed = performance.now() - startTime;
+    console.log(`[LingoRecall AI] Cache hit in ${elapsed.toFixed(1)}ms`);
+    return cached;
+  }
+
+  // 2. 调用 AI API
+  let result: AIAnalysisResult;
+
   switch (config.provider) {
     case 'gemini':
-      return analyzeWordGemini(request, config.apiKey, config.geminiModel);
+      result = await analyzeWordGemini(request, config.apiKey, config.geminiModel);
+      break;
 
     case 'openai-compatible':
       if (!config.customEndpoint) {
         throw new Error('INVALID_CONFIG: Custom API endpoint is required for OpenAI-compatible provider.');
       }
-      return analyzeWordOpenAI(
+      result = await analyzeWordOpenAI(
         request,
         config.apiKey,
         config.customEndpoint,
         config.customModel || 'gpt-4'
       );
+      break;
 
     default:
       throw new Error(`INVALID_PROVIDER: Unknown AI provider: ${config.provider}`);
   }
+
+  // 3. 缓存结果
+  setCachedAnalysis(request.text, result, mode);
+
+  const elapsed = performance.now() - startTime;
+  const stats = getCacheStats();
+  console.log(`[LingoRecall AI] API call in ${elapsed.toFixed(1)}ms (cache: ${stats.size} items, ${(stats.hitRate * 100).toFixed(1)}% hit rate)`);
+
+  return result;
 }
 
 /**

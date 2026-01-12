@@ -345,13 +345,28 @@ export function showResult(result: AnalysisResult): void {
 /**
  * Show analysis error
  * Keeps current selection position for retry
+ * 如果没有 buttonPosition，使用 Toast 显示错误
  */
 export function showError(message: string): void {
+  clearHideTimeout();
+
+  // 如果没有 buttonPosition，使用 Toast 显示错误
   if (!currentState.buttonPosition) {
+    console.warn('[LingoRecall] No button position for error popup, showing toast');
+    updateUI({
+      isAnalyzing: false,
+      analysisResult: null,
+      analysisError: null,
+      isClosing: false,
+      toast: {
+        message,
+        type: 'error',
+        id: Date.now(),
+      },
+    });
     return;
   }
 
-  clearHideTimeout();
   updateUI({
     isAnalyzing: false,
     analysisResult: null,

@@ -49,53 +49,23 @@ interface ChatCompletionResponse {
 }
 
 /**
- * 构建单词分析系统提示词
+ * 构建单词分析系统提示词（优化版：减少 token 数量）
  */
 function buildWordSystemPrompt(): string {
-  return `你是一个专业的英语词汇教师，帮助中国学生学习英语。
-用户在阅读英文文章时选中了一个单词或短语，需要你根据上下文提供准确的解释。
+  return `英语词汇分析助手。根据上下文解释选中词汇。
 
-请以 JSON 格式返回以下信息：
-1. meaning: 在当前语境中的准确含义（中文，简洁明了）
-2. pronunciation: IPA 音标（如果是短语则省略）
-3. partOfSpeech: 词性（名词、动词、形容词等）
-4. usage: 一句简短的用法说明或例句（中英对照）
+返回 JSON:
+{"meaning":"中文含义","pronunciation":"/IPA/","partOfSpeech":"词性","usage":"例句"}
 
-重要要求：
-- 必须根据上下文语境给出准确含义，而非通用释义
-- 回复必须是有效的 JSON 格式
-- 不要添加任何额外的说明文字
-
-回复格式：
-{
-  "meaning": "含义",
-  "pronunciation": "/发音/",
-  "partOfSpeech": "词性",
-  "usage": "用法说明"
-}`;
+要求：基于语境、简洁、仅返回JSON`;
 }
 
 /**
- * 构建翻译模式系统提示词
+ * 构建翻译模式系统提示词（优化版：减少 token 数量）
  */
 function buildTranslateSystemPrompt(): string {
-  return `你是一个专业的英汉翻译专家，帮助中国用户理解英文内容。
-用户在阅读英文文章时选中了一段文字，需要你提供准确、流畅的中文翻译。
-
-请以 JSON 格式返回以下信息：
-1. meaning: 完整的中文翻译（保持原文的语气和风格，流畅自然）
-
-重要要求：
-- 翻译要准确传达原文意思
-- 保持原文的语气和文风
-- 翻译要流畅自然，符合中文表达习惯
-- 回复必须是有效的 JSON 格式
-- 不要添加任何额外的说明文字
-
-回复格式：
-{
-  "meaning": "翻译结果"
-}`;
+  return `英汉翻译。返回JSON: {"meaning":"中文翻译"}
+要求：准确、流畅、仅返回JSON`;
 }
 
 /**
@@ -106,23 +76,19 @@ function buildSystemPrompt(mode: AnalysisMode = 'word'): string {
 }
 
 /**
- * 构建单词分析用户消息
+ * 构建单词分析用户消息（优化版：简洁）
  */
 function buildWordUserMessage(text: string, context: string): string {
-  return `选中的单词/短语: "${text}"
-
-上下文: "${context}"
-
-请分析这个词在上下文中的含义。`;
+  // 限制上下文长度，避免 token 浪费
+  const trimmedContext = context.length > 200 ? context.slice(0, 200) + '...' : context;
+  return `词: "${text}"\n语境: "${trimmedContext}"`;
 }
 
 /**
- * 构建翻译模式用户消息
+ * 构建翻译模式用户消息（优化版：简洁）
  */
 function buildTranslateUserMessage(text: string): string {
-  return `请翻译以下英文段落：
-
-"${text}"`;
+  return `翻译: "${text}"`;
 }
 
 /**
@@ -193,8 +159,8 @@ export async function analyzeWordOpenAI(
     normalizedEndpoint += '/chat/completions';
   }
 
-  // 翻译模式需要更多 tokens
-  const maxTokens = mode === 'translate' ? 2000 : 500;
+  // 单词分析只需要少量 tokens，翻译模式需要更多
+  const maxTokens = mode === 'translate' ? 1500 : 200;
 
   const requestBody: ChatCompletionRequest = {
     model: modelName,

@@ -72,19 +72,20 @@ function isContextInvalidatedError(error: unknown): boolean {
 
 /**
  * 全局错误处理器
- * 捕获未处理的扩展上下文失效错误，避免在 Chrome 扩展错误面板显示
+ * 捕获未处理的扩展上下文失效错误，静默处理避免在 Chrome 扩展错误面板显示
+ * 注意：不使用 console.warn，因为它仍会显示在扩展错误面板
  */
 window.addEventListener('error', (event) => {
   if (isContextInvalidatedError(event.error)) {
     event.preventDefault();
-    console.warn('[LingoRecall] Extension context invalidated (global handler)');
+    // 静默处理，用户界面会显示刷新提示
   }
 });
 
 window.addEventListener('unhandledrejection', (event) => {
   if (isContextInvalidatedError(event.reason)) {
     event.preventDefault();
-    console.warn('[LingoRecall] Extension context invalidated in promise (global handler)');
+    // 静默处理，用户界面会显示刷新提示
   }
 });
 
@@ -337,18 +338,39 @@ function isPredominantlyChinese(text: string): boolean {
 
 /**
  * 根据选中文本确定分析模式
- * - 短文本（< 100 字符）: 单词/短语分析模式
+ * 使用多种启发式规则判断是单词/短语还是句子/段落：
  * - 长文本（>= 100 字符）: 段落翻译模式
+ * - 多词（>= 5 个单词）: 句子翻译模式
+ * - 3-4 词且以句号结尾: 句子翻译模式
+ * - 其他情况: 单词/短语分析模式
  *
  * @param text - 选中的文本
  * @returns 分析模式
  */
 function getAnalysisMode(text: string): AnalysisMode {
   const trimmed = text.trim();
-  // 如果文本长度超过阈值，使用翻译模式
+
+  // 长文本始终使用翻译模式
   if (trimmed.length >= PARAGRAPH_THRESHOLD) {
     return 'translate';
   }
+
+  // 统计单词数量（按空白字符分割）
+  const words = trimmed.split(/\s+/).filter(w => w.length > 0);
+  const wordCount = words.length;
+
+  // 多词（5个及以上）视为句子，使用翻译模式
+  if (wordCount >= 5) {
+    return 'translate';
+  }
+
+  // 3-4 个单词且以句号/问号/感叹号结尾，视为完整句子
+  const endsWithSentencePunctuation = /[.!?。！？]$/.test(trimmed);
+  if (wordCount >= 3 && endsWithSentencePunctuation) {
+    return 'translate';
+  }
+
+  // 其他情况使用单词/短语分析模式
   return 'word';
 }
 /** Button offset in pixels from selection top-right */
@@ -392,12 +414,25 @@ function isValidSelection(text: string): boolean {
 // Selection Event Handlers
 // ============================================================
 
+/** 标记是否正在分析中，防止 mouseup 事件清除状态 */
+let isAnalyzingInProgress = false;
+
 /**
  * Handle text selection (mouseup event)
  */
 function handleMouseUp(event: MouseEvent): void {
+  // 忽略来自 Shadow DOM 内部的事件（如点击分析按钮）
+  if (isClickInsideShadow(event)) {
+    return;
+  }
+
   // Small delay to ensure selection is finalized
   setTimeout(() => {
+    // 如果正在分析中，不要清除状态
+    if (isAnalyzingInProgress) {
+      return;
+    }
+
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed) {
       // No selection or collapsed - clear UI
@@ -560,6 +595,9 @@ async function handleAnalyze(): Promise<void> {
     return;
   }
 
+  // 设置分析中标志，防止 mouseup 事件清除状态
+  isAnalyzingInProgress = true;
+
   // 确定分析模式
   const mode = getAnalysisMode(currentSelection.text);
   console.log('[LingoRecall] Analyzing:', currentSelection.text.substring(0, 50), '...', `(mode: ${mode})`);
@@ -589,9 +627,8 @@ async function handleAnalyze(): Promise<void> {
       // Show result popup
       showResult(response.data);
     } else {
-      // 特殊处理扩展上下文失效错误（使用 warn 而非 error 避免在 Chrome 扩展错误面板显示）
+      // 特殊处理扩展上下文失效错误（静默处理，仅显示用户提示）
       if (response.error?.code === ErrorCode.EXTENSION_CONTEXT_INVALIDATED) {
-        console.warn('[LingoRecall] Extension context invalidated, user should refresh page');
         showError('扩展已更新，请刷新页面后重试');
       } else {
         // Handle other errors - show friendly message
@@ -600,18 +637,20 @@ async function handleAnalyze(): Promise<void> {
       }
     }
   } catch (error) {
-    // 检查是否为扩展上下文失效错误（使用 warn 避免在 Chrome 扩展错误面板显示）
+    // 检查是否为扩展上下文失效错误（静默处理，仅显示用户提示）
     const isContextError = error instanceof Error &&
         (error.message.includes('Extension context invalidated') ||
          error.message.includes('context invalidated'));
 
     if (isContextError) {
-      console.warn('[LingoRecall] Extension context invalidated, user should refresh page');
       showError('扩展已更新，请刷新页面后重试');
     } else {
       console.error('[LingoRecall] Analysis error:', error);
       showError('AI 分析失败，请重试');
     }
+  } finally {
+    // 清除分析中标志
+    isAnalyzingInProgress = false;
   }
 }
 
@@ -692,9 +731,8 @@ async function handleSave(): Promise<void> {
       currentSelection = null;
       currentAnalysisResult = null;
     } else {
-      // AC2: 显示重复检测或其他错误提示
+      // AC2: 显示重复检测或其他错误提示（静默处理上下文失效错误）
       if (response.error?.code === ErrorCode.EXTENSION_CONTEXT_INVALIDATED) {
-        console.warn('[LingoRecall] Extension context invalidated during save');
         showToast('扩展已更新，请刷新页面后重试', 'error');
       } else if (response.error?.code === ErrorCode.DUPLICATE_WORD) {
         showToast('该词汇已保存', 'warning');
@@ -704,13 +742,12 @@ async function handleSave(): Promise<void> {
       }
     }
   } catch (error) {
-    // 检查是否为扩展上下文失效错误（使用 warn 避免在 Chrome 扩展错误面板显示）
+    // 检查是否为扩展上下文失效错误（静默处理，仅显示用户提示）
     const isContextError = error instanceof Error &&
         (error.message.includes('Extension context invalidated') ||
          error.message.includes('context invalidated'));
 
     if (isContextError) {
-      console.warn('[LingoRecall] Extension context invalidated during save');
       showToast('扩展已更新，请刷新页面后重试', 'error');
     } else {
       console.error('[LingoRecall] Save error:', error);
@@ -762,12 +799,38 @@ function getSelectionContext(range: Range): string {
 let isBlacklisted = false;
 
 /**
+ * 带超时的 Promise 包装器
+ * 避免 chrome.storage API 在复杂页面上阻塞过长时间
+ */
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), timeoutMs)),
+  ]);
+}
+
+/** 设置加载超时时间 (50ms) - 超过此时间使用默认设置 */
+const SETTINGS_LOAD_TIMEOUT_MS = 50;
+
+/**
  * 从 chrome.storage.local 加载设置
+ * 带超时机制，避免在复杂页面上阻塞初始化
  * @returns Settings 对象或 null (如果加载失败)
  */
 async function loadSettingsFromStorage(): Promise<Settings | null> {
+  const defaultSettings: Settings = {
+    ...DEFAULT_SETTINGS,
+    blacklistUrls: [...DEFAULT_SETTINGS.blacklistUrls],
+  };
+
   try {
-    const result = await chrome.storage.local.get(STORAGE_KEYS.SETTINGS);
+    // 使用超时机制，避免 storage API 阻塞过长
+    const result = await withTimeout(
+      chrome.storage.local.get(STORAGE_KEYS.SETTINGS),
+      SETTINGS_LOAD_TIMEOUT_MS,
+      {} // 超时时返回空对象，使用默认设置
+    );
+
     const storedSettings = result[STORAGE_KEYS.SETTINGS];
 
     if (storedSettings) {
@@ -778,10 +841,10 @@ async function loadSettingsFromStorage(): Promise<Settings | null> {
       };
     }
 
-    return { ...DEFAULT_SETTINGS, blacklistUrls: [...DEFAULT_SETTINGS.blacklistUrls] };
+    return defaultSettings;
   } catch (error) {
     console.warn('[LingoRecall] Failed to load settings:', error);
-    return null;
+    return defaultSettings;
   }
 }
 
@@ -826,6 +889,32 @@ function notifyIconState(disabled: boolean): void {
 // Content Script Initialization
 // ============================================================
 
+/** 标记初始设置是否使用了超时回退 */
+let settingsLoadedFromTimeout = false;
+
+/**
+ * 异步加载完整设置（用于超时回退后的延迟加载）
+ * 不阻塞初始化流程
+ */
+async function loadSettingsDeferred(): Promise<void> {
+  try {
+    const result = await chrome.storage.local.get(STORAGE_KEYS.SETTINGS);
+    const storedSettings = result[STORAGE_KEYS.SETTINGS];
+
+    if (storedSettings) {
+      const fullSettings: Settings = {
+        ...DEFAULT_SETTINGS,
+        ...storedSettings,
+        blacklistUrls: storedSettings.blacklistUrls || [...DEFAULT_SETTINGS.blacklistUrls],
+      };
+      applySettings(fullSettings);
+      console.log('[LingoRecall] Deferred settings loaded successfully');
+    }
+  } catch (error) {
+    console.warn('[LingoRecall] Deferred settings load failed:', error);
+  }
+}
+
 /**
  * Initialize the content script
  * Sets up event listeners and UI components
@@ -839,8 +928,14 @@ async function init(): Promise<void> {
   // 初始化消息监听器（即使被黑名单，也需要监听设置变更）
   initContentMessageListener();
 
-  // Story 4.3: 加载设置并检查黑名单
+  // Story 4.3: 加载设置并检查黑名单（带超时机制）
+  const settingsLoadStart = performance.now();
   const settings = await loadSettingsFromStorage();
+  const settingsLoadTime = performance.now() - settingsLoadStart;
+
+  // 检测是否因超时使用了默认设置
+  settingsLoadedFromTimeout = settingsLoadTime >= SETTINGS_LOAD_TIMEOUT_MS - 5;
+
   if (settings) {
     currentSettings = settings;
     isBlacklisted = checkBlacklist(settings);
@@ -888,6 +983,17 @@ async function init(): Promise<void> {
   // Performance check per Story 1.3 requirement
   if (loadTime > 100) {
     console.warn(`[LingoRecall] Slow initialization: ${loadTime.toFixed(2)}ms (target: <100ms)`);
+  }
+
+  // 如果初始设置加载超时，异步加载完整设置
+  if (settingsLoadedFromTimeout) {
+    console.log('[LingoRecall] Settings load timed out, loading deferred...');
+    // 使用 requestIdleCallback 或 setTimeout 延迟加载，不影响主线程
+    if ('requestIdleCallback' in window) {
+      (window as Window & { requestIdleCallback: (cb: () => void) => void }).requestIdleCallback(loadSettingsDeferred);
+    } else {
+      setTimeout(loadSettingsDeferred, 100);
+    }
   }
 }
 
