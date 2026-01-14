@@ -759,19 +759,20 @@ export function VocabularyList({
     return (
       <div className={`grid gap-4 ${isSelectionMode ? 'pb-20' : ''}`}>
         {sortedWords.map((word) => (
-          <WordCard
-            key={word.id}
-            word={word}
-            onJumpToSource={onJumpToSource}
-            onDelete={handleDelete}
-            searchKeyword={searchQuery}
-            allTags={tags}
-            onUpdateTags={handleUpdateWordTags}
-            onManageTags={onOpenSettings}
-            isSelectionMode={isSelectionMode}
-            isSelected={selectedWordIds.has(word.id)}
-            onSelectionToggle={() => handleToggleWordSelection(word.id)}
-          />
+          <React.Fragment key={word.id}>
+            <WordCard
+              word={word}
+              onJumpToSource={onJumpToSource}
+              onDelete={handleDelete}
+              searchKeyword={searchQuery}
+              allTags={tags}
+              onUpdateTags={handleUpdateWordTags}
+              onManageTags={onOpenSettings}
+              isSelectionMode={isSelectionMode}
+              isSelected={selectedWordIds.has(word.id)}
+              onSelectionToggle={() => handleToggleWordSelection(word.id)}
+            />
+          </React.Fragment>
         ))}
       </div>
     );

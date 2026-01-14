@@ -11,6 +11,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useAIConfig } from './useAIConfig';
 import * as configStorage from '../shared/storage/config';
+import { ErrorCode } from '../shared/types/errors';
 
 // Mock config storage module
 vi.mock('../shared/storage/config', () => ({
@@ -88,7 +89,7 @@ describe('useAIConfig Hook - Story 4.1', () => {
     it('加载失败时应该设置错误状态', async () => {
       vi.mocked(configStorage.getApiKey).mockResolvedValue({
         success: false,
-        error: { code: 'STORAGE_ERROR', message: 'Failed to load' },
+        error: { code: ErrorCode.STORAGE_ERROR, message: 'Failed to load' },
       });
 
       const { result } = renderHook(() => useAIConfig());
@@ -140,7 +141,7 @@ describe('useAIConfig Hook - Story 4.1', () => {
     it('保存失败时应该设置错误状态', async () => {
       vi.mocked(configStorage.saveApiKey).mockResolvedValue({
         success: false,
-        error: { code: 'STORAGE_ERROR', message: 'Storage full' },
+        error: { code: ErrorCode.STORAGE_ERROR, message: 'Storage full' },
       });
 
       const { result } = renderHook(() => useAIConfig());
@@ -239,7 +240,7 @@ describe('useAIConfig Hook - Story 4.1', () => {
       });
       vi.mocked(configStorage.clearApiKey).mockResolvedValue({
         success: false,
-        error: { code: 'STORAGE_ERROR', message: 'Delete failed' },
+        error: { code: ErrorCode.STORAGE_ERROR, message: 'Delete failed' },
       });
 
       const { result } = renderHook(() => useAIConfig());
@@ -330,7 +331,7 @@ describe('useAIConfig Hook - Story 4.1', () => {
     it('clearError 应该清除错误状态', async () => {
       vi.mocked(configStorage.getApiKey).mockResolvedValue({
         success: false,
-        error: { code: 'STORAGE_ERROR', message: 'Load failed' },
+        error: { code: ErrorCode.STORAGE_ERROR, message: 'Load failed' },
       });
 
       const { result } = renderHook(() => useAIConfig());
@@ -349,7 +350,7 @@ describe('useAIConfig Hook - Story 4.1', () => {
     it('新操作应该自动清除之前的错误', async () => {
       vi.mocked(configStorage.getApiKey).mockResolvedValue({
         success: false,
-        error: { code: 'STORAGE_ERROR', message: 'Load failed' },
+        error: { code: ErrorCode.STORAGE_ERROR, message: 'Load failed' },
       });
 
       const { result } = renderHook(() => useAIConfig());

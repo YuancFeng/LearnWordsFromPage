@@ -18,6 +18,7 @@ describe('Settings Types', () => {
     it('should have all required fields with correct types', () => {
       // 创建一个符合 Settings 接口的对象
       const settings: Settings = {
+        ...DEFAULT_SETTINGS,
         enableDoubleClick: true,
         enableHoverIcon: true,
         reviewReminder: true,

@@ -175,13 +175,14 @@ export function useToast() {
   const ToastContainer = () => (
     <>
       {toasts.map((toast) => (
-        <Toast
-          key={toast.id}
-          message={toast.message}
-          type={toast.type}
-          duration={toast.duration}
-          onClose={() => hideToast(toast.id)}
-        />
+        <React.Fragment key={toast.id}>
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            duration={toast.duration}
+            onClose={() => hideToast(toast.id)}
+          />
+        </React.Fragment>
       ))}
     </>
   );

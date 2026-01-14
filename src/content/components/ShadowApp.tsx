@@ -155,7 +155,6 @@ export function ShadowApp({ state, callbacks = {} }: ShadowAppProps): React.Reac
   // Render Toast independently (always visible when present)
   const toastElement = toast ? (
     <Toast
-      key={toast.id}
       message={toast.message}
       type={toast.type}
       onClose={handleToastClose}

@@ -29,6 +29,9 @@ export {
   type HighlightWordResult,
   // Story 4.2: Settings Changed
   type SettingsChangedPayload,
+  // Story 3.4: Review Word
+  type ReviewWordPayload,
+  type ReviewWordResult,
 } from './types';
 
 // Sender utilities

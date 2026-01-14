@@ -3,6 +3,7 @@
  * Provides global test utilities and mocks
  */
 
+import { vi, beforeEach } from 'vitest';
 import '@testing-library/jest-dom';
 import 'fake-indexeddb/auto';
 

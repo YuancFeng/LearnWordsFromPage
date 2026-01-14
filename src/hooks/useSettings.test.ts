@@ -85,6 +85,7 @@ describe('useSettings Hook - Story 4.2 Task 3', () => {
 
     it('应该加载已保存的设置', async () => {
       const savedSettings: Settings = {
+        ...DEFAULT_SETTINGS,
         enableDoubleClick: false,
         enableHoverIcon: true,
         reviewReminder: false,

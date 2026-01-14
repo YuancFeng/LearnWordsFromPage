@@ -251,6 +251,7 @@ describe('Settings Storage - Story 4.2', () => {
 
     it('应该返回保存的设置', async () => {
       const savedSettings: Settings = {
+        ...DEFAULT_SETTINGS,
         enableDoubleClick: false,
         enableHoverIcon: true,
         reviewReminder: false,
@@ -318,7 +319,7 @@ describe('Settings Storage - Story 4.2', () => {
 
       // 验证调用了正确的合并结果
       const lastCall = mockChrome.storage.local.set.mock.calls[0][0];
-      const savedSettings = lastCall[STORAGE_KEYS.SETTINGS];
+      const savedSettings = lastCall[STORAGE_KEYS.SETTINGS] as Settings;
 
       expect(savedSettings.enableDoubleClick).toBe(false);
       expect(savedSettings.theme).toBe('dark'); // 保持原值
@@ -339,7 +340,7 @@ describe('Settings Storage - Story 4.2', () => {
       expect(result.success).toBe(true);
 
       const lastCall = mockChrome.storage.local.set.mock.calls[0][0];
-      expect(lastCall[STORAGE_KEYS.SETTINGS].theme).toBe('dark');
+      expect((lastCall[STORAGE_KEYS.SETTINGS] as Settings).theme).toBe('dark');
     });
 
     it('应该处理 enableDoubleClick 设置变更 - AC1', async () => {
@@ -348,7 +349,7 @@ describe('Settings Storage - Story 4.2', () => {
       expect(result.success).toBe(true);
 
       const lastCall = mockChrome.storage.local.set.mock.calls[0][0];
-      expect(lastCall[STORAGE_KEYS.SETTINGS].enableDoubleClick).toBe(false);
+      expect((lastCall[STORAGE_KEYS.SETTINGS] as Settings).enableDoubleClick).toBe(false);
     });
 
     it('应该处理 enableHoverIcon 设置变更 - AC2', async () => {
@@ -357,7 +358,7 @@ describe('Settings Storage - Story 4.2', () => {
       expect(result.success).toBe(true);
 
       const lastCall = mockChrome.storage.local.set.mock.calls[0][0];
-      expect(lastCall[STORAGE_KEYS.SETTINGS].enableHoverIcon).toBe(false);
+      expect((lastCall[STORAGE_KEYS.SETTINGS] as Settings).enableHoverIcon).toBe(false);
     });
   });
 

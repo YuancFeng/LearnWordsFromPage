@@ -874,7 +874,7 @@ async function loadSettingsFromStorage(): Promise<Settings | null> {
       {} // 超时时返回空对象，使用默认设置
     );
 
-    const storedSettings = result[STORAGE_KEYS.SETTINGS];
+    const storedSettings = result[STORAGE_KEYS.SETTINGS] as Partial<Settings> | undefined;
 
     if (storedSettings) {
       return {
@@ -946,7 +946,7 @@ let settingsLoadedFromTimeout = false;
 async function loadSettingsDeferred(): Promise<void> {
   try {
     const result = await chrome.storage.local.get(STORAGE_KEYS.SETTINGS);
-    const storedSettings = result[STORAGE_KEYS.SETTINGS];
+    const storedSettings = result[STORAGE_KEYS.SETTINGS] as Partial<Settings> | undefined;
 
     if (storedSettings) {
       const fullSettings: Settings = {

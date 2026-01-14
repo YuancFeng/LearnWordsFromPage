@@ -168,23 +168,64 @@ export async function waitForTabLoad(tabId: number, timeoutMs: number = 10000): 
 }
 
 /**
- * 向标签页发送消息
- * 如果 Content Script 未注入，会静默失败
+ * 向标签页的所有 frames 发送消息
+ * 使用 webNavigation.getAllFrames 获取所有 frame，然后向每个 frame 发送消息
+ * 这样可以确保消息到达 iframe 中的 content script（如 Gmail 的邮件内容区域）
  *
  * @param tabId - 标签页 ID
  * @param message - 要发送的消息
- * @returns 响应数据，或 null（如果发送失败）
+ * @returns 第一个成功的响应，或 null（如果所有 frame 都失败）
  */
 export async function sendMessageToTab<T>(
   tabId: number,
   message: unknown
 ): Promise<T | null> {
   try {
-    const response = await chrome.tabs.sendMessage(tabId, message);
-    return response as T;
-  } catch (error) {
-    // Content Script 可能未注入，静默失败
-    console.warn('[LingoRecall] sendMessageToTab failed:', error);
+    // 获取标签页中的所有 frames
+    const frames = await chrome.webNavigation.getAllFrames({ tabId });
+
+    if (!frames || frames.length === 0) {
+      console.warn('[LingoRecall] No frames found in tab:', tabId);
+      // 回退到默认行为
+      const response = await chrome.tabs.sendMessage(tabId, message);
+      return response as T;
+    }
+
+    console.log(`[LingoRecall] Sending message to ${frames.length} frames in tab ${tabId}`);
+
+    // 向所有 frames 发送消息，收集所有响应
+    const sendPromises = frames.map(async (frame) => {
+      try {
+        const response = await chrome.tabs.sendMessage(tabId, message, { frameId: frame.frameId });
+        console.log(`[LingoRecall] Frame ${frame.frameId} (${frame.url?.substring(0, 50)}...) responded:`, response ? 'success' : 'null');
+        return { frameId: frame.frameId, response: response as T, error: null };
+      } catch (error) {
+        // 这个 frame 可能没有 content script，静默忽略
+        return { frameId: frame.frameId, response: null, error };
+      }
+    });
+
+    const results = await Promise.all(sendPromises);
+
+    // 找到第一个成功的响应
+    const successResult = results.find((r) => r.response !== null);
+
+    if (successResult) {
+      console.log(`[LingoRecall] Got successful response from frame ${successResult.frameId}`);
+      return successResult.response;
+    }
+
+    // 所有 frame 都失败了
+    console.warn('[LingoRecall] All frames failed to respond');
     return null;
+  } catch (error) {
+    // webNavigation API 调用失败，回退到默认行为
+    console.warn('[LingoRecall] sendMessageToTab failed:', error);
+    try {
+      const response = await chrome.tabs.sendMessage(tabId, message);
+      return response as T;
+    } catch {
+      return null;
+    }
   }
 }

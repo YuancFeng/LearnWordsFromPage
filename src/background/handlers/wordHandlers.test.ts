@@ -10,6 +10,7 @@ import { handleReviewWord } from './wordHandlers';
 import * as storage from '../../shared/storage';
 import * as badge from '../badge';
 import { DAY_MS, REVIEW_INTERVALS } from '../../shared/utils/ebbinghaus';
+import { ErrorCode } from '../../shared/types/errors';
 
 // Mock dependencies
 vi.mock('../../shared/storage', () => ({
@@ -202,7 +203,7 @@ describe('wordHandlers', () => {
       it('should return error when getWordById fails', async () => {
         vi.mocked(storage.getWordById).mockResolvedValue({
           success: false,
-          error: { code: 'STORAGE_ERROR', message: 'Database error' },
+          error: { code: ErrorCode.STORAGE_ERROR, message: 'Database error' },
         });
 
         const result = await handleReviewWord({
@@ -221,7 +222,7 @@ describe('wordHandlers', () => {
         });
         vi.mocked(storage.updateWord).mockResolvedValue({
           success: false,
-          error: { code: 'STORAGE_ERROR', message: 'Update failed' },
+          error: { code: ErrorCode.STORAGE_ERROR, message: 'Update failed' },
         });
 
         const result = await handleReviewWord({

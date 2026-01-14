@@ -9,7 +9,8 @@
  * @module shared/storage/config
  */
 
-import type { Response, ErrorCode } from '../messaging/types';
+import type { Response } from '../messaging/types';
+import { ErrorCode } from '../types/errors';
 import { type Settings, DEFAULT_SETTINGS, mergeWithDefaults } from '../types/settings';
 
 // ============================================================
@@ -69,7 +70,7 @@ export async function saveApiKey(key: string): Promise<Response<void>> {
     return {
       success: false,
       error: {
-        code: 'INVALID_INPUT' as ErrorCode,
+        code: ErrorCode.INVALID_INPUT,
         message: 'API Key cannot be empty',
       },
     };
@@ -87,7 +88,7 @@ export async function saveApiKey(key: string): Promise<Response<void>> {
     return {
       success: false,
       error: {
-        code: 'STORAGE_ERROR' as ErrorCode,
+        code: ErrorCode.STORAGE_ERROR,
         message: error instanceof Error ? error.message : 'Unknown storage error',
       },
     };
@@ -103,7 +104,7 @@ export async function saveApiKey(key: string): Promise<Response<void>> {
 export async function getApiKey(): Promise<Response<string | null>> {
   try {
     const result = await chrome.storage.local.get(STORAGE_KEYS.API_KEY);
-    const apiKey = result[STORAGE_KEYS.API_KEY] || null;
+    const apiKey = (result[STORAGE_KEYS.API_KEY] as string | undefined) || null;
 
     return {
       success: true,
@@ -114,7 +115,7 @@ export async function getApiKey(): Promise<Response<string | null>> {
     return {
       success: false,
       error: {
-        code: 'STORAGE_ERROR' as ErrorCode,
+        code: ErrorCode.STORAGE_ERROR,
         message: error instanceof Error ? error.message : 'Unknown storage error',
       },
     };
@@ -138,7 +139,7 @@ export async function clearApiKey(): Promise<Response<void>> {
     return {
       success: false,
       error: {
-        code: 'STORAGE_ERROR' as ErrorCode,
+        code: ErrorCode.STORAGE_ERROR,
         message: error instanceof Error ? error.message : 'Unknown storage error',
       },
     };
@@ -189,7 +190,7 @@ export async function getSettings(): Promise<Response<Settings>> {
     return {
       success: false,
       error: {
-        code: 'STORAGE_ERROR' as ErrorCode,
+        code: ErrorCode.STORAGE_ERROR,
         message: error instanceof Error ? error.message : 'Unknown storage error',
       },
     };
@@ -269,7 +270,7 @@ export async function saveSettings(
     return {
       success: false,
       error: {
-        code: 'STORAGE_ERROR' as ErrorCode,
+        code: ErrorCode.STORAGE_ERROR,
         message: error instanceof Error ? error.message : 'Unknown storage error',
       },
     };

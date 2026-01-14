@@ -142,12 +142,13 @@ export function TagBadgeList({
   return (
     <div className="flex flex-wrap gap-1" data-testid="tag-badge-list">
       {displayTags.map((tag) => (
-        <TagBadge
-          key={tag.id}
-          tag={tag}
-          size={size}
-          onClick={onTagClick ? () => onTagClick(tag) : undefined}
-        />
+        <React.Fragment key={tag.id}>
+          <TagBadge
+            tag={tag}
+            size={size}
+            onClick={onTagClick ? () => onTagClick(tag) : undefined}
+          />
+        </React.Fragment>
       ))}
 
       {remainingCount > 0 && (

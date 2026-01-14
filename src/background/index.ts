@@ -521,7 +521,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 async function getBlacklistFromStorage(): Promise<string[]> {
   try {
     const result = await chrome.storage.local.get(STORAGE_KEYS.SETTINGS);
-    const settings = result[STORAGE_KEYS.SETTINGS];
+    const settings = result[STORAGE_KEYS.SETTINGS] as Partial<Settings> | undefined;
     return settings?.blacklistUrls || [...DEFAULT_SETTINGS.blacklistUrls];
   } catch {
     return [...DEFAULT_SETTINGS.blacklistUrls];
