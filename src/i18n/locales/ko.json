@@ -1,0 +1,232 @@
+{
+  "common": {
+    "save": "저장",
+    "cancel": "취소",
+    "confirm": "확인",
+    "delete": "삭제",
+    "edit": "편집",
+    "close": "닫기",
+    "retry": "다시 시도",
+    "loading": "로딩 중...",
+    "error": "오류",
+    "success": "성공",
+    "add": "추가",
+    "reset": "초기화",
+    "clear": "지우기",
+    "back": "뒤로",
+    "new": "새로 만들기",
+    "processing": "처리 중...",
+    "saving": "저장 중..."
+  },
+  "settings": {
+    "title": "설정",
+    "tabs": {
+      "apiKey": "API 키",
+      "preferences": "환경 설정",
+      "blacklist": "블랙리스트",
+      "tags": "태그"
+    },
+    "preferences": {
+      "interaction": "상호작용",
+      "doubleClick": "더블클릭 검색",
+      "doubleClickDesc": "더블클릭으로 번역 시작",
+      "hoverIcon": "호버 아이콘 표시",
+      "hoverIconDesc": "텍스트 선택 시 번역 아이콘 표시",
+      "reviewReminder": "복습 알림",
+      "reviewReminderDesc": "확장 프로그램 아이콘에 복습 대기 단어 수 표시",
+      "skipNativeText": "모국어 텍스트 건너뛰기",
+      "skipNativeTextDesc": "대상 언어의 텍스트에는 팝업을 표시하지 않음",
+      "appearance": "외관",
+      "theme": "테마",
+      "themeLight": "라이트",
+      "themeDark": "다크",
+      "themeSystem": "시스템 설정 따르기",
+      "language": "언어",
+      "uiLanguage": "인터페이스 언어",
+      "uiLanguageAuto": "자동 감지",
+      "targetLanguage": "번역 언어",
+      "targetLanguageDesc": "단어를 이 언어로 번역"
+    },
+    "apiKey": {
+      "title": "API 키",
+      "aiProvider": "AI 제공업체",
+      "customConfig": "사용자 정의 API 설정",
+      "endpoint": "API 엔드포인트 URL",
+      "endpointPlaceholder": "http://localhost:8080/v1/chat/completions",
+      "endpointHelp": "CLI Proxy, Ollama, LM Studio 등 OpenAI 호환 API 지원",
+      "modelName": "모델 이름",
+      "modelPlaceholder": "gpt-4, claude-3-opus, llama3",
+      "apiKeyPlaceholder": "API 키를 입력하세요",
+      "apiKeyRequired": "API 키를 입력해주세요",
+      "getGeminiKey": "Gemini API 키 받기",
+      "configured": "API 키 설정됨",
+      "geminiHelp": "Gemini API 사용 시 Google AI API 키를 입력하세요",
+      "customHelp": "사용자 정의 API 사용 시 API 키는 선택사항입니다",
+      "clearConfirmTitle": "지우기 확인",
+      "clearConfirmMessage": "API 키를 지우시겠습니까? 번역 기능을 사용하려면 다시 설정해야 합니다."
+    },
+    "blacklist": {
+      "title": "블랙리스트",
+      "description": "개인정보 보호를 위해 블랙리스트 사이트에서는 확장 프로그램이 비활성화됩니다.",
+      "wildcardHelp": "와일드카드 지원: *.domain.com 또는 *keyword*",
+      "addSite": "사이트 추가",
+      "placeholder": "*.example.com 또는 *keyword*",
+      "list": "블랙리스트 ({{count}}개)",
+      "resetDefault": "기본값으로 초기화",
+      "empty": "블랙리스트가 비어 있습니다",
+      "emptyHint": "\"기본값으로 초기화\"를 클릭하여 프리셋 복원",
+      "validation": {
+        "required": "URL 패턴을 입력해주세요",
+        "invalid": "잘못된 패턴입니다. *.domain.com 또는 *keyword* 형식을 사용하세요",
+        "duplicate": "이 패턴은 이미 존재합니다"
+      }
+    },
+    "tags": {
+      "title": "태그 관리",
+      "create": "새로 만들기",
+      "empty": "아직 생성된 태그가 없습니다",
+      "emptyHint": "\"새로 만들기\"를 클릭하여 첫 번째 태그 생성",
+      "deleteConfirm": "태그 \"{{name}}\"을(를) 삭제하시겠습니까?\n\n이 태그가 있는 단어에서 태그가 제거됩니다.",
+      "loading": "태그 로딩 중...",
+      "editTag": "태그 편집",
+      "deleteTag": "태그 삭제"
+    },
+    "toast": {
+      "apiKeySaved": "API 키가 저장되었습니다",
+      "apiKeyCleared": "API 키가 삭제되었습니다",
+      "settingsSaved": "설정이 저장되었습니다",
+      "blacklistUpdated": "블랙리스트가 업데이트되었습니다",
+      "comingSoon": "이 기능은 곧 출시됩니다"
+    }
+  },
+  "vocabulary": {
+    "title": "나의 단어장",
+    "wordCount": "{{count}}개 단어",
+    "matchCount": "{{total}}개 중 {{match}}개 표시",
+    "emptyState": "저장된 단어가 없습니다",
+    "emptyStateHint": "읽기를 시작하고 새 단어를 저장하세요!",
+    "jumpToSource": "출처로 이동",
+    "jumping": "이동 중...",
+    "pronunciation": "발음",
+    "example": "예문",
+    "source": "출처",
+    "inaccessible": "출처 페이지에 접근할 수 없지만 여기서 전체 문맥을 확인할 수 있습니다.",
+    "search": {
+      "placeholder": "단어 검색...",
+      "searching": "검색 중...",
+      "resultsCount": "{{count}}개 결과 찾음",
+      "noResults": "일치하는 단어 없음",
+      "noResultsHint": "다른 키워드를 시도해보세요",
+      "clearSearch": "검색 지우기",
+      "clearAll": "모든 필터 지우기"
+    },
+    "sort": {
+      "label": "정렬 기준",
+      "options": "정렬 옵션",
+      "recent": "최신순",
+      "oldest": "오래된 순",
+      "alphabetical": "알파벳순"
+    },
+    "batch": {
+      "select": "일괄 선택",
+      "cancel": "선택 취소",
+      "selected": "{{count}}개 선택됨",
+      "addTags": "태그 추가"
+    },
+    "filter": {
+      "search": "검색: \"{{query}}\"",
+      "tagsCount": "{{count}}개 태그 필터",
+      "removeTag": "\"{{name}}\" 필터 제거"
+    },
+    "actions": {
+      "select": "선택",
+      "deselect": "선택 해제",
+      "settings": "설정",
+      "startReview": "복습 시작"
+    }
+  },
+  "review": {
+    "title": "복습",
+    "startReview": "복습 시작",
+    "showAnswer": "정답 보기",
+    "clickToShow": "클릭하여 정답 보기",
+    "remembered": "기억함",
+    "forgotten": "잊었음",
+    "hint": "카드를 클릭하거나 Enter 키를 눌러 정답 보기",
+    "progress": "{{current}} / {{total}}",
+    "cardFront": "클릭하여 정답 보기",
+    "cardBack": "카드 뒷면",
+    "complete": {
+      "title": "복습 완료!",
+      "great": "잘했어요!",
+      "awesome": "훌륭해요! 기억력이 대단해요!",
+      "good": "잘했어요! 계속 노력하세요!",
+      "okay": "좋은 시작이에요! 연습하면 더 좋아져요!",
+      "needPractice": "포기하지 마세요! 복습이 핵심이에요!",
+      "total": "총 복습 수",
+      "rememberedCount": "기억함",
+      "forgottenCount": "잊었음",
+      "memoryRate": "기억률",
+      "backToVocabulary": "단어장으로 돌아가기"
+    },
+    "empty": {
+      "title": "훌륭해요!",
+      "message": "복습할 단어가 없습니다",
+      "back": "단어장으로 돌아가기"
+    }
+  },
+  "analysis": {
+    "meaning": "의미",
+    "translation": "번역",
+    "pronunciation": "발음",
+    "partOfSpeech": "품사",
+    "usage": "용법",
+    "saveWord": "단어 저장",
+    "loading": {
+      "word": {
+        "tip1": "AI가 문맥을 분석 중...",
+        "tip2": "문맥 이해 중...",
+        "tip3": "정확한 정의 생성 중...",
+        "tip4": "단어 용법 분석 중..."
+      },
+      "translate": {
+        "tip1": "AI가 번역 중...",
+        "tip2": "원문 의미 이해 중...",
+        "tip3": "자연스러운 번역 생성 중...",
+        "tip4": "번역 최적화 중..."
+      }
+    },
+    "toast": {
+      "translationNotSavable": "번역 내용은 단어장에 저장할 수 없습니다",
+      "completeAnalysisFirst": "저장하기 전에 분석을 완료해주세요",
+      "locationError": "단어 위치를 가져올 수 없습니다. 저장에 실패했습니다",
+      "saveSuccess": "저장되었습니다",
+      "extensionUpdated": "확장 프로그램이 업데이트되었습니다. 페이지를 새로고침한 후 다시 시도해주세요",
+      "duplicateWord": "이 단어는 이미 저장되어 있습니다",
+      "saveFailed": "저장에 실패했습니다",
+      "saveRetry": "저장에 실패했습니다. 다시 시도해주세요",
+      "cannotLocate": "현재 페이지에서 이 단어를 찾을 수 없습니다. 콘텐츠가 변경되었을 수 있습니다"
+    },
+    "errors": {
+      "network": "네트워크 연결 실패",
+      "networkHint": "연결을 확인하고 다시 시도해주세요",
+      "timeout": "요청 시간 초과",
+      "timeoutHint": "AI 응답이 느립니다. 다시 시도해주세요",
+      "apiKey": "API 설정 오류",
+      "apiKeyHint": "API 키 설정을 확인해주세요",
+      "config": "설정 오류",
+      "configHint": "확장 프로그램에서 설정을 확인해주세요",
+      "refresh": "확장 프로그램이 업데이트되었습니다",
+      "refreshHint": "페이지를 새로고침한 후 다시 시도해주세요",
+      "generic": "분석에 실패했습니다",
+      "genericHint": "잠시 후 다시 시도해주세요"
+    }
+  },
+  "dialog": {
+    "confirmAction": "작업 확인",
+    "processing": "처리 중..."
+  },
+  "toast": {
+    "close": "닫기"
+  }
+}

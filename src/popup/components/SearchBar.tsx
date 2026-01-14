@@ -8,6 +8,7 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Search, X, Loader2 } from 'lucide-react';
 
 /**
@@ -58,9 +59,11 @@ export function SearchBar({
   isSearching,
   matchCount,
   totalCount,
-  placeholder = '搜索词汇...',
+  placeholder,
   disabled = false,
 }: SearchBarProps): React.ReactElement {
+  const { t } = useTranslation();
+  const searchPlaceholder = placeholder ?? t('vocabulary.searchPlaceholder');
   // 是否显示匹配计数（有搜索内容且不在搜索中）
   const showMatchCount = value.length > 0 && !isSearching;
 
@@ -107,7 +110,7 @@ export function SearchBar({
           value={value}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder}
+          placeholder={searchPlaceholder}
           disabled={disabled}
           className={`
             w-full pl-10 pr-24 py-2.5 text-sm
@@ -118,7 +121,7 @@ export function SearchBar({
             disabled:bg-gray-50 dark:disabled:bg-gray-900 disabled:cursor-not-allowed
             transition-all duration-200
           `}
-          aria-label="搜索词汇"
+          aria-label={t('vocabulary.searchPlaceholder')}
           autoComplete="off"
           spellCheck="false"
         />
@@ -130,7 +133,7 @@ export function SearchBar({
             <Loader2
               size={16}
               className="text-blue-500 animate-spin"
-              aria-label="搜索中"
+              aria-label={t('common.searching')}
             />
           )}
 
@@ -141,7 +144,7 @@ export function SearchBar({
                 text-xs font-medium px-2 py-0.5 rounded-full
                 ${matchCount > 0 ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}
               `}
-              aria-label={`找到 ${matchCount} 个结果，共 ${totalCount} 个词汇`}
+              aria-label={t('vocabulary.searchResults', { match: matchCount, total: totalCount })}
             >
               {matchCount}/{totalCount}
             </span>
@@ -152,7 +155,7 @@ export function SearchBar({
             <button
               onClick={handleClearClick}
               className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              aria-label="清除搜索"
+              aria-label={t('vocabulary.clearSearch')}
               type="button"
             >
               <X size={14} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />

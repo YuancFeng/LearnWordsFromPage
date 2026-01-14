@@ -1,0 +1,232 @@
+{
+  "common": {
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "confirm": "Xác nhận",
+    "delete": "Xóa",
+    "edit": "Chỉnh sửa",
+    "close": "Đóng",
+    "retry": "Thử lại",
+    "loading": "Đang tải...",
+    "error": "Lỗi",
+    "success": "Thành công",
+    "add": "Thêm",
+    "reset": "Đặt lại",
+    "clear": "Xóa",
+    "back": "Quay lại",
+    "new": "Mới",
+    "processing": "Đang xử lý...",
+    "saving": "Đang lưu..."
+  },
+  "settings": {
+    "title": "Cài đặt",
+    "tabs": {
+      "apiKey": "API Key",
+      "preferences": "Tùy chọn",
+      "blacklist": "Danh sách chặn",
+      "tags": "Nhãn"
+    },
+    "preferences": {
+      "interaction": "Tương tác",
+      "doubleClick": "Tra từ khi nhấp đúp",
+      "doubleClickDesc": "Kích hoạt dịch khi nhấp đúp chuột",
+      "hoverIcon": "Hiển thị biểu tượng khi di chuột",
+      "hoverIconDesc": "Hiển thị biểu tượng dịch khi chọn văn bản",
+      "reviewReminder": "Nhắc nhở ôn tập",
+      "reviewReminderDesc": "Hiển thị số từ cần ôn trên biểu tượng tiện ích",
+      "skipNativeText": "Bỏ qua văn bản ngôn ngữ đích",
+      "skipNativeTextDesc": "Không hiển thị popup cho ngôn ngữ đích của bạn",
+      "appearance": "Giao diện",
+      "theme": "Chủ đề",
+      "themeLight": "Sáng",
+      "themeDark": "Tối",
+      "themeSystem": "Theo hệ thống",
+      "language": "Ngôn ngữ",
+      "uiLanguage": "Ngôn ngữ giao diện",
+      "uiLanguageAuto": "Tự động phát hiện",
+      "targetLanguage": "Ngôn ngữ dịch",
+      "targetLanguageDesc": "Dịch từ sang ngôn ngữ này"
+    },
+    "apiKey": {
+      "title": "API Key",
+      "aiProvider": "Nhà cung cấp AI",
+      "customConfig": "Cấu hình API tùy chỉnh",
+      "endpoint": "URL Endpoint API",
+      "endpointPlaceholder": "http://localhost:8080/v1/chat/completions",
+      "endpointHelp": "Hỗ trợ CLI Proxy, Ollama, LM Studio và các API tương thích OpenAI khác",
+      "modelName": "Tên mô hình",
+      "modelPlaceholder": "gpt-4, claude-3-opus, llama3",
+      "apiKeyPlaceholder": "Nhập API Key của bạn",
+      "apiKeyRequired": "Vui lòng nhập API Key",
+      "getGeminiKey": "Lấy API Key Gemini",
+      "configured": "Đã cấu hình API Key",
+      "geminiHelp": "Sử dụng Gemini API, nhập Google AI API Key của bạn",
+      "customHelp": "Sử dụng API tùy chỉnh, API Key không bắt buộc",
+      "clearConfirmTitle": "Xác nhận xóa",
+      "clearConfirmMessage": "Bạn có chắc muốn xóa API Key? Bạn sẽ cần cấu hình lại để sử dụng tính năng dịch."
+    },
+    "blacklist": {
+      "title": "Danh sách chặn",
+      "description": "Tiện ích bị vô hiệu hóa trên các trang trong danh sách chặn để bảo vệ quyền riêng tư.",
+      "wildcardHelp": "Hỗ trợ ký tự đại diện: *.domain.com hoặc *keyword*",
+      "addSite": "Thêm trang",
+      "placeholder": "*.example.com hoặc *keyword*",
+      "list": "Danh sách chặn ({{count}})",
+      "resetDefault": "Đặt lại mặc định",
+      "empty": "Không có trang nào bị chặn",
+      "emptyHint": "Nhấp \"Đặt lại mặc định\" để khôi phục cài đặt sẵn",
+      "validation": {
+        "required": "Vui lòng nhập mẫu URL",
+        "invalid": "Mẫu không hợp lệ. Sử dụng định dạng *.domain.com hoặc *keyword*",
+        "duplicate": "Mẫu này đã tồn tại"
+      }
+    },
+    "tags": {
+      "title": "Quản lý nhãn",
+      "create": "Mới",
+      "empty": "Chưa có nhãn nào",
+      "emptyHint": "Nhấp \"Mới\" để tạo nhãn đầu tiên",
+      "deleteConfirm": "Xóa nhãn \"{{name}}\"?\n\nCác từ có nhãn này sẽ bị gỡ bỏ nhãn.",
+      "loading": "Đang tải nhãn...",
+      "editTag": "Chỉnh sửa nhãn",
+      "deleteTag": "Xóa nhãn"
+    },
+    "toast": {
+      "apiKeySaved": "Đã lưu API Key thành công",
+      "apiKeyCleared": "Đã xóa API Key",
+      "settingsSaved": "Đã lưu cài đặt",
+      "blacklistUpdated": "Đã cập nhật danh sách chặn",
+      "comingSoon": "Tính năng này sẽ sớm ra mắt"
+    }
+  },
+  "vocabulary": {
+    "title": "Từ vựng của tôi",
+    "wordCount": "{{count}} từ",
+    "matchCount": "Tìm thấy {{match}} trong {{total}} từ",
+    "emptyState": "Chưa có từ nào được lưu",
+    "emptyStateHint": "Bắt đầu đọc và lưu từ mới!",
+    "jumpToSource": "Đi đến nguồn",
+    "jumping": "Đang chuyển...",
+    "pronunciation": "Phát âm",
+    "example": "Ví dụ",
+    "source": "Nguồn",
+    "inaccessible": "Không thể truy cập trang nguồn, nhưng bạn vẫn có thể xem ngữ cảnh đầy đủ tại đây.",
+    "search": {
+      "placeholder": "Tìm kiếm từ...",
+      "searching": "Đang tìm...",
+      "resultsCount": "Tìm thấy {{count}} kết quả",
+      "noResults": "Không tìm thấy từ phù hợp",
+      "noResultsHint": "Thử từ khóa khác",
+      "clearSearch": "Xóa tìm kiếm",
+      "clearAll": "Xóa tất cả bộ lọc"
+    },
+    "sort": {
+      "label": "Sắp xếp theo",
+      "options": "Tùy chọn sắp xếp",
+      "recent": "Mới nhất",
+      "oldest": "Cũ nhất",
+      "alphabetical": "Theo bảng chữ cái"
+    },
+    "batch": {
+      "select": "Chọn hàng loạt",
+      "cancel": "Hủy chọn",
+      "selected": "Đã chọn {{count}}",
+      "addTags": "Thêm nhãn"
+    },
+    "filter": {
+      "search": "Tìm kiếm: \"{{query}}\"",
+      "tagsCount": "Lọc theo {{count}} nhãn",
+      "removeTag": "Bỏ lọc {{name}}"
+    },
+    "actions": {
+      "select": "Chọn",
+      "deselect": "Bỏ chọn",
+      "settings": "Cài đặt",
+      "startReview": "Bắt đầu ôn tập"
+    }
+  },
+  "review": {
+    "title": "Ôn tập",
+    "startReview": "Bắt đầu ôn tập",
+    "showAnswer": "Hiện đáp án",
+    "clickToShow": "Nhấp để hiện đáp án",
+    "remembered": "Đã nhớ",
+    "forgotten": "Đã quên",
+    "hint": "Nhấp vào thẻ hoặc nhấn Enter để hiện đáp án",
+    "progress": "{{current}} / {{total}}",
+    "cardFront": "Nhấp để xem đáp án",
+    "cardBack": "Mặt sau thẻ",
+    "complete": {
+      "title": "Hoàn thành ôn tập!",
+      "great": "Tuyệt vời!",
+      "awesome": "Xuất sắc! Trí nhớ tốt lắm!",
+      "good": "Làm tốt lắm! Tiếp tục phát huy!",
+      "okay": "Khởi đầu tốt! Luyện tập thêm nhé!",
+      "needPractice": "Đừng bỏ cuộc! Ôn tập là chìa khóa!",
+      "total": "Tổng số đã ôn",
+      "rememberedCount": "Đã nhớ",
+      "forgottenCount": "Đã quên",
+      "memoryRate": "Tỷ lệ nhớ",
+      "backToVocabulary": "Quay lại từ vựng"
+    },
+    "empty": {
+      "title": "Tuyệt vời!",
+      "message": "Không có từ nào cần ôn tập",
+      "back": "Quay lại từ vựng"
+    }
+  },
+  "analysis": {
+    "meaning": "Nghĩa",
+    "translation": "Bản dịch",
+    "pronunciation": "Phát âm",
+    "partOfSpeech": "Từ loại",
+    "usage": "Cách dùng",
+    "saveWord": "Lưu từ",
+    "loading": {
+      "word": {
+        "tip1": "AI đang phân tích ngữ cảnh...",
+        "tip2": "Đang hiểu ngữ cảnh...",
+        "tip3": "Đang tạo định nghĩa chính xác...",
+        "tip4": "Đang phân tích cách dùng từ..."
+      },
+      "translate": {
+        "tip1": "AI đang dịch...",
+        "tip2": "Đang hiểu nghĩa gốc...",
+        "tip3": "Đang tạo bản dịch mượt mà...",
+        "tip4": "Đang tối ưu bản dịch..."
+      }
+    },
+    "toast": {
+      "translationNotSavable": "Không thể lưu nội dung dịch vào từ vựng",
+      "completeAnalysisFirst": "Vui lòng hoàn thành phân tích trước khi lưu",
+      "locationError": "Không thể xác định vị trí từ, lưu thất bại",
+      "saveSuccess": "Đã lưu thành công",
+      "extensionUpdated": "Tiện ích đã cập nhật, vui lòng làm mới trang và thử lại",
+      "duplicateWord": "Từ này đã được lưu",
+      "saveFailed": "Lưu thất bại",
+      "saveRetry": "Lưu thất bại, vui lòng thử lại",
+      "cannotLocate": "Không thể xác định vị trí từ này trên trang hiện tại, nội dung có thể đã thay đổi"
+    },
+    "errors": {
+      "network": "Kết nối mạng thất bại",
+      "networkHint": "Vui lòng kiểm tra kết nối và thử lại",
+      "timeout": "Yêu cầu hết thời gian",
+      "timeoutHint": "AI phản hồi chậm, vui lòng thử lại",
+      "apiKey": "Lỗi cấu hình API",
+      "apiKeyHint": "Vui lòng kiểm tra cài đặt API Key",
+      "config": "Lỗi cấu hình",
+      "configHint": "Vui lòng kiểm tra cài đặt trong tiện ích",
+      "refresh": "Tiện ích đã cập nhật",
+      "refreshHint": "Vui lòng làm mới trang và thử lại",
+      "generic": "Phân tích thất bại",
+      "genericHint": "Vui lòng thử lại sau"
+    }
+  },
+  "dialog": {
+    "confirmAction": "Xác nhận hành động",
+    "processing": "Đang xử lý..."
+  },
+  "toast": {
+    "close": "Đóng"
+  }
+}

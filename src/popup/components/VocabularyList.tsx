@@ -12,6 +12,7 @@
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { BookOpen, Trash2, ExternalLink, Clock, AlertCircle, Loader2, ChevronDown, ChevronUp, GraduationCap, Settings, CheckSquare } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useSearch } from '../../hooks/useSearch';
 import { useDueCount } from '../../hooks/useDueCount';
 import { useTags } from '../../hooks/useTags';
@@ -55,10 +56,12 @@ function ContextPreview({
   word: string;
   contextAfter: string;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 mt-3">
       <p className="text-xs text-yellow-600 dark:text-yellow-400 mb-2">
-        Source page is inaccessible, but you can still view the full context here.
+        {t('vocabulary.inaccessible')}
       </p>
       <p className="text-sm text-gray-700 dark:text-gray-300">
         <span className="text-gray-500 dark:text-gray-400">...{contextBefore}</span>
@@ -101,6 +104,7 @@ function WordCard({
   /** Story 4.6 - AC4: 选中状态切换回调 */
   onSelectionToggle?: () => void;
 }) {
+  const { t } = useTranslation();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -110,7 +114,6 @@ function WordCard({
   const [showTagSelector, setShowTagSelector] = useState(false);
   const [isUpdatingTags, setIsUpdatingTags] = useState(false);
 
-  const inaccessibleMessage = 'Source page is inaccessible, but you can still view the full context here';
   const formattedDate = new Date(word.createdAt).toLocaleDateString();
 
   // Story 4.6 - 获取词汇关联的标签对象
@@ -187,16 +190,16 @@ function WordCard({
       if (!response.success) {
         // AC3: 处理页面无法访问的情况
         if (response.error?.code === ErrorCode.PAGE_INACCESSIBLE) {
-          setJumpError(inaccessibleMessage);
+          setJumpError(t('vocabulary.inaccessible'));
           setShowContextPreview(true);
         } else {
-          setJumpError(response.error?.message || 'Failed to navigate');
+          setJumpError(response.error?.message || t('analysis.errors.generic'));
         }
       }
       // 成功时不需要做什么，因为已经切换到目标标签页
     } catch (error) {
       console.error('[LingoRecall] Jump to source error:', error);
-      setJumpError('Failed to navigate to source');
+      setJumpError(t('analysis.errors.generic'));
     } finally {
       setIsJumping(false);
     }
@@ -225,7 +228,7 @@ function WordCard({
                 ? 'bg-blue-500 border-blue-500 text-white'
                 : 'border-gray-300 dark:border-gray-600 hover:border-blue-400'
             }`}
-            aria-label={isSelected ? '取消选中' : '选中'}
+            aria-label={isSelected ? t('vocabulary.actions.deselect') : t('vocabulary.actions.select')}
             data-testid={`word-checkbox-${word.id}`}
           >
             {isSelected && (
@@ -279,7 +282,7 @@ function WordCard({
         <div className="mt-4 border-t border-gray-100 dark:border-gray-700 pt-4 space-y-3">
           {word.pronunciation && (
             <div className="text-sm text-gray-600 dark:text-gray-300">
-              <span className="font-semibold text-gray-500 dark:text-gray-400">Pronunciation:</span> [{word.pronunciation}]
+              <span className="font-semibold text-gray-500 dark:text-gray-400">{t('vocabulary.pronunciation')}:</span> [{word.pronunciation}]
             </div>
           )}
 
@@ -294,7 +297,7 @@ function WordCard({
           {word.exampleSentence && (
             <div>
               <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase mb-1 flex items-center gap-1">
-                <Clock size={12} /> Example
+                <Clock size={12} /> {t('vocabulary.example')}
               </p>
               <p className="text-sm italic text-gray-600 dark:text-gray-300 border-l-2 border-gray-200 dark:border-gray-600 pl-3">
                 "...{word.exampleSentence}..."
@@ -303,7 +306,7 @@ function WordCard({
           )}
 
           {word.sourceTitle && (
-            <div className="text-xs text-gray-400 dark:text-gray-500">Source: {word.sourceTitle}</div>
+            <div className="text-xs text-gray-400 dark:text-gray-500">{t('vocabulary.source')}: {word.sourceTitle}</div>
           )}
 
           {jumpError && (
@@ -330,7 +333,7 @@ function WordCard({
                   onClick={handleJumpToSource}
                   disabled={isJumping}
                   className="flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors px-2 py-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="Jump to Source"
+                  title={t('vocabulary.jumpToSource')}
                   type="button"
                 >
                   {isJumping ? (
@@ -338,7 +341,7 @@ function WordCard({
                   ) : (
                     <ExternalLink size={14} />
                   )}
-                  <span>{isJumping ? 'Jumping...' : 'Jump to Source'}</span>
+                  <span>{isJumping ? t('vocabulary.jumping') : t('vocabulary.jumpToSource')}</span>
                 </button>
               )}
 
@@ -374,21 +377,21 @@ function WordCard({
                   className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
                   type="button"
                 >
-                  {isDeleting ? 'Deleting...' : 'Confirm'}
+                  {isDeleting ? t('common.processing') : t('common.confirm')}
                 </button>
                 <button
                   onClick={() => setShowConfirm(false)}
                   className="px-2 py-1 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-bold rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                   type="button"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
               </div>
             ) : (
               <button
                 onClick={() => setShowConfirm(true)}
                 className="flex items-center gap-1 text-xs text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30"
-                title="Delete word"
+                title={t('common.delete')}
                 type="button"
               >
                 <Trash2 size={14} />
@@ -407,14 +410,16 @@ function WordCard({
  * 空状态组件
  */
 function EmptyState(): React.ReactElement {
+  const { t } = useTranslation();
+
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
         <BookOpen size={40} className="text-gray-300 dark:text-gray-600" />
       </div>
-      <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">No words saved yet</h3>
+      <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('vocabulary.emptyState')}</h3>
       <p className="text-gray-400 dark:text-gray-500 max-w-xs">
-        Start reading and save new words!
+        {t('vocabulary.emptyStateHint')}
       </p>
     </div>
   );
@@ -433,6 +438,8 @@ export function VocabularyList({
   onStartReview,
   onOpenSettings,
 }: VocabularyListProps): React.ReactElement {
+  const { t } = useTranslation();
+
   // 使用搜索 Hook - Story 2.5
   const {
     searchQuery,
@@ -709,7 +716,7 @@ export function VocabularyList({
       return (
         <div className="flex flex-col items-center justify-center py-16">
           <div className="w-12 h-12 border-4 border-blue-200 dark:border-blue-800 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin mb-4" />
-          <p className="text-gray-500 dark:text-gray-400 text-sm">加载中...</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">{t('common.loading')}</p>
         </div>
       );
     }
@@ -721,13 +728,13 @@ export function VocabularyList({
           <div className="w-16 h-16 bg-red-50 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
             <AlertCircle size={32} className="text-red-400 dark:text-red-500" />
           </div>
-          <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">加载失败</h3>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">{t('common.error')}</h3>
           <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">{error}</p>
           <button
             onClick={clearSearch}
             className="px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-colors"
           >
-            重试
+            {t('common.retry')}
           </button>
         </div>
       );
@@ -775,12 +782,12 @@ export function VocabularyList({
       {/* Header with title and stats */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-black text-gray-900 dark:text-gray-100">我的词库</h2>
+          <h2 className="text-2xl font-black text-gray-900 dark:text-gray-100">{t('vocabulary.title')}</h2>
           <p className="text-gray-500 dark:text-gray-400 text-sm">
             {hasAnyFilter ? (
-              <>找到 {sortedWords.length} 个匹配，共 {totalCount} 个词汇</>
+              t('vocabulary.matchCount', { match: sortedWords.length, total: totalCount })
             ) : (
-              <>共 {totalCount} 个词汇</>
+              t('vocabulary.wordCount', { count: totalCount })
             )}
           </p>
         </div>
@@ -797,7 +804,7 @@ export function VocabularyList({
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
               }`}
               type="button"
-              aria-label={isSelectionMode ? '取消批量选择' : '批量选择'}
+              aria-label={isSelectionMode ? t('vocabulary.batch.cancel') : t('vocabulary.batch.select')}
               data-testid="batch-select-toggle"
             >
               <CheckSquare size={20} />
@@ -810,7 +817,7 @@ export function VocabularyList({
               onClick={onOpenSettings}
               className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
               type="button"
-              aria-label="设置"
+              aria-label={t('vocabulary.actions.settings')}
             >
               <Settings size={20} />
             </button>
@@ -824,7 +831,7 @@ export function VocabularyList({
               type="button"
             >
               <GraduationCap size={18} />
-              <span>开始复习</span>
+              <span>{t('vocabulary.actions.startReview')}</span>
               {/* 待复习数量 Badge */}
               {dueCount > 0 && (
                 <span className="absolute -top-2 -right-2 min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
@@ -867,16 +874,16 @@ export function VocabularyList({
           {hasAnyFilter && (
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-500 dark:text-gray-400">
-                {hasActiveSearch && `搜索: "${searchQuery}"`}
+                {hasActiveSearch && t('vocabulary.filter.search', { query: searchQuery })}
                 {hasActiveSearch && hasTagFilter && ' + '}
-                {hasTagFilter && `${selectedTagIds.length} 个标签筛选`}
+                {hasTagFilter && t('vocabulary.filter.tagsCount', { count: selectedTagIds.length })}
               </span>
               <button
                 type="button"
                 onClick={handleClearAllFilters}
                 className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
               >
-                清除全部筛选
+                {t('vocabulary.search.clearAll')}
               </button>
             </div>
           )}

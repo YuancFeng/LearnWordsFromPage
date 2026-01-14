@@ -1,0 +1,232 @@
+{
+  "common": {
+    "save": "保存",
+    "cancel": "取消",
+    "confirm": "确认",
+    "delete": "删除",
+    "edit": "编辑",
+    "close": "关闭",
+    "retry": "重试",
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功",
+    "add": "添加",
+    "reset": "重置",
+    "clear": "清除",
+    "back": "返回",
+    "new": "新建",
+    "processing": "处理中...",
+    "saving": "保存中..."
+  },
+  "settings": {
+    "title": "设置",
+    "tabs": {
+      "apiKey": "API Key",
+      "preferences": "偏好设置",
+      "blacklist": "黑名单",
+      "tags": "标签"
+    },
+    "preferences": {
+      "interaction": "交互方式",
+      "doubleClick": "双击查词",
+      "doubleClickDesc": "双击网页上的单词时触发翻译",
+      "hoverIcon": "显示悬浮图标",
+      "hoverIconDesc": "选中文字时显示翻译图标按钮",
+      "reviewReminder": "复习提醒",
+      "reviewReminderDesc": "在扩展图标上显示待复习词汇数量",
+      "skipNativeText": "跳过中文内容",
+      "skipNativeTextDesc": "选中中文文本时不显示翻译弹窗",
+      "appearance": "外观",
+      "theme": "主题",
+      "themeLight": "浅色",
+      "themeDark": "深色",
+      "themeSystem": "跟随系统",
+      "language": "语言",
+      "uiLanguage": "界面语言",
+      "uiLanguageAuto": "自动检测",
+      "targetLanguage": "翻译语言",
+      "targetLanguageDesc": "将单词翻译成此语言"
+    },
+    "apiKey": {
+      "title": "API Key",
+      "aiProvider": "AI Provider",
+      "customConfig": "自定义 API 配置",
+      "endpoint": "API 端点 URL",
+      "endpointPlaceholder": "http://localhost:8080/v1/chat/completions",
+      "endpointHelp": "支持 CLI Proxy、Ollama、LM Studio 等 OpenAI 兼容 API",
+      "modelName": "模型名称",
+      "modelPlaceholder": "gpt-4, claude-3-opus, llama3",
+      "apiKeyPlaceholder": "输入您的 API Key",
+      "apiKeyRequired": "请输入 API Key",
+      "getGeminiKey": "获取 Gemini API Key",
+      "configured": "API Key 已配置",
+      "geminiHelp": "使用 Gemini API，请输入您的 Google AI API Key",
+      "customHelp": "使用自定义 API，API Key 为可选项",
+      "clearConfirmTitle": "确认清除",
+      "clearConfirmMessage": "确定要清除 API Key 吗？清除后需要重新配置才能使用翻译功能。"
+    },
+    "blacklist": {
+      "title": "黑名单",
+      "description": "扩展将在黑名单网站上禁用，保护您的隐私。",
+      "wildcardHelp": "支持通配符: *.domain.com 或 *keyword*",
+      "addSite": "添加网站",
+      "placeholder": "*.example.com 或 *keyword*",
+      "list": "黑名单列表 ({{count}})",
+      "resetDefault": "重置默认",
+      "empty": "暂无黑名单网站",
+      "emptyHint": "点击「重置默认」恢复预设列表",
+      "validation": {
+        "required": "请输入 URL 模式",
+        "invalid": "无效的模式。请使用 *.domain.com 或 *keyword* 格式",
+        "duplicate": "此模式已存在"
+      }
+    },
+    "tags": {
+      "title": "标签管理",
+      "create": "新建",
+      "empty": "还没有创建标签",
+      "emptyHint": "点击「新建」按钮创建您的第一个标签",
+      "deleteConfirm": "确定要删除标签「{{name}}」吗？\n\n删除后，关联此标签的词汇将自动移除该标签。",
+      "loading": "加载标签...",
+      "editTag": "编辑标签",
+      "deleteTag": "删除标签"
+    },
+    "toast": {
+      "apiKeySaved": "API Key 保存成功",
+      "apiKeyCleared": "API Key 已清除",
+      "settingsSaved": "设置已保存",
+      "blacklistUpdated": "黑名单已更新",
+      "comingSoon": "此功能即将推出"
+    }
+  },
+  "vocabulary": {
+    "title": "我的词库",
+    "wordCount": "共 {{count}} 个词汇",
+    "matchCount": "找到 {{match}} 个匹配，共 {{total}} 个词汇",
+    "emptyState": "还没有保存任何词汇",
+    "emptyStateHint": "开始阅读并保存新单词吧！",
+    "jumpToSource": "跳转到来源",
+    "jumping": "跳转中...",
+    "pronunciation": "发音",
+    "example": "例句",
+    "source": "来源",
+    "inaccessible": "来源页面无法访问，但您仍可以在此查看完整上下文。",
+    "search": {
+      "placeholder": "搜索词汇...",
+      "searching": "搜索中...",
+      "resultsCount": "找到 {{count}} 个结果",
+      "noResults": "没有找到匹配的词汇",
+      "noResultsHint": "尝试使用不同的关键词",
+      "clearSearch": "清除搜索",
+      "clearAll": "清除全部筛选"
+    },
+    "sort": {
+      "label": "排序方式",
+      "options": "排序选项",
+      "recent": "最近添加",
+      "oldest": "最早添加",
+      "alphabetical": "按字母排序"
+    },
+    "batch": {
+      "select": "批量选择",
+      "cancel": "取消批量选择",
+      "selected": "已选中 {{count}} 个",
+      "addTags": "添加标签"
+    },
+    "filter": {
+      "search": "搜索: \"{{query}}\"",
+      "tagsCount": "{{count}} 个标签筛选",
+      "removeTag": "移除 {{name}} 筛选"
+    },
+    "actions": {
+      "select": "选中",
+      "deselect": "取消选中",
+      "settings": "设置",
+      "startReview": "开始复习"
+    }
+  },
+  "review": {
+    "title": "复习",
+    "startReview": "开始复习",
+    "showAnswer": "显示答案",
+    "clickToShow": "点击显示答案",
+    "remembered": "记住了",
+    "forgotten": "忘记了",
+    "hint": "点击卡片或按回车键显示答案",
+    "progress": "{{current}} / {{total}}",
+    "cardFront": "点击显示答案",
+    "cardBack": "卡片背面",
+    "complete": {
+      "title": "复习完成！",
+      "great": "太棒了！",
+      "awesome": "太棒了！记忆力超群！",
+      "good": "做得很好！继续保持！",
+      "okay": "不错的开始！多复习几次会更好！",
+      "needPractice": "别灰心！复习是记忆的关键！",
+      "total": "总复习",
+      "rememberedCount": "记住了",
+      "forgottenCount": "忘记了",
+      "memoryRate": "记忆率",
+      "backToVocabulary": "返回词库"
+    },
+    "empty": {
+      "title": "太棒了！",
+      "message": "暂无待复习词汇",
+      "back": "返回词库"
+    }
+  },
+  "analysis": {
+    "meaning": "释义",
+    "translation": "翻译",
+    "pronunciation": "发音",
+    "partOfSpeech": "词性",
+    "usage": "用法",
+    "saveWord": "保存词汇",
+    "loading": {
+      "word": {
+        "tip1": "AI 正在分析语境...",
+        "tip2": "理解上下文中...",
+        "tip3": "生成精准释义...",
+        "tip4": "分析词汇用法..."
+      },
+      "translate": {
+        "tip1": "AI 正在翻译...",
+        "tip2": "理解原文含义...",
+        "tip3": "生成流畅译文...",
+        "tip4": "优化翻译结果..."
+      }
+    },
+    "toast": {
+      "translationNotSavable": "翻译内容不支持保存到词汇库",
+      "completeAnalysisFirst": "请先完成分析再保存词汇",
+      "locationError": "无法获取词汇位置信息，保存失败",
+      "saveSuccess": "保存成功",
+      "extensionUpdated": "扩展已更新，请刷新页面后重试",
+      "duplicateWord": "该词汇已保存",
+      "saveFailed": "保存失败",
+      "saveRetry": "保存失败，请重试",
+      "cannotLocate": "无法在当前页面定位此单词，内容可能已更改"
+    },
+    "errors": {
+      "network": "网络连接失败",
+      "networkHint": "请检查网络连接后重试",
+      "timeout": "请求超时",
+      "timeoutHint": "AI 响应较慢，请重试",
+      "apiKey": "API 配置错误",
+      "apiKeyHint": "请检查 API Key 设置",
+      "config": "配置错误",
+      "configHint": "请在扩展设置中检查配置",
+      "refresh": "扩展已更新",
+      "refreshHint": "请刷新页面后重试",
+      "generic": "分析失败",
+      "genericHint": "请稍后重试"
+    }
+  },
+  "dialog": {
+    "confirmAction": "确认操作",
+    "processing": "处理中..."
+  },
+  "toast": {
+    "close": "关闭"
+  }
+}

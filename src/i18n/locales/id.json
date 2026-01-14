@@ -1,0 +1,232 @@
+{
+  "common": {
+    "save": "Simpan",
+    "cancel": "Batal",
+    "confirm": "Konfirmasi",
+    "delete": "Hapus",
+    "edit": "Edit",
+    "close": "Tutup",
+    "retry": "Coba Lagi",
+    "loading": "Memuat...",
+    "error": "Error",
+    "success": "Berhasil",
+    "add": "Tambah",
+    "reset": "Reset",
+    "clear": "Hapus",
+    "back": "Kembali",
+    "new": "Baru",
+    "processing": "Memproses...",
+    "saving": "Menyimpan..."
+  },
+  "settings": {
+    "title": "Pengaturan",
+    "tabs": {
+      "apiKey": "Kunci API",
+      "preferences": "Preferensi",
+      "blacklist": "Daftar Hitam",
+      "tags": "Tag"
+    },
+    "preferences": {
+      "interaction": "Interaksi",
+      "doubleClick": "Cari dengan Klik Ganda",
+      "doubleClickDesc": "Tampilkan terjemahan saat klik ganda",
+      "hoverIcon": "Tampilkan Ikon Hover",
+      "hoverIconDesc": "Tampilkan ikon terjemahan saat memilih teks",
+      "reviewReminder": "Pengingat Review",
+      "reviewReminderDesc": "Tampilkan jumlah kata yang perlu direview di ikon ekstensi",
+      "skipNativeText": "Lewati Teks Bahasa Target",
+      "skipNativeTextDesc": "Jangan tampilkan popup untuk bahasa target Anda",
+      "appearance": "Tampilan",
+      "theme": "Tema",
+      "themeLight": "Terang",
+      "themeDark": "Gelap",
+      "themeSystem": "Sistem",
+      "language": "Bahasa",
+      "uiLanguage": "Bahasa Antarmuka",
+      "uiLanguageAuto": "Deteksi Otomatis",
+      "targetLanguage": "Bahasa Terjemahan",
+      "targetLanguageDesc": "Terjemahkan kata ke bahasa ini"
+    },
+    "apiKey": {
+      "title": "Kunci API",
+      "aiProvider": "Penyedia AI",
+      "customConfig": "Konfigurasi API Kustom",
+      "endpoint": "URL Endpoint API",
+      "endpointPlaceholder": "http://localhost:8080/v1/chat/completions",
+      "endpointHelp": "Mendukung CLI Proxy, Ollama, LM Studio, dan API lain yang kompatibel dengan OpenAI",
+      "modelName": "Nama Model",
+      "modelPlaceholder": "gpt-4, claude-3-opus, llama3",
+      "apiKeyPlaceholder": "Masukkan Kunci API Anda",
+      "apiKeyRequired": "Silakan masukkan Kunci API",
+      "getGeminiKey": "Dapatkan Kunci API Gemini",
+      "configured": "Kunci API sudah dikonfigurasi",
+      "geminiHelp": "Menggunakan Gemini API, masukkan Kunci API Google AI Anda",
+      "customHelp": "Menggunakan API kustom, Kunci API bersifat opsional",
+      "clearConfirmTitle": "Konfirmasi Hapus",
+      "clearConfirmMessage": "Apakah Anda yakin ingin menghapus Kunci API? Anda perlu mengonfigurasinya kembali untuk menggunakan fitur terjemahan."
+    },
+    "blacklist": {
+      "title": "Daftar Hitam",
+      "description": "Ekstensi dinonaktifkan di situs yang masuk daftar hitam untuk privasi.",
+      "wildcardHelp": "Mendukung wildcard: *.domain.com atau *keyword*",
+      "addSite": "Tambah Situs",
+      "placeholder": "*.example.com atau *keyword*",
+      "list": "Daftar Hitam ({{count}})",
+      "resetDefault": "Reset ke Default",
+      "empty": "Tidak ada situs dalam daftar hitam",
+      "emptyHint": "Klik \"Reset ke Default\" untuk memulihkan pengaturan bawaan",
+      "validation": {
+        "required": "Silakan masukkan pola URL",
+        "invalid": "Pola tidak valid. Gunakan format *.domain.com atau *keyword*",
+        "duplicate": "Pola ini sudah ada"
+      }
+    },
+    "tags": {
+      "title": "Manajemen Tag",
+      "create": "Baru",
+      "empty": "Belum ada tag yang dibuat",
+      "emptyHint": "Klik \"Baru\" untuk membuat tag pertama Anda",
+      "deleteConfirm": "Hapus tag \"{{name}}\"?\n\nKata-kata dengan tag ini akan kehilangan tag tersebut.",
+      "loading": "Memuat tag...",
+      "editTag": "Edit tag",
+      "deleteTag": "Hapus tag"
+    },
+    "toast": {
+      "apiKeySaved": "Kunci API berhasil disimpan",
+      "apiKeyCleared": "Kunci API dihapus",
+      "settingsSaved": "Pengaturan disimpan",
+      "blacklistUpdated": "Daftar hitam diperbarui",
+      "comingSoon": "Fitur ini akan segera hadir"
+    }
+  },
+  "vocabulary": {
+    "title": "Kosakata Saya",
+    "wordCount": "{{count}} kata",
+    "matchCount": "Ditemukan {{match}} dari {{total}} kata",
+    "emptyState": "Belum ada kata yang disimpan",
+    "emptyStateHint": "Mulai membaca dan simpan kata-kata baru!",
+    "jumpToSource": "Ke Sumber",
+    "jumping": "Menuju...",
+    "pronunciation": "Pengucapan",
+    "example": "Contoh",
+    "source": "Sumber",
+    "inaccessible": "Halaman sumber tidak dapat diakses, tetapi Anda masih dapat melihat konteks lengkap di sini.",
+    "search": {
+      "placeholder": "Cari kata...",
+      "searching": "Mencari...",
+      "resultsCount": "Ditemukan {{count}} hasil",
+      "noResults": "Tidak ada kata yang cocok",
+      "noResultsHint": "Coba kata kunci lain",
+      "clearSearch": "Hapus pencarian",
+      "clearAll": "Hapus Semua Filter"
+    },
+    "sort": {
+      "label": "Urutkan berdasarkan",
+      "options": "Opsi pengurutan",
+      "recent": "Terbaru",
+      "oldest": "Terlama",
+      "alphabetical": "Abjad"
+    },
+    "batch": {
+      "select": "Pilih Batch",
+      "cancel": "Batalkan Pilihan",
+      "selected": "{{count}} dipilih",
+      "addTags": "Tambah Tag"
+    },
+    "filter": {
+      "search": "Pencarian: \"{{query}}\"",
+      "tagsCount": "{{count}} filter tag",
+      "removeTag": "Hapus filter {{name}}"
+    },
+    "actions": {
+      "select": "Pilih",
+      "deselect": "Batal Pilih",
+      "settings": "Pengaturan",
+      "startReview": "Mulai Review"
+    }
+  },
+  "review": {
+    "title": "Review",
+    "startReview": "Mulai Review",
+    "showAnswer": "Tampilkan Jawaban",
+    "clickToShow": "Klik untuk menampilkan jawaban",
+    "remembered": "Ingat",
+    "forgotten": "Lupa",
+    "hint": "Klik kartu atau tekan Enter untuk menampilkan jawaban",
+    "progress": "{{current}} / {{total}}",
+    "cardFront": "Klik untuk melihat jawaban",
+    "cardBack": "Bagian belakang kartu",
+    "complete": {
+      "title": "Review Selesai!",
+      "great": "Kerja bagus!",
+      "awesome": "Luar biasa! Daya ingat yang hebat!",
+      "good": "Kerja bagus! Terus semangat!",
+      "okay": "Awal yang baik! Latihan lebih banyak akan membantu!",
+      "needPractice": "Jangan menyerah! Review adalah kuncinya!",
+      "total": "Total direview",
+      "rememberedCount": "Diingat",
+      "forgottenCount": "Dilupakan",
+      "memoryRate": "Tingkat Ingatan",
+      "backToVocabulary": "Kembali ke Kosakata"
+    },
+    "empty": {
+      "title": "Hebat!",
+      "message": "Tidak ada kata yang perlu direview",
+      "back": "Kembali ke Kosakata"
+    }
+  },
+  "analysis": {
+    "meaning": "Arti",
+    "translation": "Terjemahan",
+    "pronunciation": "Pengucapan",
+    "partOfSpeech": "Kelas Kata",
+    "usage": "Penggunaan",
+    "saveWord": "Simpan Kata",
+    "loading": {
+      "word": {
+        "tip1": "AI sedang menganalisis konteks...",
+        "tip2": "Memahami konteks...",
+        "tip3": "Membuat definisi yang akurat...",
+        "tip4": "Menganalisis penggunaan kata..."
+      },
+      "translate": {
+        "tip1": "AI sedang menerjemahkan...",
+        "tip2": "Memahami makna asli...",
+        "tip3": "Membuat terjemahan yang lancar...",
+        "tip4": "Mengoptimalkan terjemahan..."
+      }
+    },
+    "toast": {
+      "translationNotSavable": "Konten terjemahan tidak dapat disimpan ke kosakata",
+      "completeAnalysisFirst": "Silakan selesaikan analisis sebelum menyimpan",
+      "locationError": "Tidak dapat menemukan lokasi kata, penyimpanan gagal",
+      "saveSuccess": "Berhasil disimpan",
+      "extensionUpdated": "Ekstensi diperbarui, silakan refresh halaman dan coba lagi",
+      "duplicateWord": "Kata ini sudah disimpan",
+      "saveFailed": "Gagal menyimpan",
+      "saveRetry": "Gagal menyimpan, silakan coba lagi",
+      "cannotLocate": "Tidak dapat menemukan kata ini di halaman saat ini, konten mungkin telah berubah"
+    },
+    "errors": {
+      "network": "Koneksi jaringan gagal",
+      "networkHint": "Periksa koneksi Anda dan coba lagi",
+      "timeout": "Waktu permintaan habis",
+      "timeoutHint": "Respons AI lambat, silakan coba lagi",
+      "apiKey": "Error konfigurasi API",
+      "apiKeyHint": "Periksa pengaturan Kunci API Anda",
+      "config": "Error konfigurasi",
+      "configHint": "Periksa pengaturan di ekstensi",
+      "refresh": "Ekstensi diperbarui",
+      "refreshHint": "Silakan refresh halaman dan coba lagi",
+      "generic": "Analisis gagal",
+      "genericHint": "Silakan coba lagi nanti"
+    }
+  },
+  "dialog": {
+    "confirmAction": "Konfirmasi Tindakan",
+    "processing": "Memproses..."
+  },
+  "toast": {
+    "close": "Tutup"
+  }
+}

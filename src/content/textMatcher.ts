@@ -5,6 +5,10 @@
  * 当 XPath 定位失效时，使用上下文进行精确匹配
  * 通过 contextBefore + text + contextAfter 在页面中查找匹配的文本
  *
+ * 增强功能：
+ * - 支持遍历 iframe 内的文档（同域）
+ * - 支持遍历 Shadow DOM
+ *
  * @module content/textMatcher
  */
 
@@ -20,6 +24,89 @@ export interface ContextMatchResult {
   confidence: number;
   /** 匹配方法 */
   method: 'exact' | 'normalized' | 'text-only' | 'none';
+}
+
+// ============================================================
+// 增强功能：支持 iframe 和 Shadow DOM 遍历
+// ============================================================
+
+/**
+ * 收集当前 frame 中所有可访问的文档根节点
+ * 包括：主文档、Shadow DOM
+ *
+ * 注意：不再遍历 iframe，因为使用了 all_frames: true，
+ * 每个 iframe 都有自己的 content script 实例
+ */
+function collectAllDocumentRoots(): Node[] {
+  const roots: Node[] = [document.body];
+
+  // 收集当前文档中的 Shadow DOM
+  collectShadowRoots(document.body, roots);
+
+  const frameInfo = window === window.top ? 'top-frame' : 'iframe';
+  console.log(`[LingoRecall] [${frameInfo}] Collected ${roots.length} document roots (body + shadow DOMs)`);
+
+  return roots;
+}
+
+/**
+ * 递归收集元素中的所有 Shadow Root
+ */
+function collectShadowRoots(root: Node, roots: Node[]): void {
+  try {
+    const walker = document.createTreeWalker(
+      root,
+      NodeFilter.SHOW_ELEMENT,
+      null
+    );
+
+    let node: Node | null;
+    while ((node = walker.nextNode())) {
+      const element = node as Element;
+      // 检查元素是否有 Shadow Root
+      if (element.shadowRoot) {
+        roots.push(element.shadowRoot);
+        // 递归收集 Shadow Root 内的 Shadow DOM
+        collectShadowRoots(element.shadowRoot, roots);
+      }
+    }
+  } catch (e) {
+    // 静默忽略遍历错误
+  }
+}
+
+/**
+ * 在指定根节点中创建 TreeWalker
+ */
+function createTextWalker(root: Node): TreeWalker {
+  // 获取 root 所属的文档对象
+  const ownerDocument = root.ownerDocument || document;
+
+  return ownerDocument.createTreeWalker(
+    root,
+    NodeFilter.SHOW_TEXT,
+    {
+      acceptNode: (node) => {
+        const parent = node.parentElement;
+        if (parent) {
+          const tagName = parent.tagName.toLowerCase();
+          if (tagName === 'script' || tagName === 'style' || tagName === 'noscript') {
+            return NodeFilter.FILTER_REJECT;
+          }
+          // 检查元素是否可见
+          try {
+            const style = (root.ownerDocument || document).defaultView?.getComputedStyle(parent);
+            if (style && (style.display === 'none' || style.visibility === 'hidden')) {
+              return NodeFilter.FILTER_REJECT;
+            }
+          } catch (e) {
+            // 无法获取样式时，接受节点
+          }
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    }
+  );
 }
 
 /**
@@ -44,6 +131,13 @@ export function findTextByContext(
   if (!text) {
     return { found: false, range: null, confidence: 0, method: 'none' };
   }
+
+  // 调试日志：显示搜索的内容
+  console.log('[LingoRecall] Context search params:', {
+    text,
+    contextBefore: contextBefore.substring(0, 50) + (contextBefore.length > 50 ? '...' : ''),
+    contextAfter: contextAfter.substring(0, 50) + (contextAfter.length > 50 ? '...' : ''),
+  });
 
   try {
     // 策略 1: 精确匹配完整上下文
@@ -99,6 +193,7 @@ function normalizeWhitespace(str: string): string {
 
 /**
  * 在文档中查找包含目标文本的上下文
+ * 增强版：支持 iframe 和 Shadow DOM
  *
  * @param fullText - 完整上下文文本
  * @param targetText - 目标文本
@@ -110,29 +205,30 @@ function findTextInDocument(
   targetText: string,
   targetOffset: number
 ): Range | null {
-  // 使用 TreeWalker 遍历所有文本节点
-  const walker = document.createTreeWalker(
-    document.body,
-    NodeFilter.SHOW_TEXT,
-    {
-      acceptNode: (node) => {
-        // 跳过脚本和样式元素内的文本
-        const parent = node.parentElement;
-        if (parent) {
-          const tagName = parent.tagName.toLowerCase();
-          if (tagName === 'script' || tagName === 'style' || tagName === 'noscript') {
-            return NodeFilter.FILTER_REJECT;
-          }
-          // 跳过隐藏元素
-          const style = window.getComputedStyle(parent);
-          if (style.display === 'none' || style.visibility === 'hidden') {
-            return NodeFilter.FILTER_REJECT;
-          }
-        }
-        return NodeFilter.FILTER_ACCEPT;
-      },
+  // 收集当前 frame 中的所有文档根节点
+  const roots = collectAllDocumentRoots();
+
+  // 在每个根节点中搜索
+  for (const root of roots) {
+    const result = findTextInRoot(root, fullText, targetText, targetOffset);
+    if (result) {
+      return result;
     }
-  );
+  }
+
+  return null;
+}
+
+/**
+ * 在单个根节点中查找文本
+ */
+function findTextInRoot(
+  root: Node,
+  fullText: string,
+  targetText: string,
+  targetOffset: number
+): Range | null {
+  const walker = createTextWalker(root);
 
   // 收集连续文本节点
   const textNodes: Text[] = [];
@@ -156,9 +252,23 @@ function findTextInDocument(
     });
   }
 
+  // 调试：检查是否能找到目标文本（仅文本，不含上下文）
+  const targetOnlyIndex = concatenatedText.indexOf(targetText);
+  const rootType = root === document.body ? 'main-body' :
+                   (root as ShadowRoot).host ? 'shadow-dom' : 'iframe';
+  console.log(`[LingoRecall] Root "${rootType}": textLength=${concatenatedText.length}, targetFound=${targetOnlyIndex !== -1}, targetIndex=${targetOnlyIndex}`);
+
   // 查找完整上下文
   const contextIndex = concatenatedText.indexOf(fullText);
   if (contextIndex === -1) {
+    // 如果完整上下文没找到，但目标文本找到了，打印更多信息
+    if (targetOnlyIndex !== -1) {
+      console.log(`[LingoRecall] Target "${targetText}" found at ${targetOnlyIndex}, but full context not matched`);
+      // 打印目标文本周围的实际内容
+      const actualBefore = concatenatedText.substring(Math.max(0, targetOnlyIndex - 30), targetOnlyIndex);
+      const actualAfter = concatenatedText.substring(targetOnlyIndex + targetText.length, targetOnlyIndex + targetText.length + 30);
+      console.log(`[LingoRecall] Actual context: "${actualBefore}" [${targetText}] "${actualAfter}"`);
+    }
     return null;
   }
 
@@ -172,7 +282,7 @@ function findTextInDocument(
 
 /**
  * 在文档中查找规范化后的文本（处理空白差异）
- * 用于处理 SPA 等复杂 DOM 结构导致的空白不一致
+ * 增强版：支持 iframe 和 Shadow DOM
  *
  * @param normalizedFullText - 规范化后的完整上下文
  * @param normalizedTargetText - 规范化后的目标文本
@@ -184,29 +294,31 @@ function findNormalizedTextInDocument(
   normalizedTargetText: string,
   normalizedTargetOffset: number
 ): Range | null {
-  // 使用 TreeWalker 遍历所有文本节点
-  const walker = document.createTreeWalker(
-    document.body,
-    NodeFilter.SHOW_TEXT,
-    {
-      acceptNode: (node) => {
-        const parent = node.parentElement;
-        if (parent) {
-          const tagName = parent.tagName.toLowerCase();
-          if (tagName === 'script' || tagName === 'style' || tagName === 'noscript') {
-            return NodeFilter.FILTER_REJECT;
-          }
-          const style = window.getComputedStyle(parent);
-          if (style.display === 'none' || style.visibility === 'hidden') {
-            return NodeFilter.FILTER_REJECT;
-          }
-        }
-        return NodeFilter.FILTER_ACCEPT;
-      },
-    }
-  );
+  // 收集所有文档根节点
+  const roots = collectAllDocumentRoots();
 
-  // 收集文本节点并构建映射（同时保存原始和规范化信息）
+  for (const root of roots) {
+    const result = findNormalizedTextInRoot(root, normalizedFullText, normalizedTargetText, normalizedTargetOffset);
+    if (result) {
+      return result;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * 在单个根节点中查找规范化文本
+ */
+function findNormalizedTextInRoot(
+  root: Node,
+  normalizedFullText: string,
+  normalizedTargetText: string,
+  normalizedTargetOffset: number
+): Range | null {
+  const walker = createTextWalker(root);
+
+  // 收集文本节点并构建映射
   const textNodes: Text[] = [];
   let node: Text | null;
   while ((node = walker.nextNode() as Text | null)) {
@@ -217,7 +329,6 @@ function findNormalizedTextInDocument(
   let originalText = '';
   let normalizedText = '';
   const nodeMap: { node: Text; startOffset: number; endOffset: number }[] = [];
-  // 原始偏移量到规范化偏移量的映射
   const normalizedToOriginal: number[] = [];
 
   for (const textNode of textNodes) {
@@ -225,11 +336,9 @@ function findNormalizedTextInDocument(
     const startOffset = originalText.length;
     originalText += content;
 
-    // 规范化此节点的文本，并记录偏移量映射
     for (let i = 0; i < content.length; i++) {
       const char = content[i];
       if (/\s/.test(char)) {
-        // 空白字符：只在规范化文本末尾不是空格时添加一个空格
         if (normalizedText.length > 0 && !normalizedText.endsWith(' ')) {
           normalizedToOriginal.push(startOffset + i);
           normalizedText += ' ';
@@ -247,64 +356,55 @@ function findNormalizedTextInDocument(
     });
   }
 
-  // 去除规范化文本末尾的空格
   normalizedText = normalizedText.trim();
 
-  // 在规范化文本中查找目标
   const contextIndex = normalizedText.indexOf(normalizedFullText);
   if (contextIndex === -1) {
     return null;
   }
 
-  // 计算目标文本在规范化文档中的位置
   const normalizedTargetStart = contextIndex + normalizedTargetOffset;
   const normalizedTargetEnd = normalizedTargetStart + normalizedTargetText.length;
 
-  // 将规范化偏移量转换回原始偏移量
   if (normalizedTargetStart >= normalizedToOriginal.length ||
       normalizedTargetEnd > normalizedToOriginal.length) {
     return null;
   }
 
   const originalTargetStart = normalizedToOriginal[normalizedTargetStart];
-  // 对于结束位置，需要找到实际的原始字符结束位置
   const originalTargetEnd = normalizedTargetEnd < normalizedToOriginal.length
     ? normalizedToOriginal[normalizedTargetEnd]
     : originalText.length;
 
-  // 创建 Range
   return createRangeFromOffsets(nodeMap, originalTargetStart, originalTargetEnd);
 }
 
 /**
  * 在文档中仅通过目标文本查找（不使用上下文）
- * 用于上下文完全不匹配时的回退
+ * 增强版：支持 iframe 和 Shadow DOM
  *
  * @param targetText - 目标文本
  * @returns Range 对象或 null
  */
 function findTextOnlyInDocument(targetText: string): Range | null {
-  // 使用 TreeWalker 遍历所有文本节点
-  const walker = document.createTreeWalker(
-    document.body,
-    NodeFilter.SHOW_TEXT,
-    {
-      acceptNode: (node) => {
-        const parent = node.parentElement;
-        if (parent) {
-          const tagName = parent.tagName.toLowerCase();
-          if (tagName === 'script' || tagName === 'style' || tagName === 'noscript') {
-            return NodeFilter.FILTER_REJECT;
-          }
-          const style = window.getComputedStyle(parent);
-          if (style.display === 'none' || style.visibility === 'hidden') {
-            return NodeFilter.FILTER_REJECT;
-          }
-        }
-        return NodeFilter.FILTER_ACCEPT;
-      },
+  // 收集所有文档根节点
+  const roots = collectAllDocumentRoots();
+
+  for (const root of roots) {
+    const result = findTextOnlyInRoot(root, targetText);
+    if (result) {
+      return result;
     }
-  );
+  }
+
+  return null;
+}
+
+/**
+ * 在单个根节点中查找目标文本
+ */
+function findTextOnlyInRoot(root: Node, targetText: string): Range | null {
+  const walker = createTextWalker(root);
 
   // 收集文本节点
   const textNodes: Text[] = [];
@@ -338,8 +438,6 @@ function findTextOnlyInDocument(targetText: string): Range | null {
     const normalizedIndex = normalizedConcat.indexOf(normalizedTarget);
 
     if (normalizedIndex !== -1) {
-      // 找到规范化匹配，需要找回原始位置
-      // 简化方案：在原文中搜索规范化后的文本
       targetIndex = findOriginalIndex(concatenatedText, normalizedTarget);
     }
   }
@@ -348,7 +446,6 @@ function findTextOnlyInDocument(targetText: string): Range | null {
     return null;
   }
 
-  // 创建 Range
   return createRangeFromOffsets(nodeMap, targetIndex, targetIndex + targetText.length);
 }
 

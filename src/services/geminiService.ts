@@ -6,6 +6,12 @@
  */
 
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
+import type { TargetLanguage } from '../shared/types/settings';
+import {
+  buildWordAnalysisPrompt as buildWordPrompt,
+  buildTranslationPrompt as buildTranslatePrompt,
+  getFallbackMeaningMessage,
+} from './promptTemplates';
 
 /**
  * 分析模式类型
@@ -45,6 +51,8 @@ export interface AnalyzeWordRequest {
   xpath: string;
   /** 分析模式（可选） */
   mode?: AnalysisMode;
+  /** 目标翻译语言（可选，默认 'zh-CN'） */
+  targetLanguage?: TargetLanguage;
 }
 
 /** 默认模型 */
@@ -65,87 +73,28 @@ function getModel(apiKey: string, modelName: string = DEFAULT_MODEL): Generative
   return genAI.getGenerativeModel({ model: modelName });
 }
 
-/**
- * 构建单词/短语分析 prompt
- * 针对英语学习者优化，返回 JSON 格式
- *
- * @param text - 选中的单词/短语
- * @param context - 上下文
- * @returns 格式化的 prompt
- */
-function buildWordAnalysisPrompt(text: string, context: string): string {
-  return `你是一个专业的英语词汇教师，帮助中国学生学习英语。
-
-用户在阅读英文文章时选中了一个单词或短语，需要你根据上下文提供准确的解释。
-
-**选中的单词/短语**: "${text}"
-
-**上下文**: "${context}"
-
-请提供以下信息（JSON 格式）：
-1. meaning: 在当前语境中的准确含义（中文，简洁明了）
-2. pronunciation: IPA 音标（如果是短语则省略）
-3. partOfSpeech: 词性（名词、动词、形容词等）
-4. usage: 一句简短的用法说明或例句（中英对照）
-
-**重要要求**：
-- 必须根据上下文语境给出准确含义，而非通用释义
-- 回复必须是有效的 JSON 格式
-- 不要添加任何额外的说明文字
-
-**回复格式**：
-{
-  "meaning": "含义",
-  "pronunciation": "/发音/",
-  "partOfSpeech": "词性",
-  "usage": "用法说明"
-}`;
-}
+/** 默认目标语言 */
+const DEFAULT_TARGET_LANGUAGE: TargetLanguage = 'zh-CN';
 
 /**
- * 构建段落翻译 prompt
- * 用于较长文本的翻译
- *
- * @param text - 选中的段落文本
- * @returns 格式化的 prompt
- */
-function buildTranslationPrompt(text: string): string {
-  return `你是一个专业的英汉翻译专家，帮助中国用户理解英文内容。
-
-用户在阅读英文文章时选中了一段文字，需要你提供准确、流畅的中文翻译。
-
-**选中的文字**:
-"${text}"
-
-请提供以下信息（JSON 格式）：
-1. meaning: 完整的中文翻译（保持原文的语气和风格，流畅自然）
-
-**重要要求**：
-- 翻译要准确传达原文意思
-- 保持原文的语气和文风
-- 翻译要流畅自然，符合中文表达习惯
-- 回复必须是有效的 JSON 格式
-- 不要添加任何额外的说明文字
-
-**回复格式**：
-{
-  "meaning": "翻译结果"
-}`;
-}
-
-/**
- * 根据分析模式选择合适的 prompt
+ * 根据分析模式和目标语言选择合适的 prompt
  *
  * @param text - 选中的文本
  * @param context - 上下文
  * @param mode - 分析模式
+ * @param targetLanguage - 目标翻译语言
  * @returns 格式化的 prompt
  */
-function buildAnalysisPrompt(text: string, context: string, mode: AnalysisMode = 'word'): string {
+function buildAnalysisPrompt(
+  text: string,
+  context: string,
+  mode: AnalysisMode = 'word',
+  targetLanguage: TargetLanguage = DEFAULT_TARGET_LANGUAGE
+): string {
   if (mode === 'translate') {
-    return buildTranslationPrompt(text);
+    return buildTranslatePrompt(text, targetLanguage);
   }
-  return buildWordAnalysisPrompt(text, context);
+  return buildWordPrompt(text, context, targetLanguage);
 }
 
 /**
@@ -154,16 +103,23 @@ function buildAnalysisPrompt(text: string, context: string, mode: AnalysisMode =
  *
  * @param response - AI 响应文本
  * @param mode - 分析模式
+ * @param targetLanguage - 目标语言（用于生成本地化的回退消息）
  * @returns 解析后的结果
  */
-function parseAIResponse(response: string, mode: AnalysisMode = 'word'): AIAnalysisResult {
+function parseAIResponse(
+  response: string,
+  mode: AnalysisMode = 'word',
+  targetLanguage: TargetLanguage = DEFAULT_TARGET_LANGUAGE
+): AIAnalysisResult {
+  const fallbackMessage = getFallbackMeaningMessage(targetLanguage);
+
   // 尝试提取 JSON 部分（可能被 markdown 包裹）
   const jsonMatch = response.match(/\{[\s\S]*\}/);
   if (jsonMatch) {
     try {
       const parsed = JSON.parse(jsonMatch[0]);
       return {
-        meaning: parsed.meaning || '(无法获取含义)',
+        meaning: parsed.meaning || fallbackMessage,
         pronunciation: mode === 'word' ? (parsed.pronunciation || '') : '',
         partOfSpeech: mode === 'word' ? (parsed.partOfSpeech || '') : '',
         usage: mode === 'word' ? (parsed.usage || '') : '',
@@ -176,7 +132,7 @@ function parseAIResponse(response: string, mode: AnalysisMode = 'word'): AIAnaly
 
   // 回退：使用原始响应作为含义
   return {
-    meaning: response.trim() || '(无法获取含义)',
+    meaning: response.trim() || fallbackMessage,
     pronunciation: '',
     partOfSpeech: '',
     usage: '',
@@ -242,10 +198,11 @@ export async function analyzeWord(
 ): Promise<AIAnalysisResult> {
   const startTime = Date.now();
   const mode = request.mode || 'word';
+  const targetLanguage = request.targetLanguage || DEFAULT_TARGET_LANGUAGE;
 
   try {
     const model = getModel(apiKey, modelName);
-    const prompt = buildAnalysisPrompt(request.text, request.context, mode);
+    const prompt = buildAnalysisPrompt(request.text, request.context, mode, targetLanguage);
 
     // 翻译模式可能需要更长时间处理长文本
     const timeout = mode === 'translate' ? RESPONSE_TIMEOUT_MS * 3 : RESPONSE_TIMEOUT_MS;
@@ -260,7 +217,7 @@ export async function analyzeWord(
     const text = response.text();
 
     const elapsed = Date.now() - startTime;
-    console.log(`[LingoRecall] AI response in ${elapsed}ms (mode: ${mode})`);
+    console.log(`[LingoRecall] AI response in ${elapsed}ms (mode: ${mode}, lang: ${targetLanguage})`);
 
     // Story 1.6 AC-3: 响应时间应 < 3 秒（翻译模式允许更长时间）
     const expectedTimeout = mode === 'translate' ? RESPONSE_TIMEOUT_MS * 3 : RESPONSE_TIMEOUT_MS;
@@ -268,7 +225,7 @@ export async function analyzeWord(
       console.warn(`[LingoRecall] Slow AI response: ${elapsed}ms`);
     }
 
-    return parseAIResponse(text, mode);
+    return parseAIResponse(text, mode, targetLanguage);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     const normalizedMessage = errorMessage.toUpperCase();

@@ -9,6 +9,7 @@
 
 import React, { useState } from 'react';
 import { Plus, Pencil, Trash2, Tag as TagIcon, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { Tag } from '../../shared/types/tag';
 import { useTags } from '../../hooks/useTags';
 import { TagEditModal } from './TagEditModal';
@@ -23,6 +24,7 @@ import { TagEditModal } from './TagEditModal';
  * ```
  */
 export function TagManagement(): React.ReactElement {
+  const { t } = useTranslation();
   const { tags, isLoading, error, addTag, editTag, removeTag, clearError } = useTags();
 
   // 弹窗状态
@@ -94,7 +96,7 @@ export function TagManagement(): React.ReactElement {
    */
   const handleConfirmDelete = (tag: Tag) => {
     const confirmed = window.confirm(
-      `确定要删除标签"${tag.name}"吗？\n\n删除后，关联此标签的词汇将自动移除该标签。`
+      t('settings.tags.deleteConfirm', { name: tag.name })
     );
     if (confirmed) {
       handleDelete(tag.id);
@@ -106,7 +108,7 @@ export function TagManagement(): React.ReactElement {
     return (
       <div className="flex items-center justify-center py-8">
         <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-        <span className="ml-2 text-gray-500 dark:text-gray-400">加载标签...</span>
+        <span className="ml-2 text-gray-500 dark:text-gray-400">{t('settings.tags.loading')}</span>
       </div>
     );
   }
@@ -118,7 +120,7 @@ export function TagManagement(): React.ReactElement {
         <div className="flex items-center gap-2">
           <TagIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           <h3 className="text-base font-medium text-gray-900 dark:text-white">
-            标签管理
+            {t('settings.tags.title')}
           </h3>
           <span className="text-sm text-gray-500 dark:text-gray-400">
             ({tags.length})
@@ -132,7 +134,7 @@ export function TagManagement(): React.ReactElement {
           data-testid="tag-create-button"
         >
           <Plus size={16} />
-          <span>新建</span>
+          <span>{t('settings.tags.create')}</span>
         </button>
       </div>
 
@@ -152,10 +154,10 @@ export function TagManagement(): React.ReactElement {
         <div className="text-center py-8">
           <TagIcon className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
           <p className="text-gray-500 dark:text-gray-400 mb-2">
-            还没有创建标签
+            {t('settings.tags.empty')}
           </p>
           <p className="text-sm text-gray-400 dark:text-gray-500">
-            点击"新建"按钮创建您的第一个标签
+            {t('settings.tags.emptyHint')}
           </p>
         </div>
       ) : (
@@ -196,7 +198,7 @@ export function TagManagement(): React.ReactElement {
                   type="button"
                   onClick={() => handleEdit(tag)}
                   className="p-1.5 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                  title="编辑标签"
+                  title={t('settings.tags.editTag')}
                   data-testid={`tag-edit-${tag.id}`}
                 >
                   <Pencil size={14} />
@@ -208,7 +210,7 @@ export function TagManagement(): React.ReactElement {
                   onClick={() => handleConfirmDelete(tag)}
                   disabled={deletingTagId === tag.id}
                   className="p-1.5 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
-                  title="删除标签"
+                  title={t('settings.tags.deleteTag')}
                   data-testid={`tag-delete-${tag.id}`}
                 >
                   {deletingTagId === tag.id ? (

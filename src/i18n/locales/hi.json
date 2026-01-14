@@ -1,0 +1,232 @@
+{
+  "common": {
+    "save": "सहेजें",
+    "cancel": "रद्द करें",
+    "confirm": "पुष्टि करें",
+    "delete": "हटाएं",
+    "edit": "संपादित करें",
+    "close": "बंद करें",
+    "retry": "पुनः प्रयास करें",
+    "loading": "लोड हो रहा है...",
+    "error": "त्रुटि",
+    "success": "सफल",
+    "add": "जोड़ें",
+    "reset": "रीसेट करें",
+    "clear": "साफ़ करें",
+    "back": "वापस",
+    "new": "नया",
+    "processing": "प्रोसेस हो रहा है...",
+    "saving": "सहेज रहा है..."
+  },
+  "settings": {
+    "title": "सेटिंग्स",
+    "tabs": {
+      "apiKey": "API कुंजी",
+      "preferences": "प्राथमिकताएं",
+      "blacklist": "ब्लैकलिस्ट",
+      "tags": "टैग"
+    },
+    "preferences": {
+      "interaction": "इंटरैक्शन",
+      "doubleClick": "डबल-क्लिक लुकअप",
+      "doubleClickDesc": "डबल-क्लिक पर अनुवाद दिखाएं",
+      "hoverIcon": "होवर आइकन दिखाएं",
+      "hoverIconDesc": "टेक्स्ट चुनने पर अनुवाद आइकन दिखाएं",
+      "reviewReminder": "रिव्यू रिमाइंडर",
+      "reviewReminderDesc": "एक्सटेंशन आइकन पर बकाया शब्द संख्या दिखाएं",
+      "skipNativeText": "मूल भाषा छोड़ें",
+      "skipNativeTextDesc": "अपनी लक्ष्य भाषा के लिए पॉपअप न दिखाएं",
+      "appearance": "दिखावट",
+      "theme": "थीम",
+      "themeLight": "लाइट",
+      "themeDark": "डार्क",
+      "themeSystem": "सिस्टम",
+      "language": "भाषा",
+      "uiLanguage": "इंटरफ़ेस भाषा",
+      "uiLanguageAuto": "स्वतः पहचानें",
+      "targetLanguage": "अनुवाद भाषा",
+      "targetLanguageDesc": "शब्दों का इस भाषा में अनुवाद करें"
+    },
+    "apiKey": {
+      "title": "API कुंजी",
+      "aiProvider": "AI प्रदाता",
+      "customConfig": "कस्टम API कॉन्फ़िगरेशन",
+      "endpoint": "API एंडपॉइंट URL",
+      "endpointPlaceholder": "http://localhost:8080/v1/chat/completions",
+      "endpointHelp": "CLI Proxy, Ollama, LM Studio और अन्य OpenAI-संगत API समर्थित हैं",
+      "modelName": "मॉडल का नाम",
+      "modelPlaceholder": "gpt-4, claude-3-opus, llama3",
+      "apiKeyPlaceholder": "अपनी API कुंजी दर्ज करें",
+      "apiKeyRequired": "कृपया API कुंजी दर्ज करें",
+      "getGeminiKey": "Gemini API कुंजी प्राप्त करें",
+      "configured": "API कुंजी कॉन्फ़िगर है",
+      "geminiHelp": "Gemini API का उपयोग करते हुए, अपनी Google AI API कुंजी दर्ज करें",
+      "customHelp": "कस्टम API का उपयोग करते हुए, API कुंजी वैकल्पिक है",
+      "clearConfirmTitle": "साफ़ करने की पुष्टि करें",
+      "clearConfirmMessage": "क्या आप API कुंजी को साफ़ करना चाहते हैं? अनुवाद सुविधा का उपयोग करने के लिए आपको इसे फिर से कॉन्फ़िगर करना होगा।"
+    },
+    "blacklist": {
+      "title": "ब्लैकलिस्ट",
+      "description": "गोपनीयता के लिए ब्लैकलिस्ट की गई साइटों पर एक्सटेंशन अक्षम है।",
+      "wildcardHelp": "वाइल्डकार्ड समर्थित: *.domain.com या *keyword*",
+      "addSite": "साइट जोड़ें",
+      "placeholder": "*.example.com या *keyword*",
+      "list": "ब्लैकलिस्ट ({{count}})",
+      "resetDefault": "डिफ़ॉल्ट रीसेट करें",
+      "empty": "कोई ब्लैकलिस्ट साइट नहीं",
+      "emptyHint": "प्रीसेट को पुनर्स्थापित करने के लिए \"डिफ़ॉल्ट रीसेट करें\" पर क्लिक करें",
+      "validation": {
+        "required": "कृपया एक URL पैटर्न दर्ज करें",
+        "invalid": "अमान्य पैटर्न। *.domain.com या *keyword* प्रारूप का उपयोग करें",
+        "duplicate": "यह पैटर्न पहले से मौजूद है"
+      }
+    },
+    "tags": {
+      "title": "टैग प्रबंधन",
+      "create": "नया",
+      "empty": "अभी तक कोई टैग नहीं बनाया गया",
+      "emptyHint": "अपना पहला टैग बनाने के लिए \"नया\" पर क्लिक करें",
+      "deleteConfirm": "टैग \"{{name}}\" हटाएं?\n\nइस टैग वाले शब्दों से यह हटा दिया जाएगा।",
+      "loading": "टैग लोड हो रहे हैं...",
+      "editTag": "टैग संपादित करें",
+      "deleteTag": "टैग हटाएं"
+    },
+    "toast": {
+      "apiKeySaved": "API कुंजी सफलतापूर्वक सहेजी गई",
+      "apiKeyCleared": "API कुंजी साफ़ की गई",
+      "settingsSaved": "सेटिंग्स सहेजी गईं",
+      "blacklistUpdated": "ब्लैकलिस्ट अपडेट की गई",
+      "comingSoon": "यह सुविधा जल्द आ रही है"
+    }
+  },
+  "vocabulary": {
+    "title": "मेरी शब्दावली",
+    "wordCount": "{{count}} शब्द",
+    "matchCount": "{{total}} में से {{match}} शब्द मिले",
+    "emptyState": "अभी तक कोई शब्द सहेजा नहीं गया",
+    "emptyStateHint": "पढ़ना शुरू करें और नए शब्द सहेजें!",
+    "jumpToSource": "स्रोत पर जाएं",
+    "jumping": "जा रहे हैं...",
+    "pronunciation": "उच्चारण",
+    "example": "उदाहरण",
+    "source": "स्रोत",
+    "inaccessible": "स्रोत पृष्ठ पहुंच योग्य नहीं है, लेकिन आप अभी भी पूरा संदर्भ यहां देख सकते हैं।",
+    "search": {
+      "placeholder": "शब्द खोजें...",
+      "searching": "खोज रहा है...",
+      "resultsCount": "{{count}} परिणाम मिले",
+      "noResults": "कोई मिलते-जुलते शब्द नहीं",
+      "noResultsHint": "अलग कीवर्ड आज़माएं",
+      "clearSearch": "खोज साफ़ करें",
+      "clearAll": "सभी फ़िल्टर साफ़ करें"
+    },
+    "sort": {
+      "label": "क्रमबद्ध करें",
+      "options": "क्रमबद्ध विकल्प",
+      "recent": "सबसे हाल का",
+      "oldest": "सबसे पुराना पहले",
+      "alphabetical": "वर्णानुक्रम"
+    },
+    "batch": {
+      "select": "बैच चुनें",
+      "cancel": "चयन रद्द करें",
+      "selected": "{{count}} चुने गए",
+      "addTags": "टैग जोड़ें"
+    },
+    "filter": {
+      "search": "खोज: \"{{query}}\"",
+      "tagsCount": "{{count}} टैग फ़िल्टर",
+      "removeTag": "{{name}} फ़िल्टर हटाएं"
+    },
+    "actions": {
+      "select": "चुनें",
+      "deselect": "अचयनित करें",
+      "settings": "सेटिंग्स",
+      "startReview": "रिव्यू शुरू करें"
+    }
+  },
+  "review": {
+    "title": "रिव्यू",
+    "startReview": "रिव्यू शुरू करें",
+    "showAnswer": "उत्तर दिखाएं",
+    "clickToShow": "उत्तर देखने के लिए क्लिक करें",
+    "remembered": "याद है",
+    "forgotten": "भूल गए",
+    "hint": "उत्तर देखने के लिए कार्ड पर क्लिक करें या Enter दबाएं",
+    "progress": "{{current}} / {{total}}",
+    "cardFront": "उत्तर देखने के लिए क्लिक करें",
+    "cardBack": "कार्ड का पिछला भाग",
+    "complete": {
+      "title": "रिव्यू पूर्ण!",
+      "great": "बहुत बढ़िया!",
+      "awesome": "शानदार! बेहतरीन याददाश्त!",
+      "good": "बहुत अच्छा! ऐसे ही जारी रखें!",
+      "okay": "अच्छी शुरुआत! अधिक अभ्यास से मदद मिलेगी!",
+      "needPractice": "हार मत मानो! रिव्यू महत्वपूर्ण है!",
+      "total": "कुल रिव्यू किए गए",
+      "rememberedCount": "याद किए",
+      "forgottenCount": "भूले हुए",
+      "memoryRate": "याद करने की दर",
+      "backToVocabulary": "शब्दावली पर वापस जाएं"
+    },
+    "empty": {
+      "title": "बहुत बढ़िया!",
+      "message": "रिव्यू के लिए कोई शब्द बकाया नहीं",
+      "back": "शब्दावली पर वापस जाएं"
+    }
+  },
+  "analysis": {
+    "meaning": "अर्थ",
+    "translation": "अनुवाद",
+    "pronunciation": "उच्चारण",
+    "partOfSpeech": "शब्द भेद",
+    "usage": "उपयोग",
+    "saveWord": "शब्द सहेजें",
+    "loading": {
+      "word": {
+        "tip1": "AI संदर्भ का विश्लेषण कर रहा है...",
+        "tip2": "संदर्भ समझ रहा है...",
+        "tip3": "सटीक परिभाषा बना रहा है...",
+        "tip4": "शब्द के उपयोग का विश्लेषण कर रहा है..."
+      },
+      "translate": {
+        "tip1": "AI अनुवाद कर रहा है...",
+        "tip2": "मूल अर्थ समझ रहा है...",
+        "tip3": "सहज अनुवाद बना रहा है...",
+        "tip4": "अनुवाद को बेहतर बना रहा है..."
+      }
+    },
+    "toast": {
+      "translationNotSavable": "अनुवाद सामग्री शब्दावली में सहेजी नहीं जा सकती",
+      "completeAnalysisFirst": "सहेजने से पहले कृपया विश्लेषण पूरा करें",
+      "locationError": "शब्द का स्थान नहीं मिल सका, सहेजना विफल",
+      "saveSuccess": "सफलतापूर्वक सहेजा गया",
+      "extensionUpdated": "एक्सटेंशन अपडेट हो गया है, कृपया पेज रिफ्रेश करें और पुनः प्रयास करें",
+      "duplicateWord": "यह शब्द पहले से सहेजा हुआ है",
+      "saveFailed": "सहेजना विफल",
+      "saveRetry": "सहेजना विफल, कृपया पुनः प्रयास करें",
+      "cannotLocate": "वर्तमान पृष्ठ पर इस शब्द का पता नहीं लगा सकते, सामग्री बदल गई हो सकती है"
+    },
+    "errors": {
+      "network": "नेटवर्क कनेक्शन विफल",
+      "networkHint": "कृपया अपना कनेक्शन जांचें और पुनः प्रयास करें",
+      "timeout": "अनुरोध का समय समाप्त",
+      "timeoutHint": "AI प्रतिक्रिया धीमी है, कृपया पुनः प्रयास करें",
+      "apiKey": "API कॉन्फ़िगरेशन त्रुटि",
+      "apiKeyHint": "कृपया अपनी API कुंजी सेटिंग्स जांचें",
+      "config": "कॉन्फ़िगरेशन त्रुटि",
+      "configHint": "कृपया एक्सटेंशन में सेटिंग्स जांचें",
+      "refresh": "एक्सटेंशन अपडेट हो गया",
+      "refreshHint": "कृपया पेज रिफ्रेश करें और पुनः प्रयास करें",
+      "generic": "विश्लेषण विफल",
+      "genericHint": "कृपया बाद में पुनः प्रयास करें"
+    }
+  },
+  "dialog": {
+    "confirmAction": "क्रिया की पुष्टि करें",
+    "processing": "प्रोसेस हो रहा है..."
+  },
+  "toast": {
+    "close": "बंद करें"
+  }
+}

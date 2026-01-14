@@ -8,6 +8,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react';
 
 /**
@@ -77,6 +78,7 @@ export function Toast({
   duration = 3000,
   onClose,
 }: ToastProps): React.ReactElement | null {
+  const { t } = useTranslation();
   const [isVisible, setIsVisible] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
 
@@ -130,7 +132,7 @@ export function Toast({
       <button
         onClick={handleClose}
         className="flex-shrink-0 p-0.5 rounded hover:bg-black/5 transition-colors"
-        aria-label="关闭"
+        aria-label={t('common.close')}
       >
         <X className="w-4 h-4" />
       </button>

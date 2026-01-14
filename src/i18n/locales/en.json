@@ -1,0 +1,232 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "retry": "Retry",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "add": "Add",
+    "reset": "Reset",
+    "clear": "Clear",
+    "back": "Back",
+    "new": "New",
+    "processing": "Processing...",
+    "saving": "Saving..."
+  },
+  "settings": {
+    "title": "Settings",
+    "tabs": {
+      "apiKey": "API Key",
+      "preferences": "Preferences",
+      "blacklist": "Blacklist",
+      "tags": "Tags"
+    },
+    "preferences": {
+      "interaction": "Interaction",
+      "doubleClick": "Double-click Lookup",
+      "doubleClickDesc": "Trigger translation on double-click",
+      "hoverIcon": "Show Hover Icon",
+      "hoverIconDesc": "Display translation icon on text selection",
+      "reviewReminder": "Review Reminder",
+      "reviewReminderDesc": "Show due word count on extension icon",
+      "skipNativeText": "Skip Native Text",
+      "skipNativeTextDesc": "Don't show popup for your target language",
+      "appearance": "Appearance",
+      "theme": "Theme",
+      "themeLight": "Light",
+      "themeDark": "Dark",
+      "themeSystem": "System",
+      "language": "Language",
+      "uiLanguage": "Interface Language",
+      "uiLanguageAuto": "Auto-detect",
+      "targetLanguage": "Translation Language",
+      "targetLanguageDesc": "Translate words into this language"
+    },
+    "apiKey": {
+      "title": "API Key",
+      "aiProvider": "AI Provider",
+      "customConfig": "Custom API Configuration",
+      "endpoint": "API Endpoint URL",
+      "endpointPlaceholder": "http://localhost:8080/v1/chat/completions",
+      "endpointHelp": "Supports CLI Proxy, Ollama, LM Studio and other OpenAI-compatible APIs",
+      "modelName": "Model Name",
+      "modelPlaceholder": "gpt-4, claude-3-opus, llama3",
+      "apiKeyPlaceholder": "Enter your API Key",
+      "apiKeyRequired": "Please enter API Key",
+      "getGeminiKey": "Get Gemini API Key",
+      "configured": "API Key configured",
+      "geminiHelp": "Using Gemini API, enter your Google AI API Key",
+      "customHelp": "Using custom API, API Key is optional",
+      "clearConfirmTitle": "Confirm Clear",
+      "clearConfirmMessage": "Are you sure you want to clear the API Key? You will need to reconfigure it to use the translation feature."
+    },
+    "blacklist": {
+      "title": "Blacklist",
+      "description": "Extension is disabled on blacklisted sites for privacy.",
+      "wildcardHelp": "Supports wildcards: *.domain.com or *keyword*",
+      "addSite": "Add Site",
+      "placeholder": "*.example.com or *keyword*",
+      "list": "Blacklist ({{count}})",
+      "resetDefault": "Reset Default",
+      "empty": "No blacklisted sites",
+      "emptyHint": "Click \"Reset Default\" to restore presets",
+      "validation": {
+        "required": "Please enter a URL pattern",
+        "invalid": "Invalid pattern. Use *.domain.com or *keyword* format",
+        "duplicate": "This pattern already exists"
+      }
+    },
+    "tags": {
+      "title": "Tag Management",
+      "create": "New",
+      "empty": "No tags created yet",
+      "emptyHint": "Click \"New\" to create your first tag",
+      "deleteConfirm": "Delete tag \"{{name}}\"?\n\nWords with this tag will have it removed.",
+      "loading": "Loading tags...",
+      "editTag": "Edit tag",
+      "deleteTag": "Delete tag"
+    },
+    "toast": {
+      "apiKeySaved": "API Key saved successfully",
+      "apiKeyCleared": "API Key cleared",
+      "settingsSaved": "Settings saved",
+      "blacklistUpdated": "Blacklist updated",
+      "comingSoon": "This feature is coming soon"
+    }
+  },
+  "vocabulary": {
+    "title": "My Vocabulary",
+    "wordCount": "{{count}} words",
+    "matchCount": "Found {{match}} of {{total}} words",
+    "emptyState": "No words saved yet",
+    "emptyStateHint": "Start reading and save new words!",
+    "jumpToSource": "Jump to Source",
+    "jumping": "Jumping...",
+    "pronunciation": "Pronunciation",
+    "example": "Example",
+    "source": "Source",
+    "inaccessible": "Source page is inaccessible, but you can still view the full context here.",
+    "search": {
+      "placeholder": "Search words...",
+      "searching": "Searching...",
+      "resultsCount": "Found {{count}} results",
+      "noResults": "No matching words",
+      "noResultsHint": "Try different keywords",
+      "clearSearch": "Clear search",
+      "clearAll": "Clear All Filters"
+    },
+    "sort": {
+      "label": "Sort by",
+      "options": "Sort options",
+      "recent": "Most Recent",
+      "oldest": "Oldest First",
+      "alphabetical": "Alphabetical"
+    },
+    "batch": {
+      "select": "Batch Select",
+      "cancel": "Cancel Selection",
+      "selected": "{{count}} selected",
+      "addTags": "Add Tags"
+    },
+    "filter": {
+      "search": "Search: \"{{query}}\"",
+      "tagsCount": "{{count}} tags filter",
+      "removeTag": "Remove {{name}} filter"
+    },
+    "actions": {
+      "select": "Select",
+      "deselect": "Deselect",
+      "settings": "Settings",
+      "startReview": "Start Review"
+    }
+  },
+  "review": {
+    "title": "Review",
+    "startReview": "Start Review",
+    "showAnswer": "Show Answer",
+    "clickToShow": "Click to show answer",
+    "remembered": "Remembered",
+    "forgotten": "Forgot",
+    "hint": "Click card or press Enter to show answer",
+    "progress": "{{current}} / {{total}}",
+    "cardFront": "Click to reveal answer",
+    "cardBack": "Card back",
+    "complete": {
+      "title": "Review Complete!",
+      "great": "Great job!",
+      "awesome": "Awesome! Great memory!",
+      "good": "Great job! Keep it up!",
+      "okay": "Good start! More practice helps!",
+      "needPractice": "Don't give up! Review is key!",
+      "total": "Total reviewed",
+      "rememberedCount": "Remembered",
+      "forgottenCount": "Forgot",
+      "memoryRate": "Memory Rate",
+      "backToVocabulary": "Back to Vocabulary"
+    },
+    "empty": {
+      "title": "Great!",
+      "message": "No words due for review",
+      "back": "Back to Vocabulary"
+    }
+  },
+  "analysis": {
+    "meaning": "Meaning",
+    "translation": "Translation",
+    "pronunciation": "Pronunciation",
+    "partOfSpeech": "Part of Speech",
+    "usage": "Usage",
+    "saveWord": "Save Word",
+    "loading": {
+      "word": {
+        "tip1": "AI is analyzing context...",
+        "tip2": "Understanding context...",
+        "tip3": "Generating accurate definition...",
+        "tip4": "Analyzing word usage..."
+      },
+      "translate": {
+        "tip1": "AI is translating...",
+        "tip2": "Understanding original meaning...",
+        "tip3": "Generating smooth translation...",
+        "tip4": "Optimizing translation..."
+      }
+    },
+    "toast": {
+      "translationNotSavable": "Translation content cannot be saved to vocabulary",
+      "completeAnalysisFirst": "Please complete analysis before saving",
+      "locationError": "Cannot get word location, save failed",
+      "saveSuccess": "Saved successfully",
+      "extensionUpdated": "Extension updated, please refresh the page and try again",
+      "duplicateWord": "This word is already saved",
+      "saveFailed": "Save failed",
+      "saveRetry": "Save failed, please retry",
+      "cannotLocate": "Cannot locate this word on the current page, content may have changed"
+    },
+    "errors": {
+      "network": "Network connection failed",
+      "networkHint": "Please check your connection and retry",
+      "timeout": "Request timeout",
+      "timeoutHint": "AI response is slow, please try again",
+      "apiKey": "API configuration error",
+      "apiKeyHint": "Please check your API Key settings",
+      "config": "Configuration error",
+      "configHint": "Please check settings in extension",
+      "refresh": "Extension updated",
+      "refreshHint": "Please refresh the page and try again",
+      "generic": "Analysis failed",
+      "genericHint": "Please try again later"
+    }
+  },
+  "dialog": {
+    "confirmAction": "Confirm Action",
+    "processing": "Processing..."
+  },
+  "toast": {
+    "close": "Close"
+  }
+}

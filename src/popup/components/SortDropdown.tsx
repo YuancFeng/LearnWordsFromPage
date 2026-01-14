@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ArrowUpDown, Check } from 'lucide-react';
 
 /**
@@ -35,12 +36,12 @@ export const SORT_CONFIG: Record<SortOption, SortConfig> = {
 };
 
 /**
- * 排序选项标签
+ * 排序选项翻译键
  */
-const SORT_LABELS: Record<SortOption, string> = {
-  recent: 'Most Recent',
-  oldest: 'Oldest First',
-  alphabetical: 'Alphabetical',
+const SORT_LABEL_KEYS: Record<SortOption, string> = {
+  recent: 'vocabulary.sort.recent',
+  oldest: 'vocabulary.sort.oldest',
+  alphabetical: 'vocabulary.sort.alphabetical',
 };
 
 /**
@@ -75,6 +76,7 @@ export function SortDropdown({
   onChange,
   disabled = false,
 }: SortDropdownProps): React.ReactElement {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -130,11 +132,11 @@ export function SortDropdown({
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        aria-label="排序方式"
+        aria-label={t('vocabulary.sortBy')}
         type="button"
       >
         <ArrowUpDown size={14} className="text-gray-400" />
-        <span className="text-gray-700 dark:text-gray-200 whitespace-nowrap">{SORT_LABELS[value]}</span>
+        <span className="text-gray-700 dark:text-gray-200 whitespace-nowrap">{t(SORT_LABEL_KEYS[value])}</span>
       </button>
 
       {/* 下拉菜单 */}
@@ -142,7 +144,7 @@ export function SortDropdown({
         <div
           className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 overflow-hidden"
           role="listbox"
-          aria-label="排序选项"
+          aria-label={t('vocabulary.sortOptions')}
         >
           {sortOptions.map((option) => (
             <button
@@ -157,7 +159,7 @@ export function SortDropdown({
               aria-selected={value === option}
               type="button"
             >
-              <span>{SORT_LABELS[option]}</span>
+              <span>{t(SORT_LABEL_KEYS[option])}</span>
               {value === option && (
                 <Check size={14} className="text-blue-600 dark:text-blue-400" />
               )}

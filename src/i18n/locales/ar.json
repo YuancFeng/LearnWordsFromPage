@@ -1,0 +1,232 @@
+{
+  "common": {
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "confirm": "تأكيد",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "close": "إغلاق",
+    "retry": "إعادة المحاولة",
+    "loading": "جارٍ التحميل...",
+    "error": "خطأ",
+    "success": "نجاح",
+    "add": "إضافة",
+    "reset": "إعادة تعيين",
+    "clear": "مسح",
+    "back": "رجوع",
+    "new": "جديد",
+    "processing": "جارٍ المعالجة...",
+    "saving": "جارٍ الحفظ..."
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "tabs": {
+      "apiKey": "مفتاح API",
+      "preferences": "التفضيلات",
+      "blacklist": "القائمة السوداء",
+      "tags": "الوسوم"
+    },
+    "preferences": {
+      "interaction": "التفاعل",
+      "doubleClick": "البحث بالنقر المزدوج",
+      "doubleClickDesc": "تفعيل الترجمة عند النقر المزدوج",
+      "hoverIcon": "إظهار أيقونة التمرير",
+      "hoverIconDesc": "عرض أيقونة الترجمة عند تحديد النص",
+      "reviewReminder": "تذكير المراجعة",
+      "reviewReminderDesc": "عرض عدد الكلمات المستحقة على أيقونة الإضافة",
+      "skipNativeText": "تخطي النص الأصلي",
+      "skipNativeTextDesc": "عدم إظهار النافذة المنبثقة للغة الهدف",
+      "appearance": "المظهر",
+      "theme": "السمة",
+      "themeLight": "فاتح",
+      "themeDark": "داكن",
+      "themeSystem": "النظام",
+      "language": "اللغة",
+      "uiLanguage": "لغة الواجهة",
+      "uiLanguageAuto": "اكتشاف تلقائي",
+      "targetLanguage": "لغة الترجمة",
+      "targetLanguageDesc": "ترجمة الكلمات إلى هذه اللغة"
+    },
+    "apiKey": {
+      "title": "مفتاح API",
+      "aiProvider": "مزود الذكاء الاصطناعي",
+      "customConfig": "تكوين API مخصص",
+      "endpoint": "عنوان نقطة النهاية API",
+      "endpointPlaceholder": "http://localhost:8080/v1/chat/completions",
+      "endpointHelp": "يدعم CLI Proxy و Ollama و LM Studio وواجهات API المتوافقة مع OpenAI",
+      "modelName": "اسم النموذج",
+      "modelPlaceholder": "gpt-4, claude-3-opus, llama3",
+      "apiKeyPlaceholder": "أدخل مفتاح API الخاص بك",
+      "apiKeyRequired": "الرجاء إدخال مفتاح API",
+      "getGeminiKey": "الحصول على مفتاح Gemini API",
+      "configured": "تم تكوين مفتاح API",
+      "geminiHelp": "استخدام Gemini API، أدخل مفتاح Google AI API",
+      "customHelp": "استخدام API مخصص، مفتاح API اختياري",
+      "clearConfirmTitle": "تأكيد المسح",
+      "clearConfirmMessage": "هل أنت متأكد من مسح مفتاح API؟ ستحتاج إلى إعادة تكوينه لاستخدام ميزة الترجمة."
+    },
+    "blacklist": {
+      "title": "القائمة السوداء",
+      "description": "الإضافة معطلة على المواقع المدرجة في القائمة السوداء للخصوصية.",
+      "wildcardHelp": "يدعم أحرف البدل: *.domain.com أو *keyword*",
+      "addSite": "إضافة موقع",
+      "placeholder": "*.example.com أو *keyword*",
+      "list": "القائمة السوداء ({{count}})",
+      "resetDefault": "إعادة التعيين الافتراضي",
+      "empty": "لا توجد مواقع في القائمة السوداء",
+      "emptyHint": "انقر على \"إعادة التعيين الافتراضي\" لاستعادة الإعدادات المسبقة",
+      "validation": {
+        "required": "الرجاء إدخال نمط URL",
+        "invalid": "نمط غير صالح. استخدم تنسيق *.domain.com أو *keyword*",
+        "duplicate": "هذا النمط موجود بالفعل"
+      }
+    },
+    "tags": {
+      "title": "إدارة الوسوم",
+      "create": "جديد",
+      "empty": "لم يتم إنشاء وسوم بعد",
+      "emptyHint": "انقر على \"جديد\" لإنشاء أول وسم",
+      "deleteConfirm": "حذف الوسم \"{{name}}\"؟\n\nسيتم إزالة الوسم من الكلمات المرتبطة به.",
+      "loading": "جارٍ تحميل الوسوم...",
+      "editTag": "تعديل الوسم",
+      "deleteTag": "حذف الوسم"
+    },
+    "toast": {
+      "apiKeySaved": "تم حفظ مفتاح API بنجاح",
+      "apiKeyCleared": "تم مسح مفتاح API",
+      "settingsSaved": "تم حفظ الإعدادات",
+      "blacklistUpdated": "تم تحديث القائمة السوداء",
+      "comingSoon": "هذه الميزة قادمة قريباً"
+    }
+  },
+  "vocabulary": {
+    "title": "مفرداتي",
+    "wordCount": "{{count}} كلمة",
+    "matchCount": "تم العثور على {{match}} من {{total}} كلمة",
+    "emptyState": "لم يتم حفظ كلمات بعد",
+    "emptyStateHint": "ابدأ القراءة واحفظ كلمات جديدة!",
+    "jumpToSource": "الانتقال للمصدر",
+    "jumping": "جارٍ الانتقال...",
+    "pronunciation": "النطق",
+    "example": "مثال",
+    "source": "المصدر",
+    "inaccessible": "صفحة المصدر غير متاحة، لكن يمكنك الاطلاع على السياق الكامل هنا.",
+    "search": {
+      "placeholder": "البحث عن كلمات...",
+      "searching": "جارٍ البحث...",
+      "resultsCount": "تم العثور على {{count}} نتيجة",
+      "noResults": "لا توجد كلمات مطابقة",
+      "noResultsHint": "جرب كلمات مفتاحية مختلفة",
+      "clearSearch": "مسح البحث",
+      "clearAll": "مسح جميع المرشحات"
+    },
+    "sort": {
+      "label": "ترتيب حسب",
+      "options": "خيارات الترتيب",
+      "recent": "الأحدث",
+      "oldest": "الأقدم",
+      "alphabetical": "أبجدياً"
+    },
+    "batch": {
+      "select": "تحديد متعدد",
+      "cancel": "إلغاء التحديد",
+      "selected": "تم تحديد {{count}}",
+      "addTags": "إضافة وسوم"
+    },
+    "filter": {
+      "search": "بحث: \"{{query}}\"",
+      "tagsCount": "تصفية بـ {{count}} وسوم",
+      "removeTag": "إزالة تصفية {{name}}"
+    },
+    "actions": {
+      "select": "تحديد",
+      "deselect": "إلغاء التحديد",
+      "settings": "الإعدادات",
+      "startReview": "بدء المراجعة"
+    }
+  },
+  "review": {
+    "title": "المراجعة",
+    "startReview": "بدء المراجعة",
+    "showAnswer": "إظهار الإجابة",
+    "clickToShow": "انقر لإظهار الإجابة",
+    "remembered": "تذكرت",
+    "forgotten": "نسيت",
+    "hint": "انقر على البطاقة أو اضغط Enter لإظهار الإجابة",
+    "progress": "{{current}} / {{total}}",
+    "cardFront": "انقر لكشف الإجابة",
+    "cardBack": "خلف البطاقة",
+    "complete": {
+      "title": "اكتملت المراجعة!",
+      "great": "رائع!",
+      "awesome": "ممتاز! ذاكرة قوية!",
+      "good": "أحسنت! استمر!",
+      "okay": "بداية جيدة! المزيد من الممارسة يساعد!",
+      "needPractice": "لا تستسلم! المراجعة هي المفتاح!",
+      "total": "إجمالي المراجعة",
+      "rememberedCount": "تذكرت",
+      "forgottenCount": "نسيت",
+      "memoryRate": "معدل التذكر",
+      "backToVocabulary": "العودة للمفردات"
+    },
+    "empty": {
+      "title": "رائع!",
+      "message": "لا توجد كلمات مستحقة للمراجعة",
+      "back": "العودة للمفردات"
+    }
+  },
+  "analysis": {
+    "meaning": "المعنى",
+    "translation": "الترجمة",
+    "pronunciation": "النطق",
+    "partOfSpeech": "نوع الكلمة",
+    "usage": "الاستخدام",
+    "saveWord": "حفظ الكلمة",
+    "loading": {
+      "word": {
+        "tip1": "الذكاء الاصطناعي يحلل السياق...",
+        "tip2": "جارٍ فهم السياق...",
+        "tip3": "جارٍ إنشاء تعريف دقيق...",
+        "tip4": "جارٍ تحليل استخدام الكلمة..."
+      },
+      "translate": {
+        "tip1": "الذكاء الاصطناعي يترجم...",
+        "tip2": "جارٍ فهم المعنى الأصلي...",
+        "tip3": "جارٍ إنشاء ترجمة سلسة...",
+        "tip4": "جارٍ تحسين الترجمة..."
+      }
+    },
+    "toast": {
+      "translationNotSavable": "لا يمكن حفظ محتوى الترجمة في المفردات",
+      "completeAnalysisFirst": "الرجاء إكمال التحليل قبل الحفظ",
+      "locationError": "لا يمكن تحديد موقع الكلمة، فشل الحفظ",
+      "saveSuccess": "تم الحفظ بنجاح",
+      "extensionUpdated": "تم تحديث الإضافة، الرجاء تحديث الصفحة والمحاولة مجدداً",
+      "duplicateWord": "هذه الكلمة محفوظة بالفعل",
+      "saveFailed": "فشل الحفظ",
+      "saveRetry": "فشل الحفظ، الرجاء المحاولة مجدداً",
+      "cannotLocate": "لا يمكن تحديد موقع هذه الكلمة في الصفحة الحالية، ربما تغير المحتوى"
+    },
+    "errors": {
+      "network": "فشل الاتصال بالشبكة",
+      "networkHint": "الرجاء التحقق من الاتصال والمحاولة مجدداً",
+      "timeout": "انتهت مهلة الطلب",
+      "timeoutHint": "استجابة الذكاء الاصطناعي بطيئة، الرجاء المحاولة مجدداً",
+      "apiKey": "خطأ في تكوين API",
+      "apiKeyHint": "الرجاء التحقق من إعدادات مفتاح API",
+      "config": "خطأ في التكوين",
+      "configHint": "الرجاء التحقق من الإعدادات في الإضافة",
+      "refresh": "تم تحديث الإضافة",
+      "refreshHint": "الرجاء تحديث الصفحة والمحاولة مجدداً",
+      "generic": "فشل التحليل",
+      "genericHint": "الرجاء المحاولة لاحقاً"
+    }
+  },
+  "dialog": {
+    "confirmAction": "تأكيد الإجراء",
+    "processing": "جارٍ المعالجة..."
+  },
+  "toast": {
+    "close": "إغلاق"
+  }
+}

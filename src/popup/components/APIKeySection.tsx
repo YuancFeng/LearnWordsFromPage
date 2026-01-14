@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, Save, Trash2, Key, ExternalLink, Server, Settings2 } from 'lucide-react';
 import { useAIConfig } from '../../hooks/useAIConfig';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -33,6 +34,8 @@ export function APIKeySection({
   onClearSuccess,
   onError,
 }: APIKeySectionProps): React.ReactElement {
+  const { t } = useTranslation();
+
   // 使用 AI 配置 Hook
   const {
     displayValue,
@@ -82,7 +85,7 @@ export function APIKeySection({
       if (result.success) {
         onSaveSuccess?.();
       } else {
-        onError?.(result.error?.message ?? '保存配置失败');
+        onError?.(result.error?.message ?? t('settings.apiKey.configSaveFailed'));
       }
     } finally {
       setProviderSaving(false);
@@ -95,7 +98,7 @@ export function APIKeySection({
    */
   const handleSave = useCallback(async () => {
     if (!inputValue.trim()) {
-      onError?.('请输入 API Key');
+      onError?.(t('settings.apiKey.enterKey'));
       return;
     }
 
@@ -105,9 +108,9 @@ export function APIKeySection({
       setInputValue('');
       onSaveSuccess?.();
     } else {
-      onError?.(result.error?.message ?? '保存失败');
+      onError?.(result.error?.message ?? t('settings.apiKey.saveFailed'));
     }
-  }, [inputValue, saveKey, onSaveSuccess, onError]);
+  }, [inputValue, saveKey, onSaveSuccess, onError, t]);
 
   /**
    * 处理清除 API Key
@@ -120,9 +123,9 @@ export function APIKeySection({
       setShowConfirm(false);
       onClearSuccess?.();
     } else {
-      onError?.(result.error?.message ?? '清除失败');
+      onError?.(result.error?.message ?? t('settings.apiKey.clearFailed'));
     }
-  }, [clearKey, onClearSuccess, onError]);
+  }, [clearKey, onClearSuccess, onError, t]);
 
   /**
    * 处理键盘事件
@@ -151,7 +154,7 @@ export function APIKeySection({
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
           <Settings2 className="w-4 h-4" />
-          <h3 className="font-medium">AI Provider</h3>
+          <h3 className="font-medium">{t('settings.apiKey.aiProvider')}</h3>
         </div>
         <select
           value={aiProvider}
@@ -171,12 +174,12 @@ export function APIKeySection({
         <div className="space-y-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
             <Server className="w-4 h-4" />
-            <span className="text-sm font-medium">自定义 API 配置</span>
+            <span className="text-sm font-medium">{t('settings.apiKey.customConfig')}</span>
           </div>
 
           {/* API 端点 */}
           <div className="space-y-1">
-            <label className="text-xs text-gray-600 dark:text-gray-400">API 端点 URL</label>
+            <label className="text-xs text-gray-600 dark:text-gray-400">{t('settings.apiKey.endpointUrl')}</label>
             <input
               type="text"
               value={customEndpoint}
@@ -185,13 +188,13 @@ export function APIKeySection({
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <p className="text-xs text-gray-400 dark:text-gray-500">
-              支持 CLI Proxy、Ollama、LM Studio 等 OpenAI 兼容 API
+              {t('settings.apiKey.endpointHint')}
             </p>
           </div>
 
           {/* 模型名称 */}
           <div className="space-y-1">
-            <label className="text-xs text-gray-600 dark:text-gray-400">模型名称</label>
+            <label className="text-xs text-gray-600 dark:text-gray-400">{t('settings.apiKey.modelName')}</label>
             <input
               type="text"
               value={customModel}
@@ -210,12 +213,12 @@ export function APIKeySection({
             {providerSaving ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                <span>保存中...</span>
+                <span>{t('common.saving')}</span>
               </>
             ) : (
               <>
                 <Save className="w-4 h-4" />
-                <span>保存配置</span>
+                <span>{t('settings.apiKey.saveConfig')}</span>
               </>
             )}
           </button>
@@ -226,12 +229,12 @@ export function APIKeySection({
       <div className="space-y-1">
         <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
           <Key className="w-4 h-4" />
-          <h3 className="font-medium">API Key</h3>
+          <h3 className="font-medium">{t('settings.apiKey.title')}</h3>
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400">
           {aiProvider === 'gemini'
-            ? '配置您的 Gemini API Key 以启用 AI 词汇分析功能'
-            : '配置自定义 API 的访问密钥（如不需要可留空）'}
+            ? t('settings.apiKey.geminiDescription')
+            : t('settings.apiKey.customDescription')}
         </p>
       </div>
 
@@ -245,7 +248,7 @@ export function APIKeySection({
               value={hasKey ? displayValue : inputValue}
               onChange={(e) => !hasKey && setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="输入您的 Gemini API Key"
+              placeholder={t('settings.apiKey.placeholder')}
               disabled={hasKey || isSaving}
               className={`
                 w-full px-3 py-2 pr-10
@@ -267,7 +270,7 @@ export function APIKeySection({
                 type="button"
                 onClick={toggleShowKey}
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                aria-label={showKey ? '隐藏 API Key' : '显示 API Key'}
+                aria-label={showKey ? t('settings.apiKey.hideKey') : t('settings.apiKey.showKey')}
               >
                 {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -294,12 +297,12 @@ export function APIKeySection({
               {isSaving ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                  <span>保存中...</span>
+                  <span>{t('common.saving')}</span>
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4" />
-                  <span>保存</span>
+                  <span>{t('common.save')}</span>
                 </>
               )}
             </button>
@@ -311,7 +314,7 @@ export function APIKeySection({
               className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-md hover:bg-red-100 dark:hover:bg-red-900/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Trash2 className="w-4 h-4" />
-              <span>清除</span>
+              <span>{t('settings.apiKey.clear')}</span>
             </button>
           )}
         </div>
@@ -324,7 +327,7 @@ export function APIKeySection({
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600 hover:underline"
           >
-            <span>获取 Gemini API Key</span>
+            <span>{t('settings.apiKey.getKey')}</span>
             <ExternalLink className="w-3 h-3" />
           </a>
         )}
@@ -333,7 +336,7 @@ export function APIKeySection({
         {hasKey && (
           <p className="text-xs text-green-600 flex items-center gap-1">
             <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-            API Key 已配置
+            {t('settings.apiKey.configured')}
           </p>
         )}
       </div>
@@ -341,10 +344,10 @@ export function APIKeySection({
       {/* 确认清除对话框 */}
       {showConfirm && (
         <ConfirmDialog
-          title="确认清除"
-          message="确定要清除已保存的 API Key 吗？清除后需要重新配置才能使用 AI 分析功能。"
-          confirmText="清除"
-          cancelText="取消"
+          title={t('settings.apiKey.clearConfirmTitle')}
+          message={t('settings.apiKey.clearConfirmMessage')}
+          confirmText={t('settings.apiKey.clear')}
+          cancelText={t('dialog.cancel')}
           confirmType="danger"
           onConfirm={handleClear}
           onCancel={() => setShowConfirm(false)}

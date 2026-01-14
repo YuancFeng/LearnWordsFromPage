@@ -23,6 +23,7 @@ import {
 } from '../shared/messaging';
 
 import { type Settings, DEFAULT_SETTINGS } from '../shared/types/settings';
+import i18n from '../i18n';
 import { matchesBlacklist } from '../shared/utils/urlMatcher';
 import { STORAGE_KEYS } from '../shared/storage/config';
 
@@ -122,7 +123,11 @@ registerHandler(MessageTypes.HIGHLIGHT_TEXT, async (message) => {
  */
 registerHandler(MessageTypes.HIGHLIGHT_WORD, async (message) => {
   const payload = message.payload as HighlightWordPayload;
-  console.log('[LingoRecall] HIGHLIGHT_WORD:', payload);
+
+  // 检测当前是否在 iframe 中
+  const isTopFrame = window === window.top;
+  const frameInfo = isTopFrame ? 'top-frame' : 'iframe';
+  console.log(`[LingoRecall] HIGHLIGHT_WORD in ${frameInfo}:`, payload);
 
   const { xpath, textOffset, textLength, text, contextBefore, contextAfter } = payload;
 
@@ -130,15 +135,18 @@ registerHandler(MessageTypes.HIGHLIGHT_WORD, async (message) => {
   clearHighlights();
 
   // 尝试定位文本，支持重试机制（SPA 的 DOM 可能需要时间稳定）
-  const maxRetries = 4;
-  const retryDelayMs = 600;
+  // iframe 中减少重试次数以提高响应速度
+  const maxRetries = isTopFrame ? 4 : 2;
+  const retryDelayMs = isTopFrame ? 600 : 300;
 
-  // 初始延迟：给 SPA DOM 时间完成渲染（特别是从后台切换到前台时）
-  console.log('[LingoRecall] Waiting 300ms for initial DOM stabilization...');
-  await new Promise((resolve) => setTimeout(resolve, 300));
+  // 初始延迟：给 SPA DOM 时间完成渲染
+  // iframe 中使用更短的延迟
+  const initialDelay = isTopFrame ? 300 : 100;
+  console.log(`[LingoRecall] Waiting ${initialDelay}ms for initial DOM stabilization...`);
+  await new Promise((resolve) => setTimeout(resolve, initialDelay));
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    console.log(`[LingoRecall] Location attempt ${attempt}/${maxRetries}`);
+    console.log(`[LingoRecall] [${frameInfo}] Location attempt ${attempt}/${maxRetries}`);
 
     // 策略 1: XPath + textOffset 精确定位 (AC1)
     if (xpath) {
@@ -196,9 +204,17 @@ registerHandler(MessageTypes.HIGHLIGHT_WORD, async (message) => {
     }
   }
 
-  // 所有重试都失败，显示 Toast 通知 (AC3)
-  console.log('[LingoRecall] All location attempts failed');
-  showToast('Cannot locate this word on the current page, content may have changed', 'warning');
+  // 所有重试都失败
+  console.log(`[LingoRecall] [${frameInfo}] All location attempts failed`);
+
+  // 只有顶层 frame 显示 Toast 通知 (AC3)
+  // iframe 中的 content script 静默失败，避免多个 Toast
+  if (isTopFrame) {
+    // 延迟显示 Toast，给其他 iframe 时间响应
+    setTimeout(() => {
+      showToast(i18n.t('analysis.toast.cannotLocate'), 'warning');
+    }, 500);
+  }
 
   return {
     success: false,
@@ -206,6 +222,7 @@ registerHandler(MessageTypes.HIGHLIGHT_WORD, async (message) => {
       success: false,
       scrolledTo: false,
       method: 'none',
+      frame: frameInfo,
     },
   };
 });
@@ -629,11 +646,11 @@ async function handleAnalyze(): Promise<void> {
     } else {
       // 特殊处理扩展上下文失效错误（静默处理，仅显示用户提示）
       if (response.error?.code === ErrorCode.EXTENSION_CONTEXT_INVALIDATED) {
-        showError('扩展已更新，请刷新页面后重试');
+        showError(i18n.t('analysis.toast.extensionUpdated'));
       } else {
         // Handle other errors - show friendly message
         console.error('[LingoRecall] Analysis failed:', response.error);
-        showError(response.error?.message || 'AI 分析失败，请重试');
+        showError(response.error?.message || i18n.t('analysis.errors.generic'));
       }
     }
   } catch (error) {
@@ -643,10 +660,10 @@ async function handleAnalyze(): Promise<void> {
          error.message.includes('context invalidated'));
 
     if (isContextError) {
-      showError('扩展已更新，请刷新页面后重试');
+      showError(i18n.t('analysis.toast.extensionUpdated'));
     } else {
       console.error('[LingoRecall] Analysis error:', error);
-      showError('AI 分析失败，请重试');
+      showError(i18n.t('analysis.errors.generic'));
     }
   } finally {
     // 清除分析中标志
@@ -668,7 +685,7 @@ async function handleSave(): Promise<void> {
   // 翻译模式下不支持保存
   const mode = getAnalysisMode(currentSelection.text);
   if (mode === 'translate') {
-    showToast('翻译内容不支持保存到词汇库', 'info');
+    showToast(i18n.t('analysis.toast.translationNotSavable'), 'info');
     return;
   }
 
@@ -683,7 +700,7 @@ async function handleSave(): Promise<void> {
   );
 
   if (!hasAnalysis) {
-    showToast('请先完成分析再保存词汇', 'warning');
+    showToast(i18n.t('analysis.toast.completeAnalysisFirst'), 'warning');
     return;
   }
 
@@ -691,7 +708,7 @@ async function handleSave(): Promise<void> {
     currentSelection.sourceLocation ?? extractSourceLocationFromRange(currentSelection.range);
 
   if (!sourceLocation || !sourceLocation.xpath) {
-    showToast('无法获取词汇位置信息，保存失败', 'error');
+    showToast(i18n.t('analysis.toast.locationError'), 'error');
     return;
   }
 
@@ -726,19 +743,19 @@ async function handleSave(): Promise<void> {
     if (response.success) {
       console.log('[LingoRecall] Word saved successfully');
       // AC1: 显示保存成功 Toast
-      showToast('保存成功', 'success');
+      showToast(i18n.t('analysis.toast.saveSuccess'), 'success');
       hideUI();
       currentSelection = null;
       currentAnalysisResult = null;
     } else {
       // AC2: 显示重复检测或其他错误提示（静默处理上下文失效错误）
       if (response.error?.code === ErrorCode.EXTENSION_CONTEXT_INVALIDATED) {
-        showToast('扩展已更新，请刷新页面后重试', 'error');
+        showToast(i18n.t('analysis.toast.extensionUpdated'), 'error');
       } else if (response.error?.code === ErrorCode.DUPLICATE_WORD) {
-        showToast('该词汇已保存', 'warning');
+        showToast(i18n.t('analysis.toast.duplicateWord'), 'warning');
       } else {
         console.error('[LingoRecall] Save failed:', response.error);
-        showToast(response.error?.message || '保存失败', 'error');
+        showToast(response.error?.message || i18n.t('analysis.toast.saveFailed'), 'error');
       }
     }
   } catch (error) {
@@ -748,10 +765,10 @@ async function handleSave(): Promise<void> {
          error.message.includes('context invalidated'));
 
     if (isContextError) {
-      showToast('扩展已更新，请刷新页面后重试', 'error');
+      showToast(i18n.t('analysis.toast.extensionUpdated'), 'error');
     } else {
       console.error('[LingoRecall] Save error:', error);
-      showToast('保存失败，请重试', 'error');
+      showToast(i18n.t('analysis.toast.saveRetry'), 'error');
     }
   }
 }
@@ -798,19 +815,39 @@ function getSelectionContext(range: Range): string {
 /** 标记当前站点是否被黑名单禁用 */
 let isBlacklisted = false;
 
+/** 设置加载超时时间 (30ms) - 超过此时间使用默认设置 */
+const SETTINGS_LOAD_TIMEOUT_MS = 30;
+
 /**
- * 带超时的 Promise 包装器
+ * 带超时的 Promise 包装器 - 使用更可靠的实现
  * 避免 chrome.storage API 在复杂页面上阻塞过长时间
+ * 使用 AbortController 模式确保超时一定生效
  */
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number, fallback: T): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  let resolved = false;
+
+  const timeoutPromise = new Promise<T>((resolve) => {
+    timeoutId = setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        console.log(`[LingoRecall] Settings load timeout after ${timeoutMs}ms, using defaults`);
+        resolve(fallback);
+      }
+    }, timeoutMs);
+  });
+
   return Promise.race([
-    promise,
-    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), timeoutMs)),
+    promise.then((result) => {
+      if (!resolved) {
+        resolved = true;
+        clearTimeout(timeoutId);
+      }
+      return result;
+    }),
+    timeoutPromise,
   ]);
 }
-
-/** 设置加载超时时间 (50ms) - 超过此时间使用默认设置 */
-const SETTINGS_LOAD_TIMEOUT_MS = 50;
 
 /**
  * 从 chrome.storage.local 加载设置
@@ -824,6 +861,12 @@ async function loadSettingsFromStorage(): Promise<Settings | null> {
   };
 
   try {
+    // 检查 chrome.storage 是否可用
+    if (!chrome?.storage?.local) {
+      console.warn('[LingoRecall] chrome.storage.local not available');
+      return defaultSettings;
+    }
+
     // 使用超时机制，避免 storage API 阻塞过长
     const result = await withTimeout(
       chrome.storage.local.get(STORAGE_KEYS.SETTINGS),
@@ -871,18 +914,22 @@ function checkBlacklist(settings: Settings): boolean {
 /**
  * 通知 Service Worker 更新图标状态
  * Story 4.3 - AC3: 扩展图标显示禁用状态
+ * 使用 queueMicrotask 避免阻塞初始化
  */
 function notifyIconState(disabled: boolean): void {
-  try {
-    chrome.runtime.sendMessage({
-      type: 'UPDATE_ICON_STATE',
-      payload: { disabled },
-    }).catch(() => {
-      // Service Worker 可能未就绪，忽略错误
-    });
-  } catch {
-    // chrome.runtime 不可用时忽略
-  }
+  // 使用 queueMicrotask 延迟执行，不阻塞初始化
+  queueMicrotask(() => {
+    try {
+      chrome.runtime.sendMessage({
+        type: 'UPDATE_ICON_STATE',
+        payload: { disabled },
+      }).catch(() => {
+        // Service Worker 可能未就绪，忽略错误
+      });
+    } catch {
+      // chrome.runtime 不可用时忽略
+    }
+  });
 }
 
 // ============================================================
@@ -922,16 +969,25 @@ async function loadSettingsDeferred(): Promise<void> {
  * Story 4.3 - AC3: 检查黑名单后才初始化功能
  */
 async function init(): Promise<void> {
-  console.log('[LingoRecall] Content script initializing...');
   const startTime = performance.now();
+
+  // 性能测量辅助函数
+  const mark = (label: string) => {
+    const elapsed = performance.now() - startTime;
+    console.log(`[LingoRecall] [${elapsed.toFixed(1)}ms] ${label}`);
+  };
+
+  mark('init() started');
 
   // 初始化消息监听器（即使被黑名单，也需要监听设置变更）
   initContentMessageListener();
+  mark('Message listener initialized');
 
   // Story 4.3: 加载设置并检查黑名单（带超时机制）
   const settingsLoadStart = performance.now();
   const settings = await loadSettingsFromStorage();
   const settingsLoadTime = performance.now() - settingsLoadStart;
+  mark(`Settings loaded (took ${settingsLoadTime.toFixed(1)}ms)`);
 
   // 检测是否因超时使用了默认设置
   settingsLoadedFromTimeout = settingsLoadTime >= SETTINGS_LOAD_TIMEOUT_MS - 5;
@@ -947,16 +1003,17 @@ async function init(): Promise<void> {
   // 如果站点被黑名单，通知 Service Worker 更新图标，并退出初始化
   if (isBlacklisted) {
     notifyIconState(true);
-    const loadTime = performance.now() - startTime;
-    console.log(`[LingoRecall] Blacklist check completed in ${loadTime.toFixed(2)}ms - Extension disabled`);
+    mark('Blacklisted - extension disabled');
     return; // 提前退出，不初始化 UI 功能
   }
 
   // 通知 Service Worker 站点未被黑名单（恢复正常图标）
   notifyIconState(false);
+  mark('Icon state notified');
 
   // Initialize Shadow DOM module (Story 1.4)
   initShadowModule();
+  mark('Shadow module initialized');
 
   // Set up UI callbacks
   setCallbacks({
@@ -972,17 +1029,18 @@ async function init(): Promise<void> {
   document.addEventListener('mouseup', handleMouseUp, false);
   document.addEventListener('keyup', handleKeyUp, false);
   document.addEventListener('click', handleDocumentClick, false);
+  mark('Event listeners attached');
 
   // Story 1.3 + 1.5 已实现:
   // - 文本选择监听
   // - XPath 提取和位置信息
 
   const loadTime = performance.now() - startTime;
-  console.log(`[LingoRecall] Content script initialized in ${loadTime.toFixed(2)}ms`);
+  mark(`Initialization complete (total: ${loadTime.toFixed(2)}ms)`);
 
   // Performance check per Story 1.3 requirement
   if (loadTime > 100) {
-    console.warn(`[LingoRecall] Slow initialization: ${loadTime.toFixed(2)}ms (target: <100ms)`);
+    console.warn(`[LingoRecall] Slow initialization: ${loadTime.toFixed(2)}ms (target: <100ms) - check detailed timing above`);
   }
 
   // 如果初始设置加载超时，异步加载完整设置

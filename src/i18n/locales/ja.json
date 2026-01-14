@@ -1,0 +1,232 @@
+{
+  "common": {
+    "save": "保存",
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "delete": "削除",
+    "edit": "編集",
+    "close": "閉じる",
+    "retry": "再試行",
+    "loading": "読み込み中...",
+    "error": "エラー",
+    "success": "成功",
+    "add": "追加",
+    "reset": "リセット",
+    "clear": "クリア",
+    "back": "戻る",
+    "new": "新規",
+    "processing": "処理中...",
+    "saving": "保存中..."
+  },
+  "settings": {
+    "title": "設定",
+    "tabs": {
+      "apiKey": "APIキー",
+      "preferences": "環境設定",
+      "blacklist": "ブラックリスト",
+      "tags": "タグ"
+    },
+    "preferences": {
+      "interaction": "操作設定",
+      "doubleClick": "ダブルクリックで検索",
+      "doubleClickDesc": "ダブルクリックで翻訳を開始",
+      "hoverIcon": "ホバーアイコン表示",
+      "hoverIconDesc": "テキスト選択時に翻訳アイコンを表示",
+      "reviewReminder": "復習リマインダー",
+      "reviewReminderDesc": "拡張機能アイコンに復習待ちの単語数を表示",
+      "skipNativeText": "母語テキストをスキップ",
+      "skipNativeTextDesc": "ターゲット言語のテキストにはポップアップを表示しない",
+      "appearance": "外観",
+      "theme": "テーマ",
+      "themeLight": "ライト",
+      "themeDark": "ダーク",
+      "themeSystem": "システム設定に従う",
+      "language": "言語",
+      "uiLanguage": "インターフェース言語",
+      "uiLanguageAuto": "自動検出",
+      "targetLanguage": "翻訳先言語",
+      "targetLanguageDesc": "単語をこの言語に翻訳"
+    },
+    "apiKey": {
+      "title": "APIキー",
+      "aiProvider": "AIプロバイダー",
+      "customConfig": "カスタムAPI設定",
+      "endpoint": "APIエンドポイントURL",
+      "endpointPlaceholder": "http://localhost:8080/v1/chat/completions",
+      "endpointHelp": "CLI Proxy、Ollama、LM StudioなどのOpenAI互換APIに対応",
+      "modelName": "モデル名",
+      "modelPlaceholder": "gpt-4, claude-3-opus, llama3",
+      "apiKeyPlaceholder": "APIキーを入力してください",
+      "apiKeyRequired": "APIキーを入力してください",
+      "getGeminiKey": "Gemini APIキーを取得",
+      "configured": "APIキー設定済み",
+      "geminiHelp": "Gemini APIを使用する場合は、Google AI APIキーを入力してください",
+      "customHelp": "カスタムAPIを使用する場合、APIキーは任意です",
+      "clearConfirmTitle": "クリアの確認",
+      "clearConfirmMessage": "APIキーをクリアしてもよろしいですか？翻訳機能を使用するには再設定が必要になります。"
+    },
+    "blacklist": {
+      "title": "ブラックリスト",
+      "description": "プライバシー保護のため、ブラックリストに登録されたサイトでは拡張機能が無効になります。",
+      "wildcardHelp": "ワイルドカード対応：*.domain.com または *keyword*",
+      "addSite": "サイトを追加",
+      "placeholder": "*.example.com または *keyword*",
+      "list": "ブラックリスト（{{count}}件）",
+      "resetDefault": "デフォルトに戻す",
+      "empty": "ブラックリストは空です",
+      "emptyHint": "「デフォルトに戻す」をクリックしてプリセットを復元",
+      "validation": {
+        "required": "URLパターンを入力してください",
+        "invalid": "無効なパターンです。*.domain.com または *keyword* の形式を使用してください",
+        "duplicate": "このパターンは既に存在します"
+      }
+    },
+    "tags": {
+      "title": "タグ管理",
+      "create": "新規作成",
+      "empty": "タグがまだありません",
+      "emptyHint": "「新規作成」をクリックして最初のタグを作成",
+      "deleteConfirm": "タグ「{{name}}」を削除しますか？\n\nこのタグが付いた単語からタグが削除されます。",
+      "loading": "タグを読み込み中...",
+      "editTag": "タグを編集",
+      "deleteTag": "タグを削除"
+    },
+    "toast": {
+      "apiKeySaved": "APIキーを保存しました",
+      "apiKeyCleared": "APIキーをクリアしました",
+      "settingsSaved": "設定を保存しました",
+      "blacklistUpdated": "ブラックリストを更新しました",
+      "comingSoon": "この機能は近日公開予定です"
+    }
+  },
+  "vocabulary": {
+    "title": "単語帳",
+    "wordCount": "{{count}}単語",
+    "matchCount": "{{total}}語中{{match}}語を表示",
+    "emptyState": "保存された単語がありません",
+    "emptyStateHint": "読書を始めて新しい単語を保存しましょう！",
+    "jumpToSource": "出典元へ移動",
+    "jumping": "移動中...",
+    "pronunciation": "発音",
+    "example": "例文",
+    "source": "出典",
+    "inaccessible": "出典ページにアクセスできませんが、ここで全文を確認できます。",
+    "search": {
+      "placeholder": "単語を検索...",
+      "searching": "検索中...",
+      "resultsCount": "{{count}}件の結果",
+      "noResults": "一致する単語がありません",
+      "noResultsHint": "別のキーワードを試してみてください",
+      "clearSearch": "検索をクリア",
+      "clearAll": "すべてのフィルターをクリア"
+    },
+    "sort": {
+      "label": "並び替え",
+      "options": "並び替えオプション",
+      "recent": "新しい順",
+      "oldest": "古い順",
+      "alphabetical": "アルファベット順"
+    },
+    "batch": {
+      "select": "一括選択",
+      "cancel": "選択を解除",
+      "selected": "{{count}}件選択中",
+      "addTags": "タグを追加"
+    },
+    "filter": {
+      "search": "検索：「{{query}}」",
+      "tagsCount": "{{count}}個のタグでフィルター中",
+      "removeTag": "「{{name}}」フィルターを削除"
+    },
+    "actions": {
+      "select": "選択",
+      "deselect": "選択解除",
+      "settings": "設定",
+      "startReview": "復習を開始"
+    }
+  },
+  "review": {
+    "title": "復習",
+    "startReview": "復習を開始",
+    "showAnswer": "答えを表示",
+    "clickToShow": "クリックして答えを表示",
+    "remembered": "覚えている",
+    "forgotten": "忘れた",
+    "hint": "カードをクリックまたはEnterキーで答えを表示",
+    "progress": "{{current}} / {{total}}",
+    "cardFront": "クリックして答えを表示",
+    "cardBack": "カードの裏面",
+    "complete": {
+      "title": "復習完了！",
+      "great": "よくできました！",
+      "awesome": "素晴らしい！記憶力抜群です！",
+      "good": "よくできました！この調子で頑張りましょう！",
+      "okay": "良いスタートです！練習を重ねましょう！",
+      "needPractice": "諦めないで！復習が大切です！",
+      "total": "総復習数",
+      "rememberedCount": "覚えている",
+      "forgottenCount": "忘れた",
+      "memoryRate": "記憶率",
+      "backToVocabulary": "単語帳に戻る"
+    },
+    "empty": {
+      "title": "素晴らしい！",
+      "message": "復習が必要な単語はありません",
+      "back": "単語帳に戻る"
+    }
+  },
+  "analysis": {
+    "meaning": "意味",
+    "translation": "翻訳",
+    "pronunciation": "発音",
+    "partOfSpeech": "品詞",
+    "usage": "用法",
+    "saveWord": "単語を保存",
+    "loading": {
+      "word": {
+        "tip1": "AIがコンテキストを分析中...",
+        "tip2": "文脈を理解中...",
+        "tip3": "正確な定義を生成中...",
+        "tip4": "単語の用法を分析中..."
+      },
+      "translate": {
+        "tip1": "AIが翻訳中...",
+        "tip2": "原文の意味を理解中...",
+        "tip3": "自然な翻訳を生成中...",
+        "tip4": "翻訳を最適化中..."
+      }
+    },
+    "toast": {
+      "translationNotSavable": "翻訳内容は単語帳に保存できません",
+      "completeAnalysisFirst": "保存する前に分析を完了してください",
+      "locationError": "単語の位置を取得できません。保存に失敗しました",
+      "saveSuccess": "保存しました",
+      "extensionUpdated": "拡張機能が更新されました。ページを更新してから再試行してください",
+      "duplicateWord": "この単語は既に保存されています",
+      "saveFailed": "保存に失敗しました",
+      "saveRetry": "保存に失敗しました。再試行してください",
+      "cannotLocate": "現在のページでこの単語を特定できません。コンテンツが変更された可能性があります"
+    },
+    "errors": {
+      "network": "ネットワーク接続に失敗しました",
+      "networkHint": "接続を確認して再試行してください",
+      "timeout": "リクエストがタイムアウトしました",
+      "timeoutHint": "AIの応答が遅いです。もう一度お試しください",
+      "apiKey": "API設定エラー",
+      "apiKeyHint": "APIキーの設定を確認してください",
+      "config": "設定エラー",
+      "configHint": "拡張機能の設定を確認してください",
+      "refresh": "拡張機能が更新されました",
+      "refreshHint": "ページを更新してから再試行してください",
+      "generic": "分析に失敗しました",
+      "genericHint": "しばらくしてから再試行してください"
+    }
+  },
+  "dialog": {
+    "confirmAction": "操作の確認",
+    "processing": "処理中..."
+  },
+  "toast": {
+    "close": "閉じる"
+  }
+}

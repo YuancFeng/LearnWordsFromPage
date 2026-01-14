@@ -1,0 +1,232 @@
+{
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "close": "Fermer",
+    "retry": "Réessayer",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "add": "Ajouter",
+    "reset": "Réinitialiser",
+    "clear": "Effacer",
+    "back": "Retour",
+    "new": "Nouveau",
+    "processing": "Traitement...",
+    "saving": "Enregistrement..."
+  },
+  "settings": {
+    "title": "Paramètres",
+    "tabs": {
+      "apiKey": "Clé API",
+      "preferences": "Préférences",
+      "blacklist": "Liste noire",
+      "tags": "Étiquettes"
+    },
+    "preferences": {
+      "interaction": "Interaction",
+      "doubleClick": "Double-clic pour traduire",
+      "doubleClickDesc": "Déclencher la traduction par double-clic",
+      "hoverIcon": "Afficher l'icône au survol",
+      "hoverIconDesc": "Afficher l'icône de traduction lors de la sélection de texte",
+      "reviewReminder": "Rappel de révision",
+      "reviewReminderDesc": "Afficher le nombre de mots à réviser sur l'icône de l'extension",
+      "skipNativeText": "Ignorer le texte natif",
+      "skipNativeTextDesc": "Ne pas afficher le popup pour votre langue cible",
+      "appearance": "Apparence",
+      "theme": "Thème",
+      "themeLight": "Clair",
+      "themeDark": "Sombre",
+      "themeSystem": "Système",
+      "language": "Langue",
+      "uiLanguage": "Langue de l'interface",
+      "uiLanguageAuto": "Détection auto",
+      "targetLanguage": "Langue de traduction",
+      "targetLanguageDesc": "Traduire les mots dans cette langue"
+    },
+    "apiKey": {
+      "title": "Clé API",
+      "aiProvider": "Fournisseur IA",
+      "customConfig": "Configuration API personnalisée",
+      "endpoint": "URL de l'endpoint API",
+      "endpointPlaceholder": "http://localhost:8080/v1/chat/completions",
+      "endpointHelp": "Compatible avec CLI Proxy, Ollama, LM Studio et autres API compatibles OpenAI",
+      "modelName": "Nom du modèle",
+      "modelPlaceholder": "gpt-4, claude-3-opus, llama3",
+      "apiKeyPlaceholder": "Entrez votre clé API",
+      "apiKeyRequired": "Veuillez entrer la clé API",
+      "getGeminiKey": "Obtenir une clé API Gemini",
+      "configured": "Clé API configurée",
+      "geminiHelp": "Utilisation de l'API Gemini, entrez votre clé Google AI API",
+      "customHelp": "Utilisation d'une API personnalisée, la clé API est optionnelle",
+      "clearConfirmTitle": "Confirmer l'effacement",
+      "clearConfirmMessage": "Êtes-vous sûr de vouloir effacer la clé API ? Vous devrez la reconfigurer pour utiliser la fonction de traduction."
+    },
+    "blacklist": {
+      "title": "Liste noire",
+      "description": "L'extension est désactivée sur les sites en liste noire pour la confidentialité.",
+      "wildcardHelp": "Jokers supportés : *.domaine.com ou *motclé*",
+      "addSite": "Ajouter un site",
+      "placeholder": "*.exemple.com ou *motclé*",
+      "list": "Liste noire ({{count}})",
+      "resetDefault": "Réinitialiser par défaut",
+      "empty": "Aucun site en liste noire",
+      "emptyHint": "Cliquez sur \"Réinitialiser par défaut\" pour restaurer les préréglages",
+      "validation": {
+        "required": "Veuillez entrer un motif d'URL",
+        "invalid": "Motif invalide. Utilisez le format *.domaine.com ou *motclé*",
+        "duplicate": "Ce motif existe déjà"
+      }
+    },
+    "tags": {
+      "title": "Gestion des étiquettes",
+      "create": "Nouveau",
+      "empty": "Aucune étiquette créée",
+      "emptyHint": "Cliquez sur \"Nouveau\" pour créer votre première étiquette",
+      "deleteConfirm": "Supprimer l'étiquette \"{{name}}\" ?\n\nLes mots avec cette étiquette la perdront.",
+      "loading": "Chargement des étiquettes...",
+      "editTag": "Modifier l'étiquette",
+      "deleteTag": "Supprimer l'étiquette"
+    },
+    "toast": {
+      "apiKeySaved": "Clé API enregistrée avec succès",
+      "apiKeyCleared": "Clé API effacée",
+      "settingsSaved": "Paramètres enregistrés",
+      "blacklistUpdated": "Liste noire mise à jour",
+      "comingSoon": "Cette fonctionnalité arrive bientôt"
+    }
+  },
+  "vocabulary": {
+    "title": "Mon vocabulaire",
+    "wordCount": "{{count}} mots",
+    "matchCount": "{{match}} mots trouvés sur {{total}}",
+    "emptyState": "Aucun mot enregistré",
+    "emptyStateHint": "Commencez à lire et enregistrez de nouveaux mots !",
+    "jumpToSource": "Aller à la source",
+    "jumping": "Redirection...",
+    "pronunciation": "Prononciation",
+    "example": "Exemple",
+    "source": "Source",
+    "inaccessible": "La page source est inaccessible, mais vous pouvez toujours voir le contexte complet ici.",
+    "search": {
+      "placeholder": "Rechercher des mots...",
+      "searching": "Recherche...",
+      "resultsCount": "{{count}} résultats trouvés",
+      "noResults": "Aucun mot correspondant",
+      "noResultsHint": "Essayez d'autres mots-clés",
+      "clearSearch": "Effacer la recherche",
+      "clearAll": "Effacer tous les filtres"
+    },
+    "sort": {
+      "label": "Trier par",
+      "options": "Options de tri",
+      "recent": "Plus récent",
+      "oldest": "Plus ancien",
+      "alphabetical": "Alphabétique"
+    },
+    "batch": {
+      "select": "Sélection multiple",
+      "cancel": "Annuler la sélection",
+      "selected": "{{count}} sélectionné(s)",
+      "addTags": "Ajouter des étiquettes"
+    },
+    "filter": {
+      "search": "Recherche : \"{{query}}\"",
+      "tagsCount": "{{count}} filtre(s) d'étiquettes",
+      "removeTag": "Retirer le filtre {{name}}"
+    },
+    "actions": {
+      "select": "Sélectionner",
+      "deselect": "Désélectionner",
+      "settings": "Paramètres",
+      "startReview": "Commencer la révision"
+    }
+  },
+  "review": {
+    "title": "Révision",
+    "startReview": "Commencer la révision",
+    "showAnswer": "Afficher la réponse",
+    "clickToShow": "Cliquez pour afficher la réponse",
+    "remembered": "Je m'en souviens",
+    "forgotten": "Oublié",
+    "hint": "Cliquez sur la carte ou appuyez sur Entrée pour afficher la réponse",
+    "progress": "{{current}} / {{total}}",
+    "cardFront": "Cliquez pour révéler la réponse",
+    "cardBack": "Verso de la carte",
+    "complete": {
+      "title": "Révision terminée !",
+      "great": "Excellent travail !",
+      "awesome": "Génial ! Excellente mémoire !",
+      "good": "Bravo ! Continuez comme ça !",
+      "okay": "Bon début ! La pratique aide !",
+      "needPractice": "N'abandonnez pas ! La révision est la clé !",
+      "total": "Total révisé",
+      "rememberedCount": "Mémorisés",
+      "forgottenCount": "Oubliés",
+      "memoryRate": "Taux de mémorisation",
+      "backToVocabulary": "Retour au vocabulaire"
+    },
+    "empty": {
+      "title": "Parfait !",
+      "message": "Aucun mot à réviser",
+      "back": "Retour au vocabulaire"
+    }
+  },
+  "analysis": {
+    "meaning": "Signification",
+    "translation": "Traduction",
+    "pronunciation": "Prononciation",
+    "partOfSpeech": "Catégorie grammaticale",
+    "usage": "Usage",
+    "saveWord": "Enregistrer le mot",
+    "loading": {
+      "word": {
+        "tip1": "L'IA analyse le contexte...",
+        "tip2": "Compréhension du contexte...",
+        "tip3": "Génération d'une définition précise...",
+        "tip4": "Analyse de l'usage du mot..."
+      },
+      "translate": {
+        "tip1": "L'IA traduit...",
+        "tip2": "Compréhension du sens original...",
+        "tip3": "Génération d'une traduction fluide...",
+        "tip4": "Optimisation de la traduction..."
+      }
+    },
+    "toast": {
+      "translationNotSavable": "Le contenu de traduction ne peut pas être enregistré dans le vocabulaire",
+      "completeAnalysisFirst": "Veuillez terminer l'analyse avant d'enregistrer",
+      "locationError": "Impossible d'obtenir l'emplacement du mot, échec de l'enregistrement",
+      "saveSuccess": "Enregistré avec succès",
+      "extensionUpdated": "Extension mise à jour, veuillez actualiser la page et réessayer",
+      "duplicateWord": "Ce mot est déjà enregistré",
+      "saveFailed": "Échec de l'enregistrement",
+      "saveRetry": "Échec de l'enregistrement, veuillez réessayer",
+      "cannotLocate": "Impossible de localiser ce mot sur la page actuelle, le contenu a peut-être changé"
+    },
+    "errors": {
+      "network": "Échec de la connexion réseau",
+      "networkHint": "Veuillez vérifier votre connexion et réessayer",
+      "timeout": "Délai d'attente dépassé",
+      "timeoutHint": "La réponse de l'IA est lente, veuillez réessayer",
+      "apiKey": "Erreur de configuration API",
+      "apiKeyHint": "Veuillez vérifier vos paramètres de clé API",
+      "config": "Erreur de configuration",
+      "configHint": "Veuillez vérifier les paramètres dans l'extension",
+      "refresh": "Extension mise à jour",
+      "refreshHint": "Veuillez actualiser la page et réessayer",
+      "generic": "Échec de l'analyse",
+      "genericHint": "Veuillez réessayer plus tard"
+    }
+  },
+  "dialog": {
+    "confirmAction": "Confirmer l'action",
+    "processing": "Traitement..."
+  },
+  "toast": {
+    "close": "Fermer"
+  }
+}

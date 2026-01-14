@@ -6,6 +6,7 @@
  */
 
 import React, { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react';
 
 /**
@@ -35,17 +36,23 @@ export interface ConfirmDialogProps {
  * Story 4.1 - Task 5.1
  */
 export function ConfirmDialog({
-  title = '确认操作',
+  title,
   message,
-  confirmText = '确认',
-  cancelText = '取消',
+  confirmText,
+  cancelText,
   confirmType = 'danger',
   onConfirm,
   onCancel,
   isLoading = false,
 }: ConfirmDialogProps): React.ReactElement {
+  const { t } = useTranslation();
   const dialogRef = useRef<HTMLDivElement>(null);
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
+
+  // 使用翻译后的默认值
+  const dialogTitle = title ?? t('dialog.confirmTitle');
+  const dialogConfirmText = confirmText ?? t('dialog.confirm');
+  const dialogCancelText = cancelText ?? t('dialog.cancel');
 
   // 自动聚焦到对话框
   useEffect(() => {
@@ -84,34 +91,34 @@ export function ConfirmDialog({
     >
       <div
         ref={dialogRef}
-        className="bg-white rounded-lg shadow-xl w-[280px] max-w-[90%] overflow-hidden"
+        className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-[280px] max-w-[90%] overflow-hidden"
         tabIndex={-1}
       >
         {/* 标题栏 */}
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-200">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
           <AlertTriangle
             className={`w-5 h-5 ${confirmType === 'danger' ? 'text-red-500' : 'text-blue-500'}`}
           />
-          <h2 id="confirm-dialog-title" className="text-base font-medium text-gray-900">
-            {title}
+          <h2 id="confirm-dialog-title" className="text-base font-medium text-gray-900 dark:text-gray-100">
+            {dialogTitle}
           </h2>
         </div>
 
         {/* 消息内容 */}
         <div className="px-4 py-4">
-          <p id="confirm-dialog-message" className="text-sm text-gray-600 leading-relaxed">
+          <p id="confirm-dialog-message" className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
             {message}
           </p>
         </div>
 
         {/* 按钮区域 */}
-        <div className="flex gap-2 px-4 py-3 bg-gray-50 border-t border-gray-200">
+        <div className="flex gap-2 px-4 py-3 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
           <button
             onClick={onCancel}
             disabled={isLoading}
-            className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {cancelText}
+            {dialogCancelText}
           </button>
           <button
             ref={confirmButtonRef}
@@ -119,7 +126,7 @@ export function ConfirmDialog({
             disabled={isLoading}
             className={`flex-1 px-3 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${confirmButtonClass}`}
           >
-            {isLoading ? '处理中...' : confirmText}
+            {isLoading ? t('dialog.processing') : dialogConfirmText}
           </button>
         </div>
       </div>

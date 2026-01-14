@@ -1,0 +1,232 @@
+{
+  "common": {
+    "save": "Yadda saxla",
+    "cancel": "Ləğv et",
+    "confirm": "Təsdiq et",
+    "delete": "Sil",
+    "edit": "Redaktə et",
+    "close": "Bağla",
+    "retry": "Yenidən cəhd et",
+    "loading": "Yüklənir...",
+    "error": "Xəta",
+    "success": "Uğurlu",
+    "add": "Əlavə et",
+    "reset": "Sıfırla",
+    "clear": "Təmizlə",
+    "back": "Geri",
+    "new": "Yeni",
+    "processing": "Emal olunur...",
+    "saving": "Saxlanılır..."
+  },
+  "settings": {
+    "title": "Parametrlər",
+    "tabs": {
+      "apiKey": "API Açarı",
+      "preferences": "Tərcihlər",
+      "blacklist": "Qara Siyahı",
+      "tags": "Etiketlər"
+    },
+    "preferences": {
+      "interaction": "Qarşılıqlı əlaqə",
+      "doubleClick": "Cüt Kliklə Axtarış",
+      "doubleClickDesc": "Cüt klikləmə ilə tərcüməni aktivləşdir",
+      "hoverIcon": "Kursor İkonunu Göstər",
+      "hoverIconDesc": "Mətn seçildikdə tərcümə ikonunu göstər",
+      "reviewReminder": "Təkrar Xatırlatması",
+      "reviewReminderDesc": "Genişləndirmə ikonunda gözləyən söz sayını göstər",
+      "skipNativeText": "Ana Dil Mətnini Ötür",
+      "skipNativeTextDesc": "Hədəf dilinizdə popup göstərmə",
+      "appearance": "Görünüş",
+      "theme": "Tema",
+      "themeLight": "İşıqlı",
+      "themeDark": "Qaranlıq",
+      "themeSystem": "Sistem",
+      "language": "Dil",
+      "uiLanguage": "İnterfeys Dili",
+      "uiLanguageAuto": "Avtomatik aşkarlama",
+      "targetLanguage": "Tərcümə Dili",
+      "targetLanguageDesc": "Sözləri bu dilə tərcümə et"
+    },
+    "apiKey": {
+      "title": "API Açarı",
+      "aiProvider": "AI Təminatçısı",
+      "customConfig": "Xüsusi API Konfiqurasiyası",
+      "endpoint": "API Son Nöqtə URL",
+      "endpointPlaceholder": "http://localhost:8080/v1/chat/completions",
+      "endpointHelp": "CLI Proxy, Ollama, LM Studio və digər OpenAI-uyğun API-ləri dəstəkləyir",
+      "modelName": "Model Adı",
+      "modelPlaceholder": "gpt-4, claude-3-opus, llama3",
+      "apiKeyPlaceholder": "API Açarınızı daxil edin",
+      "apiKeyRequired": "Zəhmət olmasa API Açarı daxil edin",
+      "getGeminiKey": "Gemini API Açarı əldə et",
+      "configured": "API Açarı konfiqurasiya edilib",
+      "geminiHelp": "Gemini API istifadə edir, Google AI API Açarınızı daxil edin",
+      "customHelp": "Xüsusi API istifadə edir, API Açarı istəyə bağlıdır",
+      "clearConfirmTitle": "Təmizləməni Təsdiq Et",
+      "clearConfirmMessage": "API Açarını təmizləmək istədiyinizə əminsiniz? Tərcümə funksiyasından istifadə etmək üçün yenidən konfiqurasiya etməlisiniz."
+    },
+    "blacklist": {
+      "title": "Qara Siyahı",
+      "description": "Məxfilik üçün qara siyahıdakı saytlarda genişləndirmə deaktivdir.",
+      "wildcardHelp": "Joker simvolları dəstəkləyir: *.domain.com və ya *açarsöz*",
+      "addSite": "Sayt Əlavə Et",
+      "placeholder": "*.example.com və ya *açarsöz*",
+      "list": "Qara Siyahı ({{count}})",
+      "resetDefault": "Varsayılanı Bərpa Et",
+      "empty": "Qara siyahıda sayt yoxdur",
+      "emptyHint": "Əvvəlcədən təyin edilmişləri bərpa etmək üçün \"Varsayılanı Bərpa Et\" düyməsini klikləyin",
+      "validation": {
+        "required": "Zəhmət olmasa URL şablonu daxil edin",
+        "invalid": "Yanlış şablon. *.domain.com və ya *açarsöz* formatından istifadə edin",
+        "duplicate": "Bu şablon artıq mövcuddur"
+      }
+    },
+    "tags": {
+      "title": "Etiket İdarəetməsi",
+      "create": "Yeni",
+      "empty": "Hələ etiket yaradılmayıb",
+      "emptyHint": "İlk etiketinizi yaratmaq üçün \"Yeni\" düyməsini klikləyin",
+      "deleteConfirm": "\"{{name}}\" etiketi silinsin?\n\nBu etiketli sözlərdən etiket silinəcək.",
+      "loading": "Etiketlər yüklənir...",
+      "editTag": "Etiketi redaktə et",
+      "deleteTag": "Etiketi sil"
+    },
+    "toast": {
+      "apiKeySaved": "API Açarı uğurla saxlanıldı",
+      "apiKeyCleared": "API Açarı təmizləndi",
+      "settingsSaved": "Parametrlər saxlanıldı",
+      "blacklistUpdated": "Qara siyahı yeniləndi",
+      "comingSoon": "Bu funksiya tezliklə gələcək"
+    }
+  },
+  "vocabulary": {
+    "title": "Lüğətim",
+    "wordCount": "{{count}} söz",
+    "matchCount": "{{total}} sözdən {{match}} tapıldı",
+    "emptyState": "Hələ söz saxlanılmayıb",
+    "emptyStateHint": "Oxumağa başlayın və yeni sözlər saxlayın!",
+    "jumpToSource": "Mənbəyə Keç",
+    "jumping": "Keçilir...",
+    "pronunciation": "Tələffüz",
+    "example": "Nümunə",
+    "source": "Mənbə",
+    "inaccessible": "Mənbə səhifəsi əlçatmazdır, lakin burada tam konteksti görə bilərsiniz.",
+    "search": {
+      "placeholder": "Söz axtar...",
+      "searching": "Axtarılır...",
+      "resultsCount": "{{count}} nəticə tapıldı",
+      "noResults": "Uyğun söz yoxdur",
+      "noResultsHint": "Fərqli açar sözlər sınayın",
+      "clearSearch": "Axtarışı təmizlə",
+      "clearAll": "Bütün Filtrləri Təmizlə"
+    },
+    "sort": {
+      "label": "Sırala",
+      "options": "Sıralama seçimləri",
+      "recent": "Ən Son",
+      "oldest": "Ən Köhnə",
+      "alphabetical": "Əlifba Sırası"
+    },
+    "batch": {
+      "select": "Toplu Seçim",
+      "cancel": "Seçimi Ləğv Et",
+      "selected": "{{count}} seçildi",
+      "addTags": "Etiket Əlavə Et"
+    },
+    "filter": {
+      "search": "Axtarış: \"{{query}}\"",
+      "tagsCount": "{{count}} etiket filtri",
+      "removeTag": "{{name}} filtrini sil"
+    },
+    "actions": {
+      "select": "Seç",
+      "deselect": "Seçimi Ləğv Et",
+      "settings": "Parametrlər",
+      "startReview": "Təkrara Başla"
+    }
+  },
+  "review": {
+    "title": "Təkrar",
+    "startReview": "Təkrara Başla",
+    "showAnswer": "Cavabı Göstər",
+    "clickToShow": "Cavabı göstərmək üçün klikləyin",
+    "remembered": "Xatırladım",
+    "forgotten": "Unutdum",
+    "hint": "Cavabı göstərmək üçün karta klikləyin və ya Enter basın",
+    "progress": "{{current}} / {{total}}",
+    "cardFront": "Cavabı görmək üçün klikləyin",
+    "cardBack": "Kartın arxası",
+    "complete": {
+      "title": "Təkrar Tamamlandı!",
+      "great": "Əla iş!",
+      "awesome": "Möhtəşəm! Gözəl yaddaş!",
+      "good": "Əla iş! Davam edin!",
+      "okay": "Yaxşı başlanğıc! Daha çox məşq kömək edir!",
+      "needPractice": "Təslim olmayın! Təkrar açardır!",
+      "total": "Ümumi təkrar edildi",
+      "rememberedCount": "Xatırlandı",
+      "forgottenCount": "Unuduldu",
+      "memoryRate": "Yaddaş Faizi",
+      "backToVocabulary": "Lüğətə Qayıt"
+    },
+    "empty": {
+      "title": "Əla!",
+      "message": "Təkrar üçün gözləyən söz yoxdur",
+      "back": "Lüğətə Qayıt"
+    }
+  },
+  "analysis": {
+    "meaning": "Məna",
+    "translation": "Tərcümə",
+    "pronunciation": "Tələffüz",
+    "partOfSpeech": "Nitq Hissəsi",
+    "usage": "İstifadə",
+    "saveWord": "Sözü Saxla",
+    "loading": {
+      "word": {
+        "tip1": "AI konteksti təhlil edir...",
+        "tip2": "Kontekst başa düşülür...",
+        "tip3": "Dəqiq tərif yaradılır...",
+        "tip4": "Söz istifadəsi təhlil edilir..."
+      },
+      "translate": {
+        "tip1": "AI tərcümə edir...",
+        "tip2": "Orijinal məna başa düşülür...",
+        "tip3": "Səlis tərcümə yaradılır...",
+        "tip4": "Tərcümə optimallaşdırılır..."
+      }
+    },
+    "toast": {
+      "translationNotSavable": "Tərcümə məzmunu lüğətə saxlanıla bilməz",
+      "completeAnalysisFirst": "Zəhmət olmasa saxlamadan əvvəl təhlili tamamlayın",
+      "locationError": "Söz mövqeyi alına bilmədi, saxlama uğursuz oldu",
+      "saveSuccess": "Uğurla saxlanıldı",
+      "extensionUpdated": "Genişləndirmə yeniləndi, zəhmət olmasa səhifəni yeniləyin və yenidən cəhd edin",
+      "duplicateWord": "Bu söz artıq saxlanılıb",
+      "saveFailed": "Saxlama uğursuz oldu",
+      "saveRetry": "Saxlama uğursuz oldu, zəhmət olmasa yenidən cəhd edin",
+      "cannotLocate": "Bu söz cari səhifədə tapıla bilmir, məzmun dəyişmiş ola bilər"
+    },
+    "errors": {
+      "network": "Şəbəkə bağlantısı uğursuz oldu",
+      "networkHint": "Zəhmət olmasa bağlantınızı yoxlayın və yenidən cəhd edin",
+      "timeout": "Sorğu vaxtı keçdi",
+      "timeoutHint": "AI cavabı yavaşdır, zəhmət olmasa yenidən cəhd edin",
+      "apiKey": "API konfiqurasiya xətası",
+      "apiKeyHint": "Zəhmət olmasa API Açarı parametrlərini yoxlayın",
+      "config": "Konfiqurasiya xətası",
+      "configHint": "Zəhmət olmasa genişləndirmədə parametrləri yoxlayın",
+      "refresh": "Genişləndirmə yeniləndi",
+      "refreshHint": "Zəhmət olmasa səhifəni yeniləyin və yenidən cəhd edin",
+      "generic": "Təhlil uğursuz oldu",
+      "genericHint": "Zəhmət olmasa daha sonra yenidən cəhd edin"
+    }
+  },
+  "dialog": {
+    "confirmAction": "Əməliyyatı Təsdiq Et",
+    "processing": "Emal olunur..."
+  },
+  "toast": {
+    "close": "Bağla"
+  }
+}

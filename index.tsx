@@ -6,6 +6,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
+// 初始化 i18n（必须在 App 之前导入）
+import './src/i18n';
 import { App } from './src/popup/App';
 
 const rootElement = document.getElementById('root');

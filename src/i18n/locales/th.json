@@ -1,0 +1,232 @@
+{
+  "common": {
+    "save": "บันทึก",
+    "cancel": "ยกเลิก",
+    "confirm": "ยืนยัน",
+    "delete": "ลบ",
+    "edit": "แก้ไข",
+    "close": "ปิด",
+    "retry": "ลองใหม่",
+    "loading": "กำลังโหลด...",
+    "error": "ข้อผิดพลาด",
+    "success": "สำเร็จ",
+    "add": "เพิ่ม",
+    "reset": "รีเซ็ต",
+    "clear": "ล้าง",
+    "back": "กลับ",
+    "new": "ใหม่",
+    "processing": "กำลังประมวลผล...",
+    "saving": "กำลังบันทึก..."
+  },
+  "settings": {
+    "title": "การตั้งค่า",
+    "tabs": {
+      "apiKey": "API Key",
+      "preferences": "การตั้งค่า",
+      "blacklist": "รายการบล็อก",
+      "tags": "แท็ก"
+    },
+    "preferences": {
+      "interaction": "การโต้ตอบ",
+      "doubleClick": "ค้นหาเมื่อดับเบิลคลิก",
+      "doubleClickDesc": "เปิดใช้การแปลเมื่อดับเบิลคลิก",
+      "hoverIcon": "แสดงไอคอนเมื่อชี้เมาส์",
+      "hoverIconDesc": "แสดงไอคอนแปลเมื่อเลือกข้อความ",
+      "reviewReminder": "เตือนทบทวน",
+      "reviewReminderDesc": "แสดงจำนวนคำที่ต้องทบทวนบนไอคอนส่วนขยาย",
+      "skipNativeText": "ข้ามข้อความภาษาเป้าหมาย",
+      "skipNativeTextDesc": "ไม่แสดงป๊อปอัปสำหรับภาษาเป้าหมายของคุณ",
+      "appearance": "รูปลักษณ์",
+      "theme": "ธีม",
+      "themeLight": "สว่าง",
+      "themeDark": "มืด",
+      "themeSystem": "ตามระบบ",
+      "language": "ภาษา",
+      "uiLanguage": "ภาษาอินเทอร์เฟซ",
+      "uiLanguageAuto": "ตรวจจับอัตโนมัติ",
+      "targetLanguage": "ภาษาแปล",
+      "targetLanguageDesc": "แปลคำเป็นภาษานี้"
+    },
+    "apiKey": {
+      "title": "API Key",
+      "aiProvider": "ผู้ให้บริการ AI",
+      "customConfig": "การกำหนดค่า API แบบกำหนดเอง",
+      "endpoint": "URL ปลายทาง API",
+      "endpointPlaceholder": "http://localhost:8080/v1/chat/completions",
+      "endpointHelp": "รองรับ CLI Proxy, Ollama, LM Studio และ API ที่เข้ากันได้กับ OpenAI อื่นๆ",
+      "modelName": "ชื่อโมเดล",
+      "modelPlaceholder": "gpt-4, claude-3-opus, llama3",
+      "apiKeyPlaceholder": "ใส่ API Key ของคุณ",
+      "apiKeyRequired": "กรุณาใส่ API Key",
+      "getGeminiKey": "รับ Gemini API Key",
+      "configured": "กำหนดค่า API Key แล้ว",
+      "geminiHelp": "ใช้ Gemini API ใส่ Google AI API Key ของคุณ",
+      "customHelp": "ใช้ API แบบกำหนดเอง ไม่จำเป็นต้องใส่ API Key",
+      "clearConfirmTitle": "ยืนยันการล้าง",
+      "clearConfirmMessage": "คุณแน่ใจหรือไม่ที่จะล้าง API Key? คุณจะต้องกำหนดค่าใหม่เพื่อใช้ฟีเจอร์แปล"
+    },
+    "blacklist": {
+      "title": "รายการบล็อก",
+      "description": "ส่วนขยายถูกปิดใช้งานบนเว็บไซต์ในรายการบล็อกเพื่อความเป็นส่วนตัว",
+      "wildcardHelp": "รองรับไวลด์การ์ด: *.domain.com หรือ *keyword*",
+      "addSite": "เพิ่มเว็บไซต์",
+      "placeholder": "*.example.com หรือ *keyword*",
+      "list": "รายการบล็อก ({{count}})",
+      "resetDefault": "รีเซ็ตเป็นค่าเริ่มต้น",
+      "empty": "ไม่มีเว็บไซต์ในรายการบล็อก",
+      "emptyHint": "คลิก \"รีเซ็ตเป็นค่าเริ่มต้น\" เพื่อกู้คืนค่าที่ตั้งไว้ล่วงหน้า",
+      "validation": {
+        "required": "กรุณาใส่รูปแบบ URL",
+        "invalid": "รูปแบบไม่ถูกต้อง ใช้รูปแบบ *.domain.com หรือ *keyword*",
+        "duplicate": "รูปแบบนี้มีอยู่แล้ว"
+      }
+    },
+    "tags": {
+      "title": "จัดการแท็ก",
+      "create": "ใหม่",
+      "empty": "ยังไม่มีแท็ก",
+      "emptyHint": "คลิก \"ใหม่\" เพื่อสร้างแท็กแรก",
+      "deleteConfirm": "ลบแท็ก \"{{name}}\"?\n\nคำที่มีแท็กนี้จะถูกลบแท็กออก",
+      "loading": "กำลังโหลดแท็ก...",
+      "editTag": "แก้ไขแท็ก",
+      "deleteTag": "ลบแท็ก"
+    },
+    "toast": {
+      "apiKeySaved": "บันทึก API Key สำเร็จ",
+      "apiKeyCleared": "ล้าง API Key แล้ว",
+      "settingsSaved": "บันทึกการตั้งค่าแล้ว",
+      "blacklistUpdated": "อัปเดตรายการบล็อกแล้ว",
+      "comingSoon": "ฟีเจอร์นี้กำลังจะมาเร็วๆ นี้"
+    }
+  },
+  "vocabulary": {
+    "title": "คำศัพท์ของฉัน",
+    "wordCount": "{{count}} คำ",
+    "matchCount": "พบ {{match}} จาก {{total}} คำ",
+    "emptyState": "ยังไม่มีคำที่บันทึกไว้",
+    "emptyStateHint": "เริ่มอ่านและบันทึกคำใหม่!",
+    "jumpToSource": "ไปยังแหล่งที่มา",
+    "jumping": "กำลังไป...",
+    "pronunciation": "การออกเสียง",
+    "example": "ตัวอย่าง",
+    "source": "แหล่งที่มา",
+    "inaccessible": "ไม่สามารถเข้าถึงหน้าต้นทาง แต่คุณยังสามารถดูบริบทเต็มได้ที่นี่",
+    "search": {
+      "placeholder": "ค้นหาคำ...",
+      "searching": "กำลังค้นหา...",
+      "resultsCount": "พบ {{count}} ผลลัพธ์",
+      "noResults": "ไม่พบคำที่ตรงกัน",
+      "noResultsHint": "ลองใช้คำค้นอื่น",
+      "clearSearch": "ล้างการค้นหา",
+      "clearAll": "ล้างตัวกรองทั้งหมด"
+    },
+    "sort": {
+      "label": "เรียงตาม",
+      "options": "ตัวเลือกการเรียง",
+      "recent": "ล่าสุด",
+      "oldest": "เก่าที่สุด",
+      "alphabetical": "ตามตัวอักษร"
+    },
+    "batch": {
+      "select": "เลือกหลายรายการ",
+      "cancel": "ยกเลิกการเลือก",
+      "selected": "เลือก {{count}} รายการ",
+      "addTags": "เพิ่มแท็ก"
+    },
+    "filter": {
+      "search": "ค้นหา: \"{{query}}\"",
+      "tagsCount": "กรองตาม {{count}} แท็ก",
+      "removeTag": "ลบตัวกรอง {{name}}"
+    },
+    "actions": {
+      "select": "เลือก",
+      "deselect": "ยกเลิกเลือก",
+      "settings": "การตั้งค่า",
+      "startReview": "เริ่มทบทวน"
+    }
+  },
+  "review": {
+    "title": "ทบทวน",
+    "startReview": "เริ่มทบทวน",
+    "showAnswer": "แสดงคำตอบ",
+    "clickToShow": "คลิกเพื่อแสดงคำตอบ",
+    "remembered": "จำได้",
+    "forgotten": "ลืม",
+    "hint": "คลิกการ์ดหรือกด Enter เพื่อแสดงคำตอบ",
+    "progress": "{{current}} / {{total}}",
+    "cardFront": "คลิกเพื่อดูคำตอบ",
+    "cardBack": "ด้านหลังการ์ด",
+    "complete": {
+      "title": "ทบทวนเสร็จสิ้น!",
+      "great": "เยี่ยมมาก!",
+      "awesome": "ยอดเยี่ยม! ความจำดีมาก!",
+      "good": "ทำได้ดี! รักษาไว้นะ!",
+      "okay": "เริ่มต้นดี! ฝึกต่อไปนะ!",
+      "needPractice": "อย่าท้อ! การทบทวนคือกุญแจสำคัญ!",
+      "total": "ทบทวนทั้งหมด",
+      "rememberedCount": "จำได้",
+      "forgottenCount": "ลืม",
+      "memoryRate": "อัตราความจำ",
+      "backToVocabulary": "กลับไปยังคำศัพท์"
+    },
+    "empty": {
+      "title": "เยี่ยม!",
+      "message": "ไม่มีคำที่ต้องทบทวน",
+      "back": "กลับไปยังคำศัพท์"
+    }
+  },
+  "analysis": {
+    "meaning": "ความหมาย",
+    "translation": "คำแปล",
+    "pronunciation": "การออกเสียง",
+    "partOfSpeech": "ชนิดของคำ",
+    "usage": "การใช้งาน",
+    "saveWord": "บันทึกคำ",
+    "loading": {
+      "word": {
+        "tip1": "AI กำลังวิเคราะห์บริบท...",
+        "tip2": "กำลังทำความเข้าใจบริบท...",
+        "tip3": "กำลังสร้างคำจำกัดความที่แม่นยำ...",
+        "tip4": "กำลังวิเคราะห์การใช้คำ..."
+      },
+      "translate": {
+        "tip1": "AI กำลังแปล...",
+        "tip2": "กำลังทำความเข้าใจความหมายดั้งเดิม...",
+        "tip3": "กำลังสร้างคำแปลที่ลื่นไหล...",
+        "tip4": "กำลังปรับปรุงคำแปล..."
+      }
+    },
+    "toast": {
+      "translationNotSavable": "ไม่สามารถบันทึกเนื้อหาแปลลงในคำศัพท์",
+      "completeAnalysisFirst": "กรุณาวิเคราะห์ให้เสร็จก่อนบันทึก",
+      "locationError": "ไม่สามารถระบุตำแหน่งคำ บันทึกล้มเหลว",
+      "saveSuccess": "บันทึกสำเร็จ",
+      "extensionUpdated": "ส่วนขยายอัปเดตแล้ว กรุณารีเฟรชหน้าและลองใหม่",
+      "duplicateWord": "คำนี้ถูกบันทึกแล้ว",
+      "saveFailed": "บันทึกล้มเหลว",
+      "saveRetry": "บันทึกล้มเหลว กรุณาลองใหม่",
+      "cannotLocate": "ไม่สามารถระบุตำแหน่งคำนี้ในหน้าปัจจุบัน เนื้อหาอาจเปลี่ยนแปลง"
+    },
+    "errors": {
+      "network": "การเชื่อมต่อเครือข่ายล้มเหลว",
+      "networkHint": "กรุณาตรวจสอบการเชื่อมต่อและลองใหม่",
+      "timeout": "คำขอหมดเวลา",
+      "timeoutHint": "AI ตอบสนองช้า กรุณาลองใหม่",
+      "apiKey": "ข้อผิดพลาดการกำหนดค่า API",
+      "apiKeyHint": "กรุณาตรวจสอบการตั้งค่า API Key",
+      "config": "ข้อผิดพลาดการกำหนดค่า",
+      "configHint": "กรุณาตรวจสอบการตั้งค่าในส่วนขยาย",
+      "refresh": "ส่วนขยายอัปเดตแล้ว",
+      "refreshHint": "กรุณารีเฟรชหน้าและลองใหม่",
+      "generic": "การวิเคราะห์ล้มเหลว",
+      "genericHint": "กรุณาลองใหม่ภายหลัง"
+    }
+  },
+  "dialog": {
+    "confirmAction": "ยืนยันการดำเนินการ",
+    "processing": "กำลังประมวลผล..."
+  },
+  "toast": {
+    "close": "ปิด"
+  }
+}

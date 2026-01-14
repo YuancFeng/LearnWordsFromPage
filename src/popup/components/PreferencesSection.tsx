@@ -7,9 +7,11 @@
 
 import React from 'react';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useSettings } from '../../hooks/useSettings';
 import { ToggleSwitch } from './ToggleSwitch';
 import { ThemeSelect } from './ThemeSelect';
+import { LanguageSelect } from './LanguageSelect';
 
 /**
  * PreferencesSection 属性
@@ -37,6 +39,7 @@ export function PreferencesSection({
   onSaveSuccess,
   onError,
 }: PreferencesSectionProps): React.ReactElement {
+  const { t } = useTranslation();
   const { settings, isLoading, error, updateSetting } = useSettings();
 
   /**
@@ -50,7 +53,7 @@ export function PreferencesSection({
     if (result.success) {
       onSaveSuccess?.();
     } else {
-      onError?.(result.error?.message ?? '保存失败');
+      onError?.(result.error?.message ?? t('analysis.toast.saveFailed'));
     }
   };
 
@@ -59,7 +62,7 @@ export function PreferencesSection({
     return (
       <div className="flex flex-col items-center justify-center py-12 text-gray-400">
         <Loader2 className="w-8 h-8 animate-spin mb-3" />
-        <p className="text-sm">加载设置中...</p>
+        <p className="text-sm">{t('common.loading')}</p>
       </div>
     );
   }
@@ -68,7 +71,7 @@ export function PreferencesSection({
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-red-500">
-        <p className="text-sm mb-2">加载失败</p>
+        <p className="text-sm mb-2">{t('common.error')}</p>
         <p className="text-xs text-gray-400">{error}</p>
       </div>
     );
@@ -79,13 +82,13 @@ export function PreferencesSection({
       {/* 交互设置 */}
       <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
         <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 pb-2 border-b border-gray-100 dark:border-gray-700">
-          交互方式
+          {t('settings.preferences.interaction')}
         </h3>
 
         {/* AC1: 双击查词开关 */}
         <ToggleSwitch
-          label="双击查词"
-          description="双击网页上的单词时触发翻译"
+          label={t('settings.preferences.doubleClick')}
+          description={t('settings.preferences.doubleClickDesc')}
           checked={settings.enableDoubleClick}
           onChange={(checked) => handleSettingChange('enableDoubleClick', checked)}
           testId="toggle-double-click"
@@ -93,8 +96,8 @@ export function PreferencesSection({
 
         {/* AC2: 悬浮图标开关 */}
         <ToggleSwitch
-          label="显示悬浮图标"
-          description="选中文字时显示翻译图标按钮"
+          label={t('settings.preferences.hoverIcon')}
+          description={t('settings.preferences.hoverIconDesc')}
           checked={settings.enableHoverIcon}
           onChange={(checked) => handleSettingChange('enableHoverIcon', checked)}
           testId="toggle-hover-icon"
@@ -102,8 +105,8 @@ export function PreferencesSection({
 
         {/* 复习提醒开关 */}
         <ToggleSwitch
-          label="复习提醒"
-          description="在扩展图标上显示待复习词汇数量"
+          label={t('settings.preferences.reviewReminder')}
+          description={t('settings.preferences.reviewReminderDesc')}
           checked={settings.reviewReminder}
           onChange={(checked) => handleSettingChange('reviewReminder', checked)}
           testId="toggle-review-reminder"
@@ -111,8 +114,8 @@ export function PreferencesSection({
 
         {/* 跳过中文文本开关 */}
         <ToggleSwitch
-          label="跳过中文内容"
-          description="选中中文文本时不显示翻译弹窗"
+          label={t('settings.preferences.skipNativeText')}
+          description={t('settings.preferences.skipNativeTextDesc')}
           checked={settings.skipChineseText}
           onChange={(checked) => handleSettingChange('skipChineseText', checked)}
           testId="toggle-skip-chinese"
@@ -122,13 +125,42 @@ export function PreferencesSection({
       {/* AC3: 主题设置 */}
       <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
         <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 pb-2 border-b border-gray-100 dark:border-gray-700">
-          外观
+          {t('settings.preferences.appearance')}
         </h3>
 
         <ThemeSelect
           value={settings.theme}
           onChange={(theme) => handleSettingChange('theme', theme)}
         />
+      </div>
+
+      {/* 语言设置 */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 pb-2 border-b border-gray-100 dark:border-gray-700">
+          {t('settings.preferences.language')}
+        </h3>
+
+        <div className="space-y-4">
+          {/* UI 界面语言选择 */}
+          <LanguageSelect
+            value={settings.uiLanguage}
+            onChange={(lang) => handleSettingChange('uiLanguage', lang)}
+            showAutoOption
+            syncI18n
+            label={t('settings.preferences.uiLanguage')}
+            testId="select-ui-language"
+          />
+
+          {/* 翻译目标语言选择 */}
+          <LanguageSelect
+            value={settings.targetLanguage}
+            onChange={(lang) => handleSettingChange('targetLanguage', lang)}
+            showAutoOption
+            label={t('settings.preferences.targetLanguage')}
+            description={t('settings.preferences.targetLanguageDesc')}
+            testId="select-target-language"
+          />
+        </div>
       </div>
     </div>
   );

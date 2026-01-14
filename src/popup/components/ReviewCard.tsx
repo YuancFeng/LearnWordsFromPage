@@ -9,6 +9,7 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import type { WordRecord } from '../../shared/messaging';
 
 /**
@@ -39,6 +40,8 @@ export function ReviewCard({
   onRemembered,
   onForgotten,
 }: ReviewCardProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="relative w-full h-64" style={{ perspective: '1000px' }}>
       {/* 卡片容器 */}
@@ -56,26 +59,26 @@ export function ReviewCard({
             if (!isFlipped) onFlip();
           }
         }}
-        aria-label={isFlipped ? '卡片背面' : '点击显示答案'}
+        aria-label={isFlipped ? t('review.cardBack') : t('review.clickToReveal')}
       >
         {/* 卡片正面 */}
         <div
           className="absolute w-full h-full bg-white rounded-lg shadow-lg p-6 flex flex-col items-center justify-center"
           style={{ backfaceVisibility: 'hidden' }}
         >
-          <span className="text-3xl font-bold text-gray-800 text-center break-words max-w-full">
+          <span className="text-3xl font-bold text-gray-800 dark:text-gray-100 text-center break-words max-w-full">
             {word.text}
           </span>
-          <span className="text-gray-400 mt-4 text-sm">点击显示答案</span>
+          <span className="text-gray-400 dark:text-gray-500 mt-4 text-sm">{t('review.clickToReveal')}</span>
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
               onFlip();
             }}
-            className="mt-4 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 active:bg-blue-200 transition-colors"
+            className="mt-4 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400 rounded-md hover:bg-blue-100 dark:hover:bg-blue-900/50 active:bg-blue-200 transition-colors"
           >
-            显示答案
+            {t('review.showAnswer')}
           </button>
         </div>
 
@@ -126,7 +129,7 @@ export function ReviewCard({
                 className="flex-1 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 active:bg-red-700 transition-colors font-medium"
                 type="button"
               >
-                忘记了
+                {t('review.forgotten')}
               </button>
               <button
                 onClick={(e) => {
@@ -136,7 +139,7 @@ export function ReviewCard({
                 className="flex-1 py-2.5 bg-green-500 text-white rounded-lg hover:bg-green-600 active:bg-green-700 transition-colors font-medium"
                 type="button"
               >
-                记住了
+                {t('review.remembered')}
               </button>
             </div>
           </div>

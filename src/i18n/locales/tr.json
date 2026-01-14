@@ -1,0 +1,232 @@
+{
+  "common": {
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "confirm": "Onayla",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "close": "Kapat",
+    "retry": "Tekrar Dene",
+    "loading": "Yükleniyor...",
+    "error": "Hata",
+    "success": "Başarılı",
+    "add": "Ekle",
+    "reset": "Sıfırla",
+    "clear": "Temizle",
+    "back": "Geri",
+    "new": "Yeni",
+    "processing": "İşleniyor...",
+    "saving": "Kaydediliyor..."
+  },
+  "settings": {
+    "title": "Ayarlar",
+    "tabs": {
+      "apiKey": "API Anahtarı",
+      "preferences": "Tercihler",
+      "blacklist": "Kara Liste",
+      "tags": "Etiketler"
+    },
+    "preferences": {
+      "interaction": "Etkileşim",
+      "doubleClick": "Çift Tıkla Arama",
+      "doubleClickDesc": "Çift tıklama ile çeviriyi tetikle",
+      "hoverIcon": "Fare Simgesini Göster",
+      "hoverIconDesc": "Metin seçildiğinde çeviri simgesini göster",
+      "reviewReminder": "Tekrar Hatırlatıcısı",
+      "reviewReminderDesc": "Eklenti simgesinde bekleyen kelime sayısını göster",
+      "skipNativeText": "Ana Dil Metnini Atla",
+      "skipNativeTextDesc": "Hedef dilinizde popup gösterme",
+      "appearance": "Görünüm",
+      "theme": "Tema",
+      "themeLight": "Açık",
+      "themeDark": "Koyu",
+      "themeSystem": "Sistem",
+      "language": "Dil",
+      "uiLanguage": "Arayüz Dili",
+      "uiLanguageAuto": "Otomatik algıla",
+      "targetLanguage": "Çeviri Dili",
+      "targetLanguageDesc": "Kelimeleri bu dile çevir"
+    },
+    "apiKey": {
+      "title": "API Anahtarı",
+      "aiProvider": "AI Sağlayıcısı",
+      "customConfig": "Özel API Yapılandırması",
+      "endpoint": "API Uç Nokta URL'si",
+      "endpointPlaceholder": "http://localhost:8080/v1/chat/completions",
+      "endpointHelp": "CLI Proxy, Ollama, LM Studio ve diğer OpenAI uyumlu API'leri destekler",
+      "modelName": "Model Adı",
+      "modelPlaceholder": "gpt-4, claude-3-opus, llama3",
+      "apiKeyPlaceholder": "API Anahtarınızı girin",
+      "apiKeyRequired": "Lütfen API Anahtarı girin",
+      "getGeminiKey": "Gemini API Anahtarı al",
+      "configured": "API Anahtarı yapılandırıldı",
+      "geminiHelp": "Gemini API kullanıyor, Google AI API Anahtarınızı girin",
+      "customHelp": "Özel API kullanıyor, API Anahtarı isteğe bağlı",
+      "clearConfirmTitle": "Temizlemeyi Onayla",
+      "clearConfirmMessage": "API Anahtarını temizlemek istediğinizden emin misiniz? Çeviri özelliğini kullanmak için yeniden yapılandırmanız gerekecek."
+    },
+    "blacklist": {
+      "title": "Kara Liste",
+      "description": "Gizlilik için kara listedeki sitelerde eklenti devre dışıdır.",
+      "wildcardHelp": "Joker karakterleri destekler: *.domain.com veya *anahtar*",
+      "addSite": "Site Ekle",
+      "placeholder": "*.example.com veya *anahtar*",
+      "list": "Kara Liste ({{count}})",
+      "resetDefault": "Varsayılana Sıfırla",
+      "empty": "Kara listede site yok",
+      "emptyHint": "Önceden tanımlı ayarları geri yüklemek için \"Varsayılana Sıfırla\" düğmesine tıklayın",
+      "validation": {
+        "required": "Lütfen bir URL deseni girin",
+        "invalid": "Geçersiz desen. *.domain.com veya *anahtar* formatını kullanın",
+        "duplicate": "Bu desen zaten mevcut"
+      }
+    },
+    "tags": {
+      "title": "Etiket Yönetimi",
+      "create": "Yeni",
+      "empty": "Henüz etiket oluşturulmadı",
+      "emptyHint": "İlk etiketinizi oluşturmak için \"Yeni\" düğmesine tıklayın",
+      "deleteConfirm": "\"{{name}}\" etiketi silinsin mi?\n\nBu etikete sahip kelimelerin etiketi kaldırılacak.",
+      "loading": "Etiketler yükleniyor...",
+      "editTag": "Etiketi düzenle",
+      "deleteTag": "Etiketi sil"
+    },
+    "toast": {
+      "apiKeySaved": "API Anahtarı başarıyla kaydedildi",
+      "apiKeyCleared": "API Anahtarı temizlendi",
+      "settingsSaved": "Ayarlar kaydedildi",
+      "blacklistUpdated": "Kara liste güncellendi",
+      "comingSoon": "Bu özellik yakında geliyor"
+    }
+  },
+  "vocabulary": {
+    "title": "Kelime Dağarcığım",
+    "wordCount": "{{count}} kelime",
+    "matchCount": "{{total}} kelimeden {{match}} bulundu",
+    "emptyState": "Henüz kelime kaydedilmedi",
+    "emptyStateHint": "Okumaya başlayın ve yeni kelimeler kaydedin!",
+    "jumpToSource": "Kaynağa Git",
+    "jumping": "Yönlendiriliyor...",
+    "pronunciation": "Telaffuz",
+    "example": "Örnek",
+    "source": "Kaynak",
+    "inaccessible": "Kaynak sayfaya erişilemiyor, ancak tam bağlamı burada görüntüleyebilirsiniz.",
+    "search": {
+      "placeholder": "Kelime ara...",
+      "searching": "Aranıyor...",
+      "resultsCount": "{{count}} sonuç bulundu",
+      "noResults": "Eşleşen kelime yok",
+      "noResultsHint": "Farklı anahtar kelimeler deneyin",
+      "clearSearch": "Aramayı temizle",
+      "clearAll": "Tüm Filtreleri Temizle"
+    },
+    "sort": {
+      "label": "Sırala",
+      "options": "Sıralama seçenekleri",
+      "recent": "En Son",
+      "oldest": "En Eski",
+      "alphabetical": "Alfabetik"
+    },
+    "batch": {
+      "select": "Toplu Seçim",
+      "cancel": "Seçimi İptal Et",
+      "selected": "{{count}} seçildi",
+      "addTags": "Etiket Ekle"
+    },
+    "filter": {
+      "search": "Arama: \"{{query}}\"",
+      "tagsCount": "{{count}} etiket filtresi",
+      "removeTag": "{{name}} filtresini kaldır"
+    },
+    "actions": {
+      "select": "Seç",
+      "deselect": "Seçimi Kaldır",
+      "settings": "Ayarlar",
+      "startReview": "Tekrara Başla"
+    }
+  },
+  "review": {
+    "title": "Tekrar",
+    "startReview": "Tekrara Başla",
+    "showAnswer": "Cevabı Göster",
+    "clickToShow": "Cevabı göstermek için tıklayın",
+    "remembered": "Hatırladım",
+    "forgotten": "Unuttum",
+    "hint": "Cevabı göstermek için karta tıklayın veya Enter'a basın",
+    "progress": "{{current}} / {{total}}",
+    "cardFront": "Cevabı görmek için tıklayın",
+    "cardBack": "Kartın arkası",
+    "complete": {
+      "title": "Tekrar Tamamlandı!",
+      "great": "Harika iş!",
+      "awesome": "Muhteşem! Harika hafıza!",
+      "good": "Harika iş! Devam edin!",
+      "okay": "İyi başlangıç! Daha fazla pratik yardımcı olur!",
+      "needPractice": "Pes etmeyin! Tekrar anahtardır!",
+      "total": "Toplam tekrar edilen",
+      "rememberedCount": "Hatırlanan",
+      "forgottenCount": "Unutulan",
+      "memoryRate": "Hatırlama Oranı",
+      "backToVocabulary": "Kelime Dağarcığına Dön"
+    },
+    "empty": {
+      "title": "Harika!",
+      "message": "Tekrar için bekleyen kelime yok",
+      "back": "Kelime Dağarcığına Dön"
+    }
+  },
+  "analysis": {
+    "meaning": "Anlam",
+    "translation": "Çeviri",
+    "pronunciation": "Telaffuz",
+    "partOfSpeech": "Sözcük Türü",
+    "usage": "Kullanım",
+    "saveWord": "Kelimeyi Kaydet",
+    "loading": {
+      "word": {
+        "tip1": "AI bağlamı analiz ediyor...",
+        "tip2": "Bağlam anlaşılıyor...",
+        "tip3": "Doğru tanım oluşturuluyor...",
+        "tip4": "Kelime kullanımı analiz ediliyor..."
+      },
+      "translate": {
+        "tip1": "AI çeviriyor...",
+        "tip2": "Orijinal anlam anlaşılıyor...",
+        "tip3": "Akıcı çeviri oluşturuluyor...",
+        "tip4": "Çeviri optimize ediliyor..."
+      }
+    },
+    "toast": {
+      "translationNotSavable": "Çeviri içeriği kelime dağarcığına kaydedilemez",
+      "completeAnalysisFirst": "Lütfen kaydetmeden önce analizi tamamlayın",
+      "locationError": "Kelime konumu alınamadı, kaydetme başarısız oldu",
+      "saveSuccess": "Başarıyla kaydedildi",
+      "extensionUpdated": "Eklenti güncellendi, lütfen sayfayı yenileyip tekrar deneyin",
+      "duplicateWord": "Bu kelime zaten kaydedilmiş",
+      "saveFailed": "Kaydetme başarısız oldu",
+      "saveRetry": "Kaydetme başarısız oldu, lütfen tekrar deneyin",
+      "cannotLocate": "Bu kelime mevcut sayfada bulunamıyor, içerik değişmiş olabilir"
+    },
+    "errors": {
+      "network": "Ağ bağlantısı başarısız oldu",
+      "networkHint": "Lütfen bağlantınızı kontrol edip tekrar deneyin",
+      "timeout": "İstek zaman aşımına uğradı",
+      "timeoutHint": "AI yanıtı yavaş, lütfen tekrar deneyin",
+      "apiKey": "API yapılandırma hatası",
+      "apiKeyHint": "Lütfen API Anahtarı ayarlarını kontrol edin",
+      "config": "Yapılandırma hatası",
+      "configHint": "Lütfen eklenti ayarlarını kontrol edin",
+      "refresh": "Eklenti güncellendi",
+      "refreshHint": "Lütfen sayfayı yenileyip tekrar deneyin",
+      "generic": "Analiz başarısız oldu",
+      "genericHint": "Lütfen daha sonra tekrar deneyin"
+    }
+  },
+  "dialog": {
+    "confirmAction": "İşlemi Onayla",
+    "processing": "İşleniyor..."
+  },
+  "toast": {
+    "close": "Kapat"
+  }
+}

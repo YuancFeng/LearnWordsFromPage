@@ -1,0 +1,232 @@
+{
+  "common": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "confirm": "Bestätigen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "close": "Schließen",
+    "retry": "Erneut versuchen",
+    "loading": "Wird geladen...",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "add": "Hinzufügen",
+    "reset": "Zurücksetzen",
+    "clear": "Löschen",
+    "back": "Zurück",
+    "new": "Neu",
+    "processing": "Wird verarbeitet...",
+    "saving": "Wird gespeichert..."
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "tabs": {
+      "apiKey": "API-Schlüssel",
+      "preferences": "Einstellungen",
+      "blacklist": "Sperrliste",
+      "tags": "Tags"
+    },
+    "preferences": {
+      "interaction": "Interaktion",
+      "doubleClick": "Doppelklick-Übersetzung",
+      "doubleClickDesc": "Übersetzung bei Doppelklick auslösen",
+      "hoverIcon": "Hover-Symbol anzeigen",
+      "hoverIconDesc": "Übersetzungssymbol bei Textauswahl anzeigen",
+      "reviewReminder": "Wiederholungserinnerung",
+      "reviewReminderDesc": "Anzahl fälliger Wörter auf dem Erweiterungssymbol anzeigen",
+      "skipNativeText": "Muttersprache überspringen",
+      "skipNativeTextDesc": "Kein Popup für Ihre Zielsprache anzeigen",
+      "appearance": "Darstellung",
+      "theme": "Design",
+      "themeLight": "Hell",
+      "themeDark": "Dunkel",
+      "themeSystem": "System",
+      "language": "Sprache",
+      "uiLanguage": "Oberflächensprache",
+      "uiLanguageAuto": "Automatisch erkennen",
+      "targetLanguage": "Übersetzungssprache",
+      "targetLanguageDesc": "Wörter in diese Sprache übersetzen"
+    },
+    "apiKey": {
+      "title": "API-Schlüssel",
+      "aiProvider": "KI-Anbieter",
+      "customConfig": "Benutzerdefinierte API-Konfiguration",
+      "endpoint": "API-Endpunkt-URL",
+      "endpointPlaceholder": "http://localhost:8080/v1/chat/completions",
+      "endpointHelp": "Unterstützt CLI Proxy, Ollama, LM Studio und andere OpenAI-kompatible APIs",
+      "modelName": "Modellname",
+      "modelPlaceholder": "gpt-4, claude-3-opus, llama3",
+      "apiKeyPlaceholder": "Geben Sie Ihren API-Schlüssel ein",
+      "apiKeyRequired": "Bitte API-Schlüssel eingeben",
+      "getGeminiKey": "Gemini API-Schlüssel erhalten",
+      "configured": "API-Schlüssel konfiguriert",
+      "geminiHelp": "Verwendet Gemini API, geben Sie Ihren Google AI API-Schlüssel ein",
+      "customHelp": "Bei benutzerdefinierter API ist der API-Schlüssel optional",
+      "clearConfirmTitle": "Löschen bestätigen",
+      "clearConfirmMessage": "Sind Sie sicher, dass Sie den API-Schlüssel löschen möchten? Sie müssen ihn neu konfigurieren, um die Übersetzungsfunktion zu nutzen."
+    },
+    "blacklist": {
+      "title": "Sperrliste",
+      "description": "Die Erweiterung ist auf gesperrten Seiten zum Schutz der Privatsphäre deaktiviert.",
+      "wildcardHelp": "Unterstützt Platzhalter: *.domain.com oder *stichwort*",
+      "addSite": "Seite hinzufügen",
+      "placeholder": "*.beispiel.com oder *stichwort*",
+      "list": "Sperrliste ({{count}})",
+      "resetDefault": "Standard wiederherstellen",
+      "empty": "Keine gesperrten Seiten",
+      "emptyHint": "Klicken Sie auf \"Standard wiederherstellen\", um Voreinstellungen zu laden",
+      "validation": {
+        "required": "Bitte geben Sie ein URL-Muster ein",
+        "invalid": "Ungültiges Muster. Verwenden Sie das Format *.domain.com oder *stichwort*",
+        "duplicate": "Dieses Muster existiert bereits"
+      }
+    },
+    "tags": {
+      "title": "Tag-Verwaltung",
+      "create": "Neu",
+      "empty": "Noch keine Tags erstellt",
+      "emptyHint": "Klicken Sie auf \"Neu\", um Ihr erstes Tag zu erstellen",
+      "deleteConfirm": "Tag \"{{name}}\" löschen?\n\nWörter mit diesem Tag werden es verlieren.",
+      "loading": "Tags werden geladen...",
+      "editTag": "Tag bearbeiten",
+      "deleteTag": "Tag löschen"
+    },
+    "toast": {
+      "apiKeySaved": "API-Schlüssel erfolgreich gespeichert",
+      "apiKeyCleared": "API-Schlüssel gelöscht",
+      "settingsSaved": "Einstellungen gespeichert",
+      "blacklistUpdated": "Sperrliste aktualisiert",
+      "comingSoon": "Diese Funktion kommt bald"
+    }
+  },
+  "vocabulary": {
+    "title": "Mein Wortschatz",
+    "wordCount": "{{count}} Wörter",
+    "matchCount": "{{match}} von {{total}} Wörtern gefunden",
+    "emptyState": "Noch keine Wörter gespeichert",
+    "emptyStateHint": "Beginnen Sie zu lesen und speichern Sie neue Wörter!",
+    "jumpToSource": "Zur Quelle springen",
+    "jumping": "Wird gesprungen...",
+    "pronunciation": "Aussprache",
+    "example": "Beispiel",
+    "source": "Quelle",
+    "inaccessible": "Die Quellseite ist nicht erreichbar, aber Sie können den vollständigen Kontext hier einsehen.",
+    "search": {
+      "placeholder": "Wörter suchen...",
+      "searching": "Wird gesucht...",
+      "resultsCount": "{{count}} Ergebnisse gefunden",
+      "noResults": "Keine passenden Wörter",
+      "noResultsHint": "Versuchen Sie andere Suchbegriffe",
+      "clearSearch": "Suche löschen",
+      "clearAll": "Alle Filter löschen"
+    },
+    "sort": {
+      "label": "Sortieren nach",
+      "options": "Sortieroptionen",
+      "recent": "Neueste zuerst",
+      "oldest": "Älteste zuerst",
+      "alphabetical": "Alphabetisch"
+    },
+    "batch": {
+      "select": "Mehrfachauswahl",
+      "cancel": "Auswahl aufheben",
+      "selected": "{{count}} ausgewählt",
+      "addTags": "Tags hinzufügen"
+    },
+    "filter": {
+      "search": "Suche: \"{{query}}\"",
+      "tagsCount": "{{count}} Tag-Filter",
+      "removeTag": "{{name}}-Filter entfernen"
+    },
+    "actions": {
+      "select": "Auswählen",
+      "deselect": "Abwählen",
+      "settings": "Einstellungen",
+      "startReview": "Wiederholung starten"
+    }
+  },
+  "review": {
+    "title": "Wiederholung",
+    "startReview": "Wiederholung starten",
+    "showAnswer": "Antwort anzeigen",
+    "clickToShow": "Klicken, um Antwort anzuzeigen",
+    "remembered": "Gewusst",
+    "forgotten": "Vergessen",
+    "hint": "Klicken Sie auf die Karte oder drücken Sie Enter, um die Antwort anzuzeigen",
+    "progress": "{{current}} / {{total}}",
+    "cardFront": "Klicken, um Antwort anzuzeigen",
+    "cardBack": "Kartenrückseite",
+    "complete": {
+      "title": "Wiederholung abgeschlossen!",
+      "great": "Sehr gut!",
+      "awesome": "Fantastisch! Tolles Gedächtnis!",
+      "good": "Sehr gut! Weiter so!",
+      "okay": "Guter Anfang! Übung macht den Meister!",
+      "needPractice": "Nicht aufgeben! Wiederholung ist der Schlüssel!",
+      "total": "Insgesamt wiederholt",
+      "rememberedCount": "Gewusst",
+      "forgottenCount": "Vergessen",
+      "memoryRate": "Erinnerungsquote",
+      "backToVocabulary": "Zurück zum Wortschatz"
+    },
+    "empty": {
+      "title": "Super!",
+      "message": "Keine Wörter zur Wiederholung fällig",
+      "back": "Zurück zum Wortschatz"
+    }
+  },
+  "analysis": {
+    "meaning": "Bedeutung",
+    "translation": "Übersetzung",
+    "pronunciation": "Aussprache",
+    "partOfSpeech": "Wortart",
+    "usage": "Verwendung",
+    "saveWord": "Wort speichern",
+    "loading": {
+      "word": {
+        "tip1": "KI analysiert den Kontext...",
+        "tip2": "Kontext wird verstanden...",
+        "tip3": "Genaue Definition wird erstellt...",
+        "tip4": "Wortverwendung wird analysiert..."
+      },
+      "translate": {
+        "tip1": "KI übersetzt...",
+        "tip2": "Originalbedeutung wird verstanden...",
+        "tip3": "Flüssige Übersetzung wird erstellt...",
+        "tip4": "Übersetzung wird optimiert..."
+      }
+    },
+    "toast": {
+      "translationNotSavable": "Übersetzungsinhalte können nicht im Wortschatz gespeichert werden",
+      "completeAnalysisFirst": "Bitte schließen Sie die Analyse ab, bevor Sie speichern",
+      "locationError": "Wortposition kann nicht ermittelt werden, Speichern fehlgeschlagen",
+      "saveSuccess": "Erfolgreich gespeichert",
+      "extensionUpdated": "Erweiterung aktualisiert, bitte aktualisieren Sie die Seite und versuchen Sie es erneut",
+      "duplicateWord": "Dieses Wort ist bereits gespeichert",
+      "saveFailed": "Speichern fehlgeschlagen",
+      "saveRetry": "Speichern fehlgeschlagen, bitte erneut versuchen",
+      "cannotLocate": "Dieses Wort kann auf der aktuellen Seite nicht gefunden werden, der Inhalt hat sich möglicherweise geändert"
+    },
+    "errors": {
+      "network": "Netzwerkverbindung fehlgeschlagen",
+      "networkHint": "Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut",
+      "timeout": "Zeitüberschreitung",
+      "timeoutHint": "KI antwortet langsam, bitte versuchen Sie es erneut",
+      "apiKey": "API-Konfigurationsfehler",
+      "apiKeyHint": "Bitte überprüfen Sie Ihre API-Schlüssel-Einstellungen",
+      "config": "Konfigurationsfehler",
+      "configHint": "Bitte überprüfen Sie die Einstellungen in der Erweiterung",
+      "refresh": "Erweiterung aktualisiert",
+      "refreshHint": "Bitte aktualisieren Sie die Seite und versuchen Sie es erneut",
+      "generic": "Analyse fehlgeschlagen",
+      "genericHint": "Bitte versuchen Sie es später erneut"
+    }
+  },
+  "dialog": {
+    "confirmAction": "Aktion bestätigen",
+    "processing": "Wird verarbeitet..."
+  },
+  "toast": {
+    "close": "Schließen"
+  }
+}

@@ -26,6 +26,74 @@ export type ThemeType = 'light' | 'dark' | 'system';
  */
 export type AIProviderType = 'gemini' | 'openai-compatible';
 
+// ============================================================
+// Language Types (i18n)
+// ============================================================
+
+/**
+ * 支持的 UI 界面语言
+ * 包含 21 种语言支持
+ */
+export type UILanguage =
+  | 'en'      // English
+  | 'zh-CN'   // 简体中文
+  | 'zh-TW'   // 繁體中文
+  | 'ja'      // 日本語
+  | 'ko'      // 한국어
+  | 'de'      // Deutsch
+  | 'es'      // Español
+  | 'ru'      // Русский
+  | 'az'      // Azərbaycan
+  | 'tr'      // Türkçe
+  | 'fr'      // Français
+  | 'it'      // Italiano
+  | 'pt'      // Português
+  | 'pl'      // Polski
+  | 'vi'      // Tiếng Việt
+  | 'th'      // ไทย
+  | 'ar'      // العربية
+  | 'hi'      // हिन्दी
+  | 'nl'      // Nederlands
+  | 'uk'      // Українська
+  | 'id';     // Indonesia
+
+/**
+ * 目标翻译语言（与 UILanguage 相同）
+ */
+export type TargetLanguage = UILanguage;
+
+/**
+ * UI 语言选项列表（用于下拉菜单）
+ * 每种语言包含本地名称和英文名称
+ */
+export const UI_LANGUAGE_OPTIONS: ReadonlyArray<{
+  value: UILanguage;
+  label: string;      // 本地名称
+  labelEn: string;    // 英文名称
+}> = Object.freeze([
+  { value: 'en', label: 'English', labelEn: 'English' },
+  { value: 'zh-CN', label: '简体中文', labelEn: 'Simplified Chinese' },
+  { value: 'zh-TW', label: '繁體中文', labelEn: 'Traditional Chinese' },
+  { value: 'ja', label: '日本語', labelEn: 'Japanese' },
+  { value: 'ko', label: '한국어', labelEn: 'Korean' },
+  { value: 'de', label: 'Deutsch', labelEn: 'German' },
+  { value: 'es', label: 'Español', labelEn: 'Spanish' },
+  { value: 'ru', label: 'Русский', labelEn: 'Russian' },
+  { value: 'az', label: 'Azərbaycan', labelEn: 'Azerbaijani' },
+  { value: 'tr', label: 'Türkçe', labelEn: 'Turkish' },
+  { value: 'fr', label: 'Français', labelEn: 'French' },
+  { value: 'it', label: 'Italiano', labelEn: 'Italian' },
+  { value: 'pt', label: 'Português', labelEn: 'Portuguese' },
+  { value: 'pl', label: 'Polski', labelEn: 'Polish' },
+  { value: 'vi', label: 'Tiếng Việt', labelEn: 'Vietnamese' },
+  { value: 'th', label: 'ไทย', labelEn: 'Thai' },
+  { value: 'ar', label: 'العربية', labelEn: 'Arabic' },
+  { value: 'hi', label: 'हिन्दी', labelEn: 'Hindi' },
+  { value: 'nl', label: 'Nederlands', labelEn: 'Dutch' },
+  { value: 'uk', label: 'Українська', labelEn: 'Ukrainian' },
+  { value: 'id', label: 'Indonesia', labelEn: 'Indonesian' },
+]);
+
 /**
  * 主题选项列表（用于 UI 下拉菜单）
  */
@@ -115,6 +183,21 @@ export interface Settings {
    * @default ''
    */
   customModelName: string;
+
+  /**
+   * UI 界面语言
+   * 'auto' 表示自动检测浏览器语言
+   * @default 'auto'
+   */
+  uiLanguage: UILanguage | 'auto';
+
+  /**
+   * 目标翻译语言
+   * AI 会将文本翻译成此语言
+   * 'auto' 表示自动检测浏览器语言
+   * @default 'auto'
+   */
+  targetLanguage: TargetLanguage | 'auto';
 }
 
 // ============================================================
@@ -139,6 +222,8 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
   aiProvider: 'gemini' as AIProviderType,
   customApiEndpoint: '',
   customModelName: '',
+  uiLanguage: 'auto',
+  targetLanguage: 'auto',
 });
 
 // ============================================================
@@ -164,6 +249,50 @@ export function isValidAIProvider(value: unknown): value is AIProviderType {
 }
 
 /**
+ * 有效的 UI 语言列表
+ */
+const VALID_UI_LANGUAGES: readonly UILanguage[] = [
+  'en', 'zh-CN', 'zh-TW', 'ja', 'ko', 'de', 'es', 'ru', 'az', 'tr',
+  'fr', 'it', 'pt', 'pl', 'vi', 'th', 'ar', 'hi', 'nl', 'uk', 'id',
+] as const;
+
+/**
+ * 检查是否为有效的 UI 语言
+ * @param value - 待检查的值
+ * @returns 是否为有效的 UILanguage
+ */
+export function isValidUILanguage(value: unknown): value is UILanguage {
+  return VALID_UI_LANGUAGES.includes(value as UILanguage);
+}
+
+/**
+ * 检查是否为有效的 UI 语言设置（包含 'auto' 选项）
+ * @param value - 待检查的值
+ * @returns 是否为有效的 UILanguage 或 'auto'
+ */
+export function isValidUILanguageSetting(value: unknown): value is UILanguage | 'auto' {
+  return value === 'auto' || isValidUILanguage(value);
+}
+
+/**
+ * 检查是否为有效的目标翻译语言
+ * @param value - 待检查的值
+ * @returns 是否为有效的 TargetLanguage
+ */
+export function isValidTargetLanguage(value: unknown): value is TargetLanguage {
+  return isValidUILanguage(value);
+}
+
+/**
+ * 检查是否为有效的目标翻译语言设置（包含 'auto' 选项）
+ * @param value - 待检查的值
+ * @returns 是否为有效的 TargetLanguage 或 'auto'
+ */
+export function isValidTargetLanguageSetting(value: unknown): value is TargetLanguage | 'auto' {
+  return value === 'auto' || isValidTargetLanguage(value);
+}
+
+/**
  * 检查是否为有效的 Settings 对象
  * @param value - 待检查的值
  * @returns 是否为有效的 Settings
@@ -185,7 +314,9 @@ export function isValidSettings(value: unknown): value is Settings {
     settings.blacklistUrls.every((url) => typeof url === 'string') &&
     isValidAIProvider(settings.aiProvider) &&
     typeof settings.customApiEndpoint === 'string' &&
-    typeof settings.customModelName === 'string'
+    typeof settings.customModelName === 'string' &&
+    isValidUILanguageSetting(settings.uiLanguage) &&
+    isValidTargetLanguageSetting(settings.targetLanguage)
   );
 }
 
@@ -217,5 +348,7 @@ export function mergeWithDefaults(partial: Partial<Settings> | null | undefined)
     aiProvider: isValidAIProvider(partial.aiProvider) ? partial.aiProvider : DEFAULT_SETTINGS.aiProvider,
     customApiEndpoint: typeof partial.customApiEndpoint === 'string' ? partial.customApiEndpoint : DEFAULT_SETTINGS.customApiEndpoint,
     customModelName: typeof partial.customModelName === 'string' ? partial.customModelName : DEFAULT_SETTINGS.customModelName,
+    uiLanguage: isValidUILanguageSetting(partial.uiLanguage) ? partial.uiLanguage : DEFAULT_SETTINGS.uiLanguage,
+    targetLanguage: isValidTargetLanguageSetting(partial.targetLanguage) ? partial.targetLanguage : DEFAULT_SETTINGS.targetLanguage,
   };
 }

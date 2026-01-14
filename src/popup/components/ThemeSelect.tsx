@@ -7,6 +7,7 @@
 
 import React from 'react';
 import { Sun, Moon, Monitor } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { type ThemeType, THEME_OPTIONS } from '../../shared/types/settings';
 
 /**
@@ -36,6 +37,20 @@ function getThemeIcon(theme: ThemeType): React.ReactNode {
 }
 
 /**
+ * 获取主题翻译键
+ */
+function getThemeLabelKey(theme: ThemeType): string {
+  switch (theme) {
+    case 'light':
+      return 'settings.preferences.themeLight';
+    case 'dark':
+      return 'settings.preferences.themeDark';
+    case 'system':
+      return 'settings.preferences.themeSystem';
+  }
+}
+
+/**
  * 主题选择组件
  * Story 4.2 - AC3
  *
@@ -52,10 +67,12 @@ export function ThemeSelect({
   onChange,
   disabled = false,
 }: ThemeSelectProps): React.ReactElement {
+  const { t } = useTranslation();
+
   return (
     <div className="py-2">
       <div className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-        外观主题
+        {t('settings.preferences.theme')}
       </div>
       <div className="flex gap-2">
         {THEME_OPTIONS.map((option) => {
@@ -67,7 +84,7 @@ export function ThemeSelect({
               onClick={() => onChange(option.value)}
               disabled={disabled}
               aria-pressed={isSelected}
-              aria-label={`选择${option.label}主题`}
+              aria-label={t(getThemeLabelKey(option.value))}
               className={`
                 flex-1 flex items-center justify-center gap-1.5
                 px-3 py-2 rounded-lg
@@ -83,7 +100,7 @@ export function ThemeSelect({
               `}
             >
               {getThemeIcon(option.value)}
-              <span>{option.label}</span>
+              <span>{t(getThemeLabelKey(option.value))}</span>
             </button>
           );
         })}

@@ -10,6 +10,7 @@
 
 import React, { useState } from 'react';
 import { Loader2, Plus, Trash2, RotateCcw, AlertCircle, Info } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useSettings } from '../../hooks/useSettings';
 import { isValidPattern, normalizePattern } from '../../shared/utils/urlMatcher';
 import { DEFAULT_SETTINGS } from '../../shared/types/settings';
@@ -40,6 +41,7 @@ export function BlacklistSection({
   onSaveSuccess,
   onError,
 }: BlacklistSectionProps): React.ReactElement {
+  const { t } = useTranslation();
   const { settings, isLoading, error, updateSetting } = useSettings();
   const [newPattern, setNewPattern] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -54,13 +56,13 @@ export function BlacklistSection({
     // 验证输入
     const trimmed = newPattern.trim();
     if (!trimmed) {
-      setValidationError('请输入 URL 模式');
+      setValidationError(t('settings.blacklist.validation.required'));
       return;
     }
 
     // 验证模式格式
     if (!isValidPattern(trimmed)) {
-      setValidationError('无效的模式。请使用 *.domain.com 或 *keyword* 格式');
+      setValidationError(t('settings.blacklist.validation.invalid'));
       return;
     }
 
@@ -69,7 +71,7 @@ export function BlacklistSection({
 
     // 检查重复
     if (settings.blacklistUrls.includes(normalized)) {
-      setValidationError('此模式已存在');
+      setValidationError(t('settings.blacklist.validation.duplicate'));
       return;
     }
 
@@ -81,7 +83,7 @@ export function BlacklistSection({
       setNewPattern('');
       onSaveSuccess?.();
     } else {
-      onError?.(result.error?.message ?? '添加失败');
+      onError?.(result.error?.message ?? t('analysis.toast.saveFailed'));
     }
   };
 
@@ -95,7 +97,7 @@ export function BlacklistSection({
     if (result.success) {
       onSaveSuccess?.();
     } else {
-      onError?.(result.error?.message ?? '删除失败');
+      onError?.(result.error?.message ?? t('analysis.toast.saveFailed'));
     }
   };
 
@@ -109,7 +111,7 @@ export function BlacklistSection({
     if (result.success) {
       onSaveSuccess?.();
     } else {
-      onError?.(result.error?.message ?? '重置失败');
+      onError?.(result.error?.message ?? t('analysis.toast.saveFailed'));
     }
   };
 
@@ -128,7 +130,7 @@ export function BlacklistSection({
     return (
       <div className="flex flex-col items-center justify-center py-12 text-gray-400">
         <Loader2 className="w-8 h-8 animate-spin mb-3" />
-        <p className="text-sm">加载设置中...</p>
+        <p className="text-sm">{t('common.loading')}</p>
       </div>
     );
   }
@@ -138,7 +140,7 @@ export function BlacklistSection({
     return (
       <div className="flex flex-col items-center justify-center py-12 text-red-500">
         <AlertCircle className="w-8 h-8 mb-3" />
-        <p className="text-sm mb-2">加载失败</p>
+        <p className="text-sm mb-2">{t('common.error')}</p>
         <p className="text-xs text-gray-400">{error}</p>
       </div>
     );
@@ -151,8 +153,8 @@ export function BlacklistSection({
         <div className="flex items-start gap-2">
           <Info className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
           <div className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
-            <p>扩展将在黑名单网站上禁用，保护您的隐私。</p>
-            <p>支持通配符: <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">*.domain.com</code> 或 <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">*keyword*</code></p>
+            <p>{t('settings.blacklist.description')}</p>
+            <p>{t('settings.blacklist.wildcardHelp')}</p>
           </div>
         </div>
       </div>
@@ -160,7 +162,7 @@ export function BlacklistSection({
       {/* 添加新模式 (AC1) */}
       <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
         <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 pb-2 border-b border-gray-100 dark:border-gray-700">
-          添加网站
+          {t('settings.blacklist.addSite')}
         </h3>
 
         <div className="flex gap-2">
@@ -172,7 +174,7 @@ export function BlacklistSection({
               setValidationError(null);
             }}
             onKeyDown={handleKeyDown}
-            placeholder="*.example.com 或 *keyword*"
+            placeholder={t('settings.blacklist.placeholder')}
             className={`
               flex-1 px-3 py-2 text-sm
               bg-gray-50 dark:bg-gray-900
@@ -189,11 +191,11 @@ export function BlacklistSection({
           <button
             onClick={handleAddPattern}
             className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors flex items-center gap-1"
-            aria-label="添加"
+            aria-label={t('common.add')}
             data-testid="add-pattern-button"
           >
             <Plus className="w-4 h-4" />
-            <span className="sr-only sm:not-sr-only text-sm">添加</span>
+            <span className="sr-only sm:not-sr-only text-sm">{t('common.add')}</span>
           </button>
         </div>
 
@@ -210,24 +212,24 @@ export function BlacklistSection({
       <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-100 dark:border-gray-700">
           <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            黑名单列表 ({settings.blacklistUrls.length})
+            {t('settings.blacklist.list', { count: settings.blacklistUrls.length })}
           </h3>
           <button
             onClick={handleResetDefaults}
             className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1 transition-colors"
-            title="重置为默认值"
+            title={t('settings.blacklist.resetDefault')}
             data-testid="reset-defaults-button"
           >
             <RotateCcw className="w-3 h-3" />
-            重置默认
+            {t('settings.blacklist.resetDefault')}
           </button>
         </div>
 
         {/* 空状态 */}
         {settings.blacklistUrls.length === 0 ? (
           <div className="py-8 text-center text-gray-400 text-sm">
-            <p>暂无黑名单网站</p>
-            <p className="text-xs mt-1">点击"重置默认"恢复预设列表</p>
+            <p>{t('settings.blacklist.empty')}</p>
+            <p className="text-xs mt-1">{t('settings.blacklist.emptyHint')}</p>
           </div>
         ) : (
           <ul className="space-y-2" data-testid="blacklist-list">
@@ -243,7 +245,7 @@ export function BlacklistSection({
                 <button
                   onClick={() => handleRemovePattern(pattern)}
                   className="p-1 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                  aria-label={`删除 ${pattern}`}
+                  aria-label={`${t('common.delete')} ${pattern}`}
                   data-testid={`remove-pattern-${pattern}`}
                 >
                   <Trash2 className="w-4 h-4" />

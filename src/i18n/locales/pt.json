@@ -1,0 +1,232 @@
+{
+  "common": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "close": "Fechar",
+    "retry": "Tentar novamente",
+    "loading": "Carregando...",
+    "error": "Erro",
+    "success": "Sucesso",
+    "add": "Adicionar",
+    "reset": "Redefinir",
+    "clear": "Limpar",
+    "back": "Voltar",
+    "new": "Novo",
+    "processing": "Processando...",
+    "saving": "Salvando..."
+  },
+  "settings": {
+    "title": "Configurações",
+    "tabs": {
+      "apiKey": "Chave API",
+      "preferences": "Preferências",
+      "blacklist": "Lista negra",
+      "tags": "Etiquetas"
+    },
+    "preferences": {
+      "interaction": "Interação",
+      "doubleClick": "Duplo clique para traduzir",
+      "doubleClickDesc": "Ativar tradução com duplo clique",
+      "hoverIcon": "Mostrar ícone ao passar o mouse",
+      "hoverIconDesc": "Exibir ícone de tradução ao selecionar texto",
+      "reviewReminder": "Lembrete de revisão",
+      "reviewReminderDesc": "Mostrar contagem de palavras pendentes no ícone da extensão",
+      "skipNativeText": "Ignorar texto nativo",
+      "skipNativeTextDesc": "Não mostrar popup para seu idioma de destino",
+      "appearance": "Aparência",
+      "theme": "Tema",
+      "themeLight": "Claro",
+      "themeDark": "Escuro",
+      "themeSystem": "Sistema",
+      "language": "Idioma",
+      "uiLanguage": "Idioma da interface",
+      "uiLanguageAuto": "Detecção automática",
+      "targetLanguage": "Idioma de tradução",
+      "targetLanguageDesc": "Traduzir palavras para este idioma"
+    },
+    "apiKey": {
+      "title": "Chave API",
+      "aiProvider": "Provedor de IA",
+      "customConfig": "Configuração de API personalizada",
+      "endpoint": "URL do endpoint da API",
+      "endpointPlaceholder": "http://localhost:8080/v1/chat/completions",
+      "endpointHelp": "Suporta CLI Proxy, Ollama, LM Studio e outras APIs compatíveis com OpenAI",
+      "modelName": "Nome do modelo",
+      "modelPlaceholder": "gpt-4, claude-3-opus, llama3",
+      "apiKeyPlaceholder": "Digite sua chave API",
+      "apiKeyRequired": "Por favor, digite a chave API",
+      "getGeminiKey": "Obter chave API Gemini",
+      "configured": "Chave API configurada",
+      "geminiHelp": "Usando a API Gemini, digite sua chave Google AI API",
+      "customHelp": "Usando API personalizada, a chave API é opcional",
+      "clearConfirmTitle": "Confirmar exclusão",
+      "clearConfirmMessage": "Tem certeza de que deseja limpar a chave API? Você precisará reconfigurá-la para usar a função de tradução."
+    },
+    "blacklist": {
+      "title": "Lista negra",
+      "description": "A extensão é desativada em sites da lista negra para privacidade.",
+      "wildcardHelp": "Suporta curingas: *.dominio.com ou *palavra*",
+      "addSite": "Adicionar site",
+      "placeholder": "*.exemplo.com ou *palavra*",
+      "list": "Lista negra ({{count}})",
+      "resetDefault": "Restaurar padrão",
+      "empty": "Nenhum site na lista negra",
+      "emptyHint": "Clique em \"Restaurar padrão\" para restaurar as predefinições",
+      "validation": {
+        "required": "Por favor, digite um padrão de URL",
+        "invalid": "Padrão inválido. Use o formato *.dominio.com ou *palavra*",
+        "duplicate": "Este padrão já existe"
+      }
+    },
+    "tags": {
+      "title": "Gerenciar etiquetas",
+      "create": "Novo",
+      "empty": "Nenhuma etiqueta criada",
+      "emptyHint": "Clique em \"Novo\" para criar sua primeira etiqueta",
+      "deleteConfirm": "Excluir etiqueta \"{{name}}\"?\n\nAs palavras com esta etiqueta a perderão.",
+      "loading": "Carregando etiquetas...",
+      "editTag": "Editar etiqueta",
+      "deleteTag": "Excluir etiqueta"
+    },
+    "toast": {
+      "apiKeySaved": "Chave API salva com sucesso",
+      "apiKeyCleared": "Chave API removida",
+      "settingsSaved": "Configurações salvas",
+      "blacklistUpdated": "Lista negra atualizada",
+      "comingSoon": "Esta funcionalidade estará disponível em breve"
+    }
+  },
+  "vocabulary": {
+    "title": "Meu vocabulário",
+    "wordCount": "{{count}} palavras",
+    "matchCount": "Encontradas {{match}} de {{total}} palavras",
+    "emptyState": "Nenhuma palavra salva",
+    "emptyStateHint": "Comece a ler e salve novas palavras!",
+    "jumpToSource": "Ir para a fonte",
+    "jumping": "Redirecionando...",
+    "pronunciation": "Pronúncia",
+    "example": "Exemplo",
+    "source": "Fonte",
+    "inaccessible": "A página de origem está inacessível, mas você ainda pode ver o contexto completo aqui.",
+    "search": {
+      "placeholder": "Buscar palavras...",
+      "searching": "Buscando...",
+      "resultsCount": "{{count}} resultados encontrados",
+      "noResults": "Nenhuma palavra correspondente",
+      "noResultsHint": "Tente palavras-chave diferentes",
+      "clearSearch": "Limpar busca",
+      "clearAll": "Limpar todos os filtros"
+    },
+    "sort": {
+      "label": "Ordenar por",
+      "options": "Opções de ordenação",
+      "recent": "Mais recentes",
+      "oldest": "Mais antigos",
+      "alphabetical": "Alfabético"
+    },
+    "batch": {
+      "select": "Seleção múltipla",
+      "cancel": "Cancelar seleção",
+      "selected": "{{count}} selecionada(s)",
+      "addTags": "Adicionar etiquetas"
+    },
+    "filter": {
+      "search": "Busca: \"{{query}}\"",
+      "tagsCount": "{{count}} filtros de etiquetas",
+      "removeTag": "Remover filtro {{name}}"
+    },
+    "actions": {
+      "select": "Selecionar",
+      "deselect": "Desmarcar",
+      "settings": "Configurações",
+      "startReview": "Iniciar revisão"
+    }
+  },
+  "review": {
+    "title": "Revisão",
+    "startReview": "Iniciar revisão",
+    "showAnswer": "Mostrar resposta",
+    "clickToShow": "Clique para mostrar a resposta",
+    "remembered": "Lembrei",
+    "forgotten": "Esqueci",
+    "hint": "Clique no cartão ou pressione Enter para mostrar a resposta",
+    "progress": "{{current}} / {{total}}",
+    "cardFront": "Clique para revelar a resposta",
+    "cardBack": "Verso do cartão",
+    "complete": {
+      "title": "Revisão concluída!",
+      "great": "Ótimo trabalho!",
+      "awesome": "Incrível! Ótima memória!",
+      "good": "Muito bem! Continue assim!",
+      "okay": "Bom começo! A prática ajuda!",
+      "needPractice": "Não desista! A revisão é fundamental!",
+      "total": "Total revisado",
+      "rememberedCount": "Lembradas",
+      "forgottenCount": "Esquecidas",
+      "memoryRate": "Taxa de memorização",
+      "backToVocabulary": "Voltar ao vocabulário"
+    },
+    "empty": {
+      "title": "Perfeito!",
+      "message": "Nenhuma palavra para revisar",
+      "back": "Voltar ao vocabulário"
+    }
+  },
+  "analysis": {
+    "meaning": "Significado",
+    "translation": "Tradução",
+    "pronunciation": "Pronúncia",
+    "partOfSpeech": "Classe gramatical",
+    "usage": "Uso",
+    "saveWord": "Salvar palavra",
+    "loading": {
+      "word": {
+        "tip1": "A IA está analisando o contexto...",
+        "tip2": "Compreendendo o contexto...",
+        "tip3": "Gerando definição precisa...",
+        "tip4": "Analisando o uso da palavra..."
+      },
+      "translate": {
+        "tip1": "A IA está traduzindo...",
+        "tip2": "Compreendendo o significado original...",
+        "tip3": "Gerando tradução fluida...",
+        "tip4": "Otimizando tradução..."
+      }
+    },
+    "toast": {
+      "translationNotSavable": "O conteúdo da tradução não pode ser salvo no vocabulário",
+      "completeAnalysisFirst": "Por favor, conclua a análise antes de salvar",
+      "locationError": "Não foi possível obter a localização da palavra, falha ao salvar",
+      "saveSuccess": "Salvo com sucesso",
+      "extensionUpdated": "Extensão atualizada, por favor atualize a página e tente novamente",
+      "duplicateWord": "Esta palavra já está salva",
+      "saveFailed": "Falha ao salvar",
+      "saveRetry": "Falha ao salvar, por favor tente novamente",
+      "cannotLocate": "Não foi possível localizar esta palavra na página atual, o conteúdo pode ter mudado"
+    },
+    "errors": {
+      "network": "Falha na conexão de rede",
+      "networkHint": "Verifique sua conexão e tente novamente",
+      "timeout": "Tempo limite excedido",
+      "timeoutHint": "A resposta da IA está lenta, por favor tente novamente",
+      "apiKey": "Erro de configuração da API",
+      "apiKeyHint": "Verifique as configurações da sua chave API",
+      "config": "Erro de configuração",
+      "configHint": "Verifique as configurações na extensão",
+      "refresh": "Extensão atualizada",
+      "refreshHint": "Por favor, atualize a página e tente novamente",
+      "generic": "Falha na análise",
+      "genericHint": "Por favor, tente novamente mais tarde"
+    }
+  },
+  "dialog": {
+    "confirmAction": "Confirmar ação",
+    "processing": "Processando..."
+  },
+  "toast": {
+    "close": "Fechar"
+  }
+}

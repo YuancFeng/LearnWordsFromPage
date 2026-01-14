@@ -1,0 +1,232 @@
+{
+  "common": {
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "confirm": "Potwierdź",
+    "delete": "Usuń",
+    "edit": "Edytuj",
+    "close": "Zamknij",
+    "retry": "Spróbuj ponownie",
+    "loading": "Ładowanie...",
+    "error": "Błąd",
+    "success": "Sukces",
+    "add": "Dodaj",
+    "reset": "Resetuj",
+    "clear": "Wyczyść",
+    "back": "Wstecz",
+    "new": "Nowy",
+    "processing": "Przetwarzanie...",
+    "saving": "Zapisywanie..."
+  },
+  "settings": {
+    "title": "Ustawienia",
+    "tabs": {
+      "apiKey": "Klucz API",
+      "preferences": "Preferencje",
+      "blacklist": "Czarna lista",
+      "tags": "Tagi"
+    },
+    "preferences": {
+      "interaction": "Interakcja",
+      "doubleClick": "Wyszukiwanie podwójnym kliknięciem",
+      "doubleClickDesc": "Uruchom tłumaczenie podwójnym kliknięciem",
+      "hoverIcon": "Pokaż ikonę przy najechaniu",
+      "hoverIconDesc": "Wyświetl ikonę tłumaczenia po zaznaczeniu tekstu",
+      "reviewReminder": "Przypomnienie o powtórce",
+      "reviewReminderDesc": "Pokaż liczbę słów do powtórki na ikonie rozszerzenia",
+      "skipNativeText": "Pomiń tekst w języku docelowym",
+      "skipNativeTextDesc": "Nie pokazuj okna dla Twojego języka docelowego",
+      "appearance": "Wygląd",
+      "theme": "Motyw",
+      "themeLight": "Jasny",
+      "themeDark": "Ciemny",
+      "themeSystem": "Systemowy",
+      "language": "Język",
+      "uiLanguage": "Język interfejsu",
+      "uiLanguageAuto": "Wykryj automatycznie",
+      "targetLanguage": "Język tłumaczenia",
+      "targetLanguageDesc": "Tłumacz słowa na ten język"
+    },
+    "apiKey": {
+      "title": "Klucz API",
+      "aiProvider": "Dostawca AI",
+      "customConfig": "Niestandardowa konfiguracja API",
+      "endpoint": "Adres URL punktu końcowego API",
+      "endpointPlaceholder": "http://localhost:8080/v1/chat/completions",
+      "endpointHelp": "Obsługuje CLI Proxy, Ollama, LM Studio i inne API zgodne z OpenAI",
+      "modelName": "Nazwa modelu",
+      "modelPlaceholder": "gpt-4, claude-3-opus, llama3",
+      "apiKeyPlaceholder": "Wprowadź swój klucz API",
+      "apiKeyRequired": "Proszę wprowadzić klucz API",
+      "getGeminiKey": "Uzyskaj klucz API Gemini",
+      "configured": "Klucz API skonfigurowany",
+      "geminiHelp": "Używa API Gemini, wprowadź swój klucz Google AI API",
+      "customHelp": "Używa niestandardowego API, klucz API jest opcjonalny",
+      "clearConfirmTitle": "Potwierdź wyczyszczenie",
+      "clearConfirmMessage": "Czy na pewno chcesz wyczyścić klucz API? Będziesz musiał ponownie go skonfigurować, aby korzystać z funkcji tłumaczenia."
+    },
+    "blacklist": {
+      "title": "Czarna lista",
+      "description": "Rozszerzenie jest wyłączone na stronach z czarnej listy dla zachowania prywatności.",
+      "wildcardHelp": "Obsługuje znaki wieloznaczne: *.domain.com lub *słowokluczowe*",
+      "addSite": "Dodaj stronę",
+      "placeholder": "*.example.com lub *słowokluczowe*",
+      "list": "Czarna lista ({{count}})",
+      "resetDefault": "Przywróć domyślne",
+      "empty": "Brak stron na czarnej liście",
+      "emptyHint": "Kliknij \"Przywróć domyślne\", aby przywrócić ustawienia wstępne",
+      "validation": {
+        "required": "Proszę wprowadzić wzorzec URL",
+        "invalid": "Nieprawidłowy wzorzec. Użyj formatu *.domain.com lub *słowokluczowe*",
+        "duplicate": "Ten wzorzec już istnieje"
+      }
+    },
+    "tags": {
+      "title": "Zarządzanie tagami",
+      "create": "Nowy",
+      "empty": "Nie utworzono jeszcze żadnych tagów",
+      "emptyHint": "Kliknij \"Nowy\", aby utworzyć swój pierwszy tag",
+      "deleteConfirm": "Usunąć tag \"{{name}}\"?\n\nSłowa z tym tagiem będą miały go usunięty.",
+      "loading": "Ładowanie tagów...",
+      "editTag": "Edytuj tag",
+      "deleteTag": "Usuń tag"
+    },
+    "toast": {
+      "apiKeySaved": "Klucz API zapisany pomyślnie",
+      "apiKeyCleared": "Klucz API wyczyszczony",
+      "settingsSaved": "Ustawienia zapisane",
+      "blacklistUpdated": "Czarna lista zaktualizowana",
+      "comingSoon": "Ta funkcja wkrótce będzie dostępna"
+    }
+  },
+  "vocabulary": {
+    "title": "Moje słownictwo",
+    "wordCount": "{{count}} słów",
+    "matchCount": "Znaleziono {{match}} z {{total}} słów",
+    "emptyState": "Nie zapisano jeszcze żadnych słów",
+    "emptyStateHint": "Zacznij czytać i zapisuj nowe słowa!",
+    "jumpToSource": "Przejdź do źródła",
+    "jumping": "Przechodzenie...",
+    "pronunciation": "Wymowa",
+    "example": "Przykład",
+    "source": "Źródło",
+    "inaccessible": "Strona źródłowa jest niedostępna, ale nadal możesz zobaczyć pełny kontekst tutaj.",
+    "search": {
+      "placeholder": "Szukaj słów...",
+      "searching": "Wyszukiwanie...",
+      "resultsCount": "Znaleziono {{count}} wyników",
+      "noResults": "Brak pasujących słów",
+      "noResultsHint": "Spróbuj innych słów kluczowych",
+      "clearSearch": "Wyczyść wyszukiwanie",
+      "clearAll": "Wyczyść wszystkie filtry"
+    },
+    "sort": {
+      "label": "Sortuj według",
+      "options": "Opcje sortowania",
+      "recent": "Najnowsze",
+      "oldest": "Najstarsze",
+      "alphabetical": "Alfabetycznie"
+    },
+    "batch": {
+      "select": "Zaznaczanie grupowe",
+      "cancel": "Anuluj zaznaczenie",
+      "selected": "Zaznaczono {{count}}",
+      "addTags": "Dodaj tagi"
+    },
+    "filter": {
+      "search": "Wyszukiwanie: \"{{query}}\"",
+      "tagsCount": "Filtr {{count}} tagów",
+      "removeTag": "Usuń filtr {{name}}"
+    },
+    "actions": {
+      "select": "Zaznacz",
+      "deselect": "Odznacz",
+      "settings": "Ustawienia",
+      "startReview": "Rozpocznij powtórkę"
+    }
+  },
+  "review": {
+    "title": "Powtórka",
+    "startReview": "Rozpocznij powtórkę",
+    "showAnswer": "Pokaż odpowiedź",
+    "clickToShow": "Kliknij, aby pokazać odpowiedź",
+    "remembered": "Pamiętam",
+    "forgotten": "Zapomniałem",
+    "hint": "Kliknij kartę lub naciśnij Enter, aby pokazać odpowiedź",
+    "progress": "{{current}} / {{total}}",
+    "cardFront": "Kliknij, aby odkryć odpowiedź",
+    "cardBack": "Tył karty",
+    "complete": {
+      "title": "Powtórka zakończona!",
+      "great": "Świetna robota!",
+      "awesome": "Niesamowite! Świetna pamięć!",
+      "good": "Świetna robota! Tak trzymaj!",
+      "okay": "Dobry początek! Więcej praktyki pomoże!",
+      "needPractice": "Nie poddawaj się! Powtórka jest kluczem!",
+      "total": "Łącznie powtórzonych",
+      "rememberedCount": "Zapamiętanych",
+      "forgottenCount": "Zapomnianych",
+      "memoryRate": "Wskaźnik pamięci",
+      "backToVocabulary": "Powrót do słownictwa"
+    },
+    "empty": {
+      "title": "Świetnie!",
+      "message": "Brak słów do powtórki",
+      "back": "Powrót do słownictwa"
+    }
+  },
+  "analysis": {
+    "meaning": "Znaczenie",
+    "translation": "Tłumaczenie",
+    "pronunciation": "Wymowa",
+    "partOfSpeech": "Część mowy",
+    "usage": "Użycie",
+    "saveWord": "Zapisz słowo",
+    "loading": {
+      "word": {
+        "tip1": "AI analizuje kontekst...",
+        "tip2": "Rozumienie kontekstu...",
+        "tip3": "Generowanie dokładnej definicji...",
+        "tip4": "Analiza użycia słowa..."
+      },
+      "translate": {
+        "tip1": "AI tłumaczy...",
+        "tip2": "Rozumienie oryginalnego znaczenia...",
+        "tip3": "Generowanie płynnego tłumaczenia...",
+        "tip4": "Optymalizacja tłumaczenia..."
+      }
+    },
+    "toast": {
+      "translationNotSavable": "Treść tłumaczenia nie może zostać zapisana do słownictwa",
+      "completeAnalysisFirst": "Proszę zakończyć analizę przed zapisaniem",
+      "locationError": "Nie można uzyskać lokalizacji słowa, zapisywanie nie powiodło się",
+      "saveSuccess": "Zapisano pomyślnie",
+      "extensionUpdated": "Rozszerzenie zostało zaktualizowane, proszę odświeżyć stronę i spróbować ponownie",
+      "duplicateWord": "To słowo jest już zapisane",
+      "saveFailed": "Zapisywanie nie powiodło się",
+      "saveRetry": "Zapisywanie nie powiodło się, proszę spróbować ponownie",
+      "cannotLocate": "Nie można zlokalizować tego słowa na bieżącej stronie, treść mogła ulec zmianie"
+    },
+    "errors": {
+      "network": "Połączenie sieciowe nie powiodło się",
+      "networkHint": "Proszę sprawdzić połączenie i spróbować ponownie",
+      "timeout": "Przekroczono limit czasu żądania",
+      "timeoutHint": "Odpowiedź AI jest wolna, proszę spróbować ponownie",
+      "apiKey": "Błąd konfiguracji API",
+      "apiKeyHint": "Proszę sprawdzić ustawienia klucza API",
+      "config": "Błąd konfiguracji",
+      "configHint": "Proszę sprawdzić ustawienia w rozszerzeniu",
+      "refresh": "Rozszerzenie zaktualizowane",
+      "refreshHint": "Proszę odświeżyć stronę i spróbować ponownie",
+      "generic": "Analiza nie powiodła się",
+      "genericHint": "Proszę spróbować ponownie później"
+    }
+  },
+  "dialog": {
+    "confirmAction": "Potwierdź akcję",
+    "processing": "Przetwarzanie..."
+  },
+  "toast": {
+    "close": "Zamknij"
+  }
+}

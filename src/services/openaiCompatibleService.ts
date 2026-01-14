@@ -6,6 +6,14 @@
  */
 
 import type { AIAnalysisResult, AnalyzeWordRequest, AnalysisMode } from './geminiService';
+import type { TargetLanguage } from '../shared/types/settings';
+import {
+  buildWordSystemPromptCompact,
+  buildTranslateSystemPromptCompact,
+  buildWordUserMessage as buildWordMsg,
+  buildTranslateUserMessage as buildTranslateMsg,
+  getFallbackMeaningMessage,
+} from './promptTemplates';
 
 /** 响应时间上限（毫秒）*/
 const RESPONSE_TIMEOUT_MS = 10000; // OpenAI 兼容 API 可能较慢，给 10s
@@ -48,67 +56,42 @@ interface ChatCompletionResponse {
   };
 }
 
-/**
- * 构建单词分析系统提示词（优化版：减少 token 数量）
- */
-function buildWordSystemPrompt(): string {
-  return `英语词汇分析助手。根据上下文解释选中词汇。
-
-返回 JSON:
-{"meaning":"中文含义","pronunciation":"/IPA/","partOfSpeech":"词性","usage":"例句"}
-
-要求：基于语境、简洁、仅返回JSON`;
-}
+/** 默认目标语言 */
+const DEFAULT_TARGET_LANGUAGE: TargetLanguage = 'zh-CN';
 
 /**
- * 构建翻译模式系统提示词（优化版：减少 token 数量）
+ * 根据模式和目标语言构建系统提示词
  */
-function buildTranslateSystemPrompt(): string {
-  return `英汉翻译。返回JSON: {"meaning":"中文翻译"}
-要求：准确、流畅、仅返回JSON`;
-}
-
-/**
- * 根据模式构建系统提示词
- */
-function buildSystemPrompt(mode: AnalysisMode = 'word'): string {
-  return mode === 'translate' ? buildTranslateSystemPrompt() : buildWordSystemPrompt();
-}
-
-/**
- * 构建单词分析用户消息（优化版：简洁）
- */
-function buildWordUserMessage(text: string, context: string): string {
-  // 限制上下文长度，避免 token 浪费
-  const trimmedContext = context.length > 200 ? context.slice(0, 200) + '...' : context;
-  return `词: "${text}"\n语境: "${trimmedContext}"`;
-}
-
-/**
- * 构建翻译模式用户消息（优化版：简洁）
- */
-function buildTranslateUserMessage(text: string): string {
-  return `翻译: "${text}"`;
+function buildSystemPrompt(mode: AnalysisMode = 'word', targetLanguage: TargetLanguage = DEFAULT_TARGET_LANGUAGE): string {
+  return mode === 'translate'
+    ? buildTranslateSystemPromptCompact(targetLanguage)
+    : buildWordSystemPromptCompact(targetLanguage);
 }
 
 /**
  * 根据模式构建用户消息
  */
 function buildUserMessage(text: string, context: string, mode: AnalysisMode = 'word'): string {
-  return mode === 'translate' ? buildTranslateUserMessage(text) : buildWordUserMessage(text, context);
+  return mode === 'translate' ? buildTranslateMsg(text) : buildWordMsg(text, context);
 }
 
 /**
  * 解析 AI 响应
  */
-function parseResponse(content: string, mode: AnalysisMode = 'word'): AIAnalysisResult {
+function parseResponse(
+  content: string,
+  mode: AnalysisMode = 'word',
+  targetLanguage: TargetLanguage = DEFAULT_TARGET_LANGUAGE
+): AIAnalysisResult {
+  const fallbackMessage = getFallbackMeaningMessage(targetLanguage);
+
   // 尝试提取 JSON 部分（可能被 markdown 包裹）
   const jsonMatch = content.match(/\{[\s\S]*\}/);
   if (jsonMatch) {
     try {
       const parsed = JSON.parse(jsonMatch[0]);
       return {
-        meaning: parsed.meaning || '(无法获取含义)',
+        meaning: parsed.meaning || fallbackMessage,
         pronunciation: mode === 'word' ? (parsed.pronunciation || '') : '',
         partOfSpeech: mode === 'word' ? (parsed.partOfSpeech || '') : '',
         usage: mode === 'word' ? (parsed.usage || '') : '',
@@ -121,7 +104,7 @@ function parseResponse(content: string, mode: AnalysisMode = 'word'): AIAnalysis
 
   // 回退：使用原始响应作为含义
   return {
-    meaning: content.trim() || '(无法获取含义)',
+    meaning: content.trim() || fallbackMessage,
     pronunciation: '',
     partOfSpeech: '',
     usage: '',
@@ -146,6 +129,7 @@ export async function analyzeWordOpenAI(
 ): Promise<AIAnalysisResult> {
   const startTime = Date.now();
   const mode = request.mode || 'word';
+  const targetLanguage = request.targetLanguage || DEFAULT_TARGET_LANGUAGE;
 
   // 规范化端点 URL
   let normalizedEndpoint = endpoint.trim();
@@ -165,7 +149,7 @@ export async function analyzeWordOpenAI(
   const requestBody: ChatCompletionRequest = {
     model: modelName,
     messages: [
-      { role: 'system', content: buildSystemPrompt(mode) },
+      { role: 'system', content: buildSystemPrompt(mode, targetLanguage) },
       { role: 'user', content: buildUserMessage(request.text, request.context, mode) },
     ],
     temperature: 0.3,
@@ -211,9 +195,9 @@ export async function analyzeWordOpenAI(
     const content = data.choices?.[0]?.message?.content || '';
 
     const elapsed = Date.now() - startTime;
-    console.log(`[LingoRecall] OpenAI Compatible API response in ${elapsed}ms (mode: ${mode})`);
+    console.log(`[LingoRecall] OpenAI Compatible API response in ${elapsed}ms (mode: ${mode}, lang: ${targetLanguage})`);
 
-    return parseResponse(content, mode);
+    return parseResponse(content, mode, targetLanguage);
   } catch (error) {
     clearTimeout(timeoutId);
 

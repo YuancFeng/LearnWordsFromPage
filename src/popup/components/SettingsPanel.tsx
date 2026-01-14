@@ -9,6 +9,7 @@
 
 import React, { useState } from 'react';
 import { ArrowLeft, Key, Settings, Shield, Tag } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { APIKeySection } from './APIKeySection';
 import { PreferencesSection } from './PreferencesSection';
 import { BlacklistSection } from './BlacklistSection';
@@ -23,16 +24,18 @@ type SettingsTab = 'api-key' | 'preferences' | 'blacklist' | 'tags';
 /**
  * Tab 配置
  */
-const TABS: {
+interface TabConfig {
   id: SettingsTab;
-  label: string;
+  labelKey: string;
   icon: React.ComponentType<{ className?: string }>;
   disabled?: boolean;
-}[] = [
-  { id: 'api-key', label: 'API Key', icon: Key },
-  { id: 'preferences', label: '偏好设置', icon: Settings },
-  { id: 'blacklist', label: '黑名单', icon: Shield },
-  { id: 'tags', label: '标签', icon: Tag },
+}
+
+const TABS: TabConfig[] = [
+  { id: 'api-key', labelKey: 'settings.tabs.apiKey', icon: Key },
+  { id: 'preferences', labelKey: 'settings.tabs.preferences', icon: Settings },
+  { id: 'blacklist', labelKey: 'settings.tabs.blacklist', icon: Shield },
+  { id: 'tags', labelKey: 'settings.tabs.tags', icon: Tag },
 ];
 
 /**
@@ -48,6 +51,7 @@ export interface SettingsPanelProps {
  * Story 4.1 - Task 1
  */
 export function SettingsPanel({ onBack }: SettingsPanelProps): React.ReactElement {
+  const { t } = useTranslation();
   // 当前选中的 Tab
   const [activeTab, setActiveTab] = useState<SettingsTab>('api-key');
   // Toast 通知
@@ -59,7 +63,7 @@ export function SettingsPanel({ onBack }: SettingsPanelProps): React.ReactElemen
   const handleTabChange = (tabId: SettingsTab) => {
     const tab = TABS.find((t) => t.id === tabId);
     if (tab?.disabled) {
-      toast.info('此功能即将推出');
+      toast.info(t('settings.toast.comingSoon'));
       return;
     }
     setActiveTab(tabId);
@@ -73,12 +77,14 @@ export function SettingsPanel({ onBack }: SettingsPanelProps): React.ReactElemen
           <button
             onClick={onBack}
             className="p-1 -ml-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
-            aria-label="返回"
+            aria-label={t('common.back')}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
         )}
-        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">设置</h1>
+        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          {t('settings.title')}
+        </h1>
       </header>
 
       {/* Tab 导航 */}
@@ -112,7 +118,7 @@ export function SettingsPanel({ onBack }: SettingsPanelProps): React.ReactElemen
               `}
             >
               <Icon className="w-4 h-4" />
-              <span>{tab.label}</span>
+              <span>{t(tab.labelKey)}</span>
             </button>
           );
         })}
@@ -128,8 +134,8 @@ export function SettingsPanel({ onBack }: SettingsPanelProps): React.ReactElemen
           className={activeTab === 'api-key' ? 'p-4' : 'hidden'}
         >
           <APIKeySection
-            onSaveSuccess={() => toast.success('API Key 保存成功')}
-            onClearSuccess={() => toast.success('API Key 已清除')}
+            onSaveSuccess={() => toast.success(t('settings.toast.apiKeySaved'))}
+            onClearSuccess={() => toast.success(t('settings.toast.apiKeyCleared'))}
             onError={(error) => toast.error(error)}
           />
         </div>
@@ -142,7 +148,7 @@ export function SettingsPanel({ onBack }: SettingsPanelProps): React.ReactElemen
           className={activeTab === 'preferences' ? 'p-4' : 'hidden'}
         >
           <PreferencesSection
-            onSaveSuccess={() => toast.success('设置已保存')}
+            onSaveSuccess={() => toast.success(t('settings.toast.settingsSaved'))}
             onError={(error) => toast.error(error)}
           />
         </div>
@@ -155,7 +161,7 @@ export function SettingsPanel({ onBack }: SettingsPanelProps): React.ReactElemen
           className={activeTab === 'blacklist' ? 'p-4' : 'hidden'}
         >
           <BlacklistSection
-            onSaveSuccess={() => toast.success('黑名单已更新')}
+            onSaveSuccess={() => toast.success(t('settings.toast.blacklistUpdated'))}
             onError={(error) => toast.error(error)}
           />
         </div>

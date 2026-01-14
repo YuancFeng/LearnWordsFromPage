@@ -1,0 +1,232 @@
+{
+  "common": {
+    "save": "儲存",
+    "cancel": "取消",
+    "confirm": "確認",
+    "delete": "刪除",
+    "edit": "編輯",
+    "close": "關閉",
+    "retry": "重試",
+    "loading": "載入中...",
+    "error": "錯誤",
+    "success": "成功",
+    "add": "新增",
+    "reset": "重設",
+    "clear": "清除",
+    "back": "返回",
+    "new": "新增",
+    "processing": "處理中...",
+    "saving": "儲存中..."
+  },
+  "settings": {
+    "title": "設定",
+    "tabs": {
+      "apiKey": "API 金鑰",
+      "preferences": "偏好設定",
+      "blacklist": "黑名單",
+      "tags": "標籤"
+    },
+    "preferences": {
+      "interaction": "互動方式",
+      "doubleClick": "雙擊查詢",
+      "doubleClickDesc": "雙擊文字時觸發翻譯",
+      "hoverIcon": "顯示懸浮圖示",
+      "hoverIconDesc": "選取文字時顯示翻譯圖示",
+      "reviewReminder": "複習提醒",
+      "reviewReminderDesc": "在擴充功能圖示上顯示待複習單字數量",
+      "skipNativeText": "跳過母語文字",
+      "skipNativeTextDesc": "不為目標語言的文字顯示彈出視窗",
+      "appearance": "外觀",
+      "theme": "主題",
+      "themeLight": "淺色",
+      "themeDark": "深色",
+      "themeSystem": "跟隨系統",
+      "language": "語言",
+      "uiLanguage": "介面語言",
+      "uiLanguageAuto": "自動偵測",
+      "targetLanguage": "翻譯語言",
+      "targetLanguageDesc": "將單字翻譯成此語言"
+    },
+    "apiKey": {
+      "title": "API 金鑰",
+      "aiProvider": "AI 服務商",
+      "customConfig": "自訂 API 設定",
+      "endpoint": "API 端點網址",
+      "endpointPlaceholder": "http://localhost:8080/v1/chat/completions",
+      "endpointHelp": "支援 CLI Proxy、Ollama、LM Studio 等 OpenAI 相容的 API",
+      "modelName": "模型名稱",
+      "modelPlaceholder": "gpt-4, claude-3-opus, llama3",
+      "apiKeyPlaceholder": "請輸入您的 API 金鑰",
+      "apiKeyRequired": "請輸入 API 金鑰",
+      "getGeminiKey": "取得 Gemini API 金鑰",
+      "configured": "API 金鑰已設定",
+      "geminiHelp": "使用 Gemini API，請輸入您的 Google AI API 金鑰",
+      "customHelp": "使用自訂 API，API 金鑰為選填",
+      "clearConfirmTitle": "確認清除",
+      "clearConfirmMessage": "確定要清除 API 金鑰嗎？您需要重新設定才能使用翻譯功能。"
+    },
+    "blacklist": {
+      "title": "黑名單",
+      "description": "擴充功能在黑名單網站上停用，以保護您的隱私。",
+      "wildcardHelp": "支援萬用字元：*.domain.com 或 *keyword*",
+      "addSite": "新增網站",
+      "placeholder": "*.example.com 或 *keyword*",
+      "list": "黑名單（{{count}}）",
+      "resetDefault": "重設為預設",
+      "empty": "尚無黑名單網站",
+      "emptyHint": "點擊「重設為預設」以還原預設清單",
+      "validation": {
+        "required": "請輸入網址模式",
+        "invalid": "無效的模式。請使用 *.domain.com 或 *keyword* 格式",
+        "duplicate": "此模式已存在"
+      }
+    },
+    "tags": {
+      "title": "標籤管理",
+      "create": "新增",
+      "empty": "尚未建立任何標籤",
+      "emptyHint": "點擊「新增」建立第一個標籤",
+      "deleteConfirm": "確定要刪除標籤「{{name}}」嗎？\n\n擁有此標籤的單字將會移除該標籤。",
+      "loading": "載入標籤中...",
+      "editTag": "編輯標籤",
+      "deleteTag": "刪除標籤"
+    },
+    "toast": {
+      "apiKeySaved": "API 金鑰已儲存",
+      "apiKeyCleared": "API 金鑰已清除",
+      "settingsSaved": "設定已儲存",
+      "blacklistUpdated": "黑名單已更新",
+      "comingSoon": "此功能即將推出"
+    }
+  },
+  "vocabulary": {
+    "title": "我的單字本",
+    "wordCount": "{{count}} 個單字",
+    "matchCount": "找到 {{match}} / {{total}} 個單字",
+    "emptyState": "尚未儲存任何單字",
+    "emptyStateHint": "開始閱讀並儲存新單字吧！",
+    "jumpToSource": "跳至來源",
+    "jumping": "跳轉中...",
+    "pronunciation": "發音",
+    "example": "例句",
+    "source": "來源",
+    "inaccessible": "無法存取來源頁面，但您仍可在此查看完整上下文。",
+    "search": {
+      "placeholder": "搜尋單字...",
+      "searching": "搜尋中...",
+      "resultsCount": "找到 {{count}} 個結果",
+      "noResults": "無符合的單字",
+      "noResultsHint": "試試其他關鍵字",
+      "clearSearch": "清除搜尋",
+      "clearAll": "清除所有篩選"
+    },
+    "sort": {
+      "label": "排序方式",
+      "options": "排序選項",
+      "recent": "最近新增",
+      "oldest": "最早新增",
+      "alphabetical": "字母順序"
+    },
+    "batch": {
+      "select": "批次選取",
+      "cancel": "取消選取",
+      "selected": "已選取 {{count}} 個",
+      "addTags": "新增標籤"
+    },
+    "filter": {
+      "search": "搜尋：「{{query}}」",
+      "tagsCount": "{{count}} 個標籤篩選",
+      "removeTag": "移除「{{name}}」篩選"
+    },
+    "actions": {
+      "select": "選取",
+      "deselect": "取消選取",
+      "settings": "設定",
+      "startReview": "開始複習"
+    }
+  },
+  "review": {
+    "title": "複習",
+    "startReview": "開始複習",
+    "showAnswer": "顯示答案",
+    "clickToShow": "點擊顯示答案",
+    "remembered": "記得",
+    "forgotten": "忘記",
+    "hint": "點擊卡片或按 Enter 鍵顯示答案",
+    "progress": "{{current}} / {{total}}",
+    "cardFront": "點擊顯示答案",
+    "cardBack": "卡片背面",
+    "complete": {
+      "title": "複習完成！",
+      "great": "做得好！",
+      "awesome": "太棒了！記憶力真好！",
+      "good": "做得好！繼續保持！",
+      "okay": "好的開始！多練習會更好！",
+      "needPractice": "別放棄！複習是關鍵！",
+      "total": "總複習數",
+      "rememberedCount": "記得",
+      "forgottenCount": "忘記",
+      "memoryRate": "記憶率",
+      "backToVocabulary": "返回單字本"
+    },
+    "empty": {
+      "title": "太棒了！",
+      "message": "目前沒有需要複習的單字",
+      "back": "返回單字本"
+    }
+  },
+  "analysis": {
+    "meaning": "釋義",
+    "translation": "翻譯",
+    "pronunciation": "發音",
+    "partOfSpeech": "詞性",
+    "usage": "用法",
+    "saveWord": "儲存單字",
+    "loading": {
+      "word": {
+        "tip1": "AI 正在分析上下文...",
+        "tip2": "理解語境中...",
+        "tip3": "生成精準定義...",
+        "tip4": "分析單字用法..."
+      },
+      "translate": {
+        "tip1": "AI 正在翻譯...",
+        "tip2": "理解原文含義...",
+        "tip3": "生成流暢譯文...",
+        "tip4": "優化翻譯內容..."
+      }
+    },
+    "toast": {
+      "translationNotSavable": "翻譯內容無法儲存至單字本",
+      "completeAnalysisFirst": "請先完成分析再儲存",
+      "locationError": "無法取得單字位置，儲存失敗",
+      "saveSuccess": "儲存成功",
+      "extensionUpdated": "擴充功能已更新，請重新整理頁面後再試",
+      "duplicateWord": "此單字已儲存過",
+      "saveFailed": "儲存失敗",
+      "saveRetry": "儲存失敗，請重試",
+      "cannotLocate": "無法在目前頁面上定位此單字，內容可能已變更"
+    },
+    "errors": {
+      "network": "網路連線失敗",
+      "networkHint": "請檢查網路連線後重試",
+      "timeout": "請求逾時",
+      "timeoutHint": "AI 回應較慢，請稍後再試",
+      "apiKey": "API 設定錯誤",
+      "apiKeyHint": "請檢查您的 API 金鑰設定",
+      "config": "設定錯誤",
+      "configHint": "請在擴充功能中檢查設定",
+      "refresh": "擴充功能已更新",
+      "refreshHint": "請重新整理頁面後再試",
+      "generic": "分析失敗",
+      "genericHint": "請稍後再試"
+    }
+  },
+  "dialog": {
+    "confirmAction": "確認操作",
+    "processing": "處理中..."
+  },
+  "toast": {
+    "close": "關閉"
+  }
+}

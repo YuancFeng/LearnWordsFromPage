@@ -11,7 +11,8 @@
  * @module content/components/LoadingPopup
  */
 
-import React, { useEffect, useState, type CSSProperties } from 'react';
+import React, { useEffect, useState, useMemo, type CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface LoadingPopupProps {
   /** 弹窗位置 */
@@ -55,20 +56,20 @@ const tokens = {
   shadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
 };
 
-/** 加载提示语 */
-const LOADING_TIPS = [
-  'AI 正在分析语境...',
-  '理解上下文中...',
-  '生成精准释义...',
-  '分析词汇用法...',
+/** 加载提示语翻译键 */
+const LOADING_TIP_KEYS = [
+  'analysis.loading.word.tip1',
+  'analysis.loading.word.tip2',
+  'analysis.loading.word.tip3',
+  'analysis.loading.word.tip4',
 ];
 
-/** 翻译提示语 */
-const TRANSLATE_TIPS = [
-  'AI 正在翻译...',
-  '理解原文含义...',
-  '生成流畅译文...',
-  '优化翻译结果...',
+/** 翻译提示语翻译键 */
+const TRANSLATE_TIP_KEYS = [
+  'analysis.loading.translate.tip1',
+  'analysis.loading.translate.tip2',
+  'analysis.loading.translate.tip3',
+  'analysis.loading.translate.tip4',
 ];
 
 /**
@@ -181,12 +182,14 @@ export function LoadingPopup({
   onCancel,
   isTranslateMode = false,
 }: LoadingPopupProps): React.ReactElement {
+  const { t } = useTranslation();
   const [opacity, setOpacity] = useState(0);
   const [tipIndex, setTipIndex] = useState(0);
   const [dots, setDots] = useState('');
   const [isHoveringCancel, setIsHoveringCancel] = useState(false);
 
-  const tips = isTranslateMode ? TRANSLATE_TIPS : LOADING_TIPS;
+  const tipKeys = isTranslateMode ? TRANSLATE_TIP_KEYS : LOADING_TIP_KEYS;
+  const tips = useMemo(() => tipKeys.map(key => t(key)), [t, tipKeys]);
 
   // 淡入动画
   useEffect(() => {
@@ -257,7 +260,7 @@ export function LoadingPopup({
           onMouseEnter={() => setIsHoveringCancel(true)}
           onMouseLeave={() => setIsHoveringCancel(false)}
         >
-          取消
+          {t('common.cancel')}
         </button>
       </div>
     </div>

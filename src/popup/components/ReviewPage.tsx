@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ReviewCard } from './ReviewCard';
 import { ReviewComplete, type ReviewStats } from './ReviewComplete';
 import { useReview } from '../../hooks/useReview';
@@ -26,6 +27,7 @@ interface ReviewPageProps {
  * Story 3.3 - AC1, AC3, AC5: 复习卡片界面逻辑
  */
 export function ReviewPage({ onBack }: ReviewPageProps) {
+  const { t } = useTranslation();
   const { dueWords, isLoading, error, submitReview } = useReview();
 
   // 当前卡片索引
@@ -99,7 +101,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
     return (
       <div className="flex flex-col items-center justify-center p-6 min-h-[300px]">
         <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-gray-500">加载中...</p>
+        <p className="text-gray-500">{t('common.loading')}</p>
       </div>
     );
   }
@@ -108,7 +110,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center p-6 min-h-[300px]">
-        <span className="text-4xl mb-4" role="img" aria-label="错误">
+        <span className="text-4xl mb-4" role="img" aria-label={t('common.error')}>
           😕
         </span>
         <p className="text-gray-500 mb-4">{error}</p>
@@ -117,7 +119,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
           className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
           type="button"
         >
-          返回词库
+          {t('review.empty.back')}
         </button>
       </div>
     );
@@ -127,17 +129,17 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
   if (dueWords.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-6 min-h-[300px]">
-        <span className="text-6xl mb-4" role="img" aria-label="完成">
+        <span className="text-6xl mb-4" role="img" aria-label={t('review.empty.title')}>
           🎉
         </span>
-        <h2 className="text-xl font-bold text-gray-800 mb-2">太棒了！</h2>
-        <p className="text-gray-500 mb-6">暂无待复习词汇</p>
+        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">{t('review.empty.title')}</h2>
+        <p className="text-gray-500 dark:text-gray-400 mb-6">{t('review.empty.message')}</p>
         <button
           onClick={onBack}
           className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
           type="button"
         >
-          返回词库
+          {t('review.empty.back')}
         </button>
       </div>
     );
@@ -158,7 +160,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
           onClick={onBack}
           className="text-gray-500 hover:text-gray-700 transition-colors p-1"
           type="button"
-          aria-label="返回"
+          aria-label={t('common.back')}
         >
           <svg
             className="w-6 h-6"
@@ -208,7 +210,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
       {/* 底部提示 */}
       {!isFlipped && (
         <p className="text-center text-gray-400 text-xs mt-4">
-          点击卡片或按回车键显示答案
+          {t('review.clickToReveal')}
         </p>
       )}
     </div>

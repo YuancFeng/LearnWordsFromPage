@@ -10,6 +10,7 @@
  */
 
 import React, { useEffect, useState, type CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * 分析模式类型
@@ -275,6 +276,7 @@ export function AnalysisPopup({
   onClose,
   isTranslateMode: isTranslateModeProp,
 }: AnalysisPopupProps) {
+  const { t } = useTranslation();
   const [opacity, setOpacity] = useState(0);
   const [isHoveringSave, setIsHoveringSave] = useState(false);
   const [isHoveringClose, setIsHoveringClose] = useState(false);
@@ -335,7 +337,7 @@ export function AnalysisPopup({
           onClick={onClose}
           onMouseEnter={() => setIsHoveringClose(true)}
           onMouseLeave={() => setIsHoveringClose(false)}
-          title="关闭"
+          title={t('common.close')}
         >
           <CloseIcon />
         </button>
@@ -353,14 +355,14 @@ export function AnalysisPopup({
 
         {/* 含义/翻译 */}
         <div style={isTranslateMode || !result.usage ? styles.sectionLast : styles.section}>
-          <div style={styles.label}>{isTranslateMode ? '翻译' : '释义'}</div>
+          <div style={styles.label}>{isTranslateMode ? t('analysis.translation') : t('analysis.meaning')}</div>
           <div style={styles.value}>{result.meaning}</div>
         </div>
 
         {/* 用法 - 仅在单词模式显示 */}
         {!isTranslateMode && result.usage && (
           <div style={styles.sectionLast}>
-            <div style={styles.label}>用法</div>
+            <div style={styles.label}>{t('analysis.usage')}</div>
             <div style={styles.value}>{result.usage}</div>
           </div>
         )}
@@ -377,10 +379,10 @@ export function AnalysisPopup({
             onClick={onSave}
             onMouseEnter={() => setIsHoveringSave(true)}
             onMouseLeave={() => setIsHoveringSave(false)}
-            title="保存到词汇库"
+            title={t('analysis.saveWord')}
           >
             <SaveIcon />
-            保存词汇
+            {t('analysis.saveWord')}
           </button>
         </div>
       )}
@@ -405,13 +407,14 @@ interface AnalysisErrorProps {
 /** 错误类型配置 */
 interface ErrorConfig {
   icon: 'network' | 'api' | 'timeout' | 'config' | 'generic';
-  title: string;
+  titleKey: string;
   color: string;
-  suggestion: string;
+  suggestionKey: string;
 }
 
 /**
- * 根据错误信息获取友好的错误配置
+ * 根据错误信息获取错误类型配置
+ * 返回翻译键而不是直接文本，由组件使用 t() 翻译
  */
 function getErrorConfig(message: string): ErrorConfig {
   const lowerMsg = message.toLowerCase();
@@ -419,53 +422,53 @@ function getErrorConfig(message: string): ErrorConfig {
   if (lowerMsg.includes('网络') || lowerMsg.includes('network') || lowerMsg.includes('连接')) {
     return {
       icon: 'network',
-      title: '网络连接失败',
+      titleKey: 'analysis.errors.network',
       color: '#F59E0B',
-      suggestion: '请检查网络连接后重试',
+      suggestionKey: 'analysis.errors.networkHint',
     };
   }
 
   if (lowerMsg.includes('超时') || lowerMsg.includes('timeout')) {
     return {
       icon: 'timeout',
-      title: '请求超时',
+      titleKey: 'analysis.errors.timeout',
       color: '#F59E0B',
-      suggestion: 'AI 响应较慢，请稍后重试',
+      suggestionKey: 'analysis.errors.timeoutHint',
     };
   }
 
   if (lowerMsg.includes('api') || lowerMsg.includes('key') || lowerMsg.includes('密钥') || lowerMsg.includes('无效')) {
     return {
       icon: 'api',
-      title: 'API 配置错误',
+      titleKey: 'analysis.errors.apiKey',
       color: '#EF4444',
-      suggestion: '请检查 API Key 或端点设置',
+      suggestionKey: 'analysis.errors.apiKeyHint',
     };
   }
 
   if (lowerMsg.includes('配置') || lowerMsg.includes('config') || lowerMsg.includes('端点')) {
     return {
       icon: 'config',
-      title: '配置错误',
+      titleKey: 'analysis.errors.config',
       color: '#EF4444',
-      suggestion: '请在扩展设置中检查配置',
+      suggestionKey: 'analysis.errors.configHint',
     };
   }
 
   if (lowerMsg.includes('刷新') || lowerMsg.includes('更新')) {
     return {
       icon: 'generic',
-      title: '扩展已更新',
+      titleKey: 'analysis.errors.refresh',
       color: '#3B82F6',
-      suggestion: '请刷新页面后重试',
+      suggestionKey: 'analysis.errors.refreshHint',
     };
   }
 
   return {
     icon: 'generic',
-    title: '分析失败',
+    titleKey: 'analysis.errors.generic',
     color: '#EF4444',
-    suggestion: message || '请稍后重试',
+    suggestionKey: 'analysis.errors.genericHint',
   };
 }
 
@@ -581,6 +584,7 @@ export function AnalysisError({
   onRetry,
   onClose,
 }: AnalysisErrorProps) {
+  const { t } = useTranslation();
   const [opacity, setOpacity] = useState(0);
   const [isHoveringRetry, setIsHoveringRetry] = useState(false);
   const [isHoveringClose, setIsHoveringClose] = useState(false);
@@ -619,10 +623,10 @@ export function AnalysisError({
         </div>
 
         {/* 错误标题 */}
-        <div style={errorStyles.title}>{errorConfig.title}</div>
+        <div style={errorStyles.title}>{t(errorConfig.titleKey)}</div>
 
         {/* 建议信息 */}
-        <div style={errorStyles.suggestion}>{errorConfig.suggestion}</div>
+        <div style={errorStyles.suggestion}>{t(errorConfig.suggestionKey)}</div>
 
         {/* 操作按钮 */}
         <div style={errorStyles.buttons}>
@@ -636,7 +640,7 @@ export function AnalysisError({
             onMouseEnter={() => setIsHoveringClose(true)}
             onMouseLeave={() => setIsHoveringClose(false)}
           >
-            关闭
+            {t('common.close')}
           </button>
           <button
             style={{
@@ -648,7 +652,7 @@ export function AnalysisError({
             onMouseEnter={() => setIsHoveringRetry(true)}
             onMouseLeave={() => setIsHoveringRetry(false)}
           >
-            重试
+            {t('common.retry')}
           </button>
         </div>
       </div>

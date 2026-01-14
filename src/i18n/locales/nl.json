@@ -1,0 +1,232 @@
+{
+  "common": {
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "confirm": "Bevestigen",
+    "delete": "Verwijderen",
+    "edit": "Bewerken",
+    "close": "Sluiten",
+    "retry": "Opnieuw proberen",
+    "loading": "Laden...",
+    "error": "Fout",
+    "success": "Gelukt",
+    "add": "Toevoegen",
+    "reset": "Resetten",
+    "clear": "Wissen",
+    "back": "Terug",
+    "new": "Nieuw",
+    "processing": "Verwerken...",
+    "saving": "Opslaan..."
+  },
+  "settings": {
+    "title": "Instellingen",
+    "tabs": {
+      "apiKey": "API-sleutel",
+      "preferences": "Voorkeuren",
+      "blacklist": "Zwarte lijst",
+      "tags": "Tags"
+    },
+    "preferences": {
+      "interaction": "Interactie",
+      "doubleClick": "Dubbelklik opzoeken",
+      "doubleClickDesc": "Vertaling starten bij dubbelklik",
+      "hoverIcon": "Hover-pictogram tonen",
+      "hoverIconDesc": "Vertaalpictogram tonen bij tekstselectie",
+      "reviewReminder": "Herhaalherinnering",
+      "reviewReminderDesc": "Aantal te herhalen woorden op extensiepictogram tonen",
+      "skipNativeText": "Moedertaal overslaan",
+      "skipNativeTextDesc": "Geen pop-up tonen voor je doeltaal",
+      "appearance": "Uiterlijk",
+      "theme": "Thema",
+      "themeLight": "Licht",
+      "themeDark": "Donker",
+      "themeSystem": "Systeem",
+      "language": "Taal",
+      "uiLanguage": "Interfacetaal",
+      "uiLanguageAuto": "Automatisch detecteren",
+      "targetLanguage": "Vertaaltaal",
+      "targetLanguageDesc": "Woorden naar deze taal vertalen"
+    },
+    "apiKey": {
+      "title": "API-sleutel",
+      "aiProvider": "AI-provider",
+      "customConfig": "Aangepaste API-configuratie",
+      "endpoint": "API-eindpunt URL",
+      "endpointPlaceholder": "http://localhost:8080/v1/chat/completions",
+      "endpointHelp": "Ondersteunt CLI Proxy, Ollama, LM Studio en andere OpenAI-compatibele API's",
+      "modelName": "Modelnaam",
+      "modelPlaceholder": "gpt-4, claude-3-opus, llama3",
+      "apiKeyPlaceholder": "Voer je API-sleutel in",
+      "apiKeyRequired": "Voer een API-sleutel in",
+      "getGeminiKey": "Gemini API-sleutel ophalen",
+      "configured": "API-sleutel geconfigureerd",
+      "geminiHelp": "Gemini API gebruiken, voer je Google AI API-sleutel in",
+      "customHelp": "Aangepaste API gebruiken, API-sleutel is optioneel",
+      "clearConfirmTitle": "Wissen bevestigen",
+      "clearConfirmMessage": "Weet je zeker dat je de API-sleutel wilt wissen? Je moet deze opnieuw configureren om de vertaalfunctie te gebruiken."
+    },
+    "blacklist": {
+      "title": "Zwarte lijst",
+      "description": "Extensie is uitgeschakeld op sites op de zwarte lijst voor privacy.",
+      "wildcardHelp": "Ondersteunt jokertekens: *.domein.com of *trefwoord*",
+      "addSite": "Site toevoegen",
+      "placeholder": "*.voorbeeld.com of *trefwoord*",
+      "list": "Zwarte lijst ({{count}})",
+      "resetDefault": "Standaard herstellen",
+      "empty": "Geen sites op zwarte lijst",
+      "emptyHint": "Klik op \"Standaard herstellen\" om voorinstellingen te herstellen",
+      "validation": {
+        "required": "Voer een URL-patroon in",
+        "invalid": "Ongeldig patroon. Gebruik het formaat *.domein.com of *trefwoord*",
+        "duplicate": "Dit patroon bestaat al"
+      }
+    },
+    "tags": {
+      "title": "Tagbeheer",
+      "create": "Nieuw",
+      "empty": "Nog geen tags aangemaakt",
+      "emptyHint": "Klik op \"Nieuw\" om je eerste tag aan te maken",
+      "deleteConfirm": "Tag \"{{name}}\" verwijderen?\n\nWordt verwijderd van woorden met deze tag.",
+      "loading": "Tags laden...",
+      "editTag": "Tag bewerken",
+      "deleteTag": "Tag verwijderen"
+    },
+    "toast": {
+      "apiKeySaved": "API-sleutel succesvol opgeslagen",
+      "apiKeyCleared": "API-sleutel gewist",
+      "settingsSaved": "Instellingen opgeslagen",
+      "blacklistUpdated": "Zwarte lijst bijgewerkt",
+      "comingSoon": "Deze functie komt binnenkort"
+    }
+  },
+  "vocabulary": {
+    "title": "Mijn woordenlijst",
+    "wordCount": "{{count}} woorden",
+    "matchCount": "{{match}} van {{total}} woorden gevonden",
+    "emptyState": "Nog geen woorden opgeslagen",
+    "emptyStateHint": "Begin met lezen en sla nieuwe woorden op!",
+    "jumpToSource": "Naar bron gaan",
+    "jumping": "Navigeren...",
+    "pronunciation": "Uitspraak",
+    "example": "Voorbeeld",
+    "source": "Bron",
+    "inaccessible": "Bronpagina is niet toegankelijk, maar je kunt de volledige context hier nog bekijken.",
+    "search": {
+      "placeholder": "Woorden zoeken...",
+      "searching": "Zoeken...",
+      "resultsCount": "{{count}} resultaten gevonden",
+      "noResults": "Geen overeenkomende woorden",
+      "noResultsHint": "Probeer andere zoektermen",
+      "clearSearch": "Zoekopdracht wissen",
+      "clearAll": "Alle filters wissen"
+    },
+    "sort": {
+      "label": "Sorteren op",
+      "options": "Sorteeropties",
+      "recent": "Meest recent",
+      "oldest": "Oudste eerst",
+      "alphabetical": "Alfabetisch"
+    },
+    "batch": {
+      "select": "Batch selecteren",
+      "cancel": "Selectie annuleren",
+      "selected": "{{count}} geselecteerd",
+      "addTags": "Tags toevoegen"
+    },
+    "filter": {
+      "search": "Zoeken: \"{{query}}\"",
+      "tagsCount": "{{count}} tagfilters",
+      "removeTag": "{{name}} filter verwijderen"
+    },
+    "actions": {
+      "select": "Selecteren",
+      "deselect": "Deselecteren",
+      "settings": "Instellingen",
+      "startReview": "Herhaling starten"
+    }
+  },
+  "review": {
+    "title": "Herhaling",
+    "startReview": "Herhaling starten",
+    "showAnswer": "Antwoord tonen",
+    "clickToShow": "Klik om antwoord te tonen",
+    "remembered": "Onthouden",
+    "forgotten": "Vergeten",
+    "hint": "Klik op kaart of druk Enter om antwoord te tonen",
+    "progress": "{{current}} / {{total}}",
+    "cardFront": "Klik om antwoord te onthullen",
+    "cardBack": "Achterkant kaart",
+    "complete": {
+      "title": "Herhaling voltooid!",
+      "great": "Goed gedaan!",
+      "awesome": "Geweldig! Uitstekend geheugen!",
+      "good": "Goed gedaan! Ga zo door!",
+      "okay": "Goede start! Meer oefenen helpt!",
+      "needPractice": "Geef niet op! Herhaling is de sleutel!",
+      "total": "Totaal herhaald",
+      "rememberedCount": "Onthouden",
+      "forgottenCount": "Vergeten",
+      "memoryRate": "Onthoudpercentage",
+      "backToVocabulary": "Terug naar woordenlijst"
+    },
+    "empty": {
+      "title": "Geweldig!",
+      "message": "Geen woorden te herhalen",
+      "back": "Terug naar woordenlijst"
+    }
+  },
+  "analysis": {
+    "meaning": "Betekenis",
+    "translation": "Vertaling",
+    "pronunciation": "Uitspraak",
+    "partOfSpeech": "Woordsoort",
+    "usage": "Gebruik",
+    "saveWord": "Woord opslaan",
+    "loading": {
+      "word": {
+        "tip1": "AI analyseert context...",
+        "tip2": "Context begrijpen...",
+        "tip3": "Nauwkeurige definitie genereren...",
+        "tip4": "Woordgebruik analyseren..."
+      },
+      "translate": {
+        "tip1": "AI is aan het vertalen...",
+        "tip2": "Originele betekenis begrijpen...",
+        "tip3": "Vloeiende vertaling genereren...",
+        "tip4": "Vertaling optimaliseren..."
+      }
+    },
+    "toast": {
+      "translationNotSavable": "Vertaalinhoud kan niet worden opgeslagen in woordenlijst",
+      "completeAnalysisFirst": "Voltooi eerst de analyse voordat je opslaat",
+      "locationError": "Kan woordlocatie niet bepalen, opslaan mislukt",
+      "saveSuccess": "Succesvol opgeslagen",
+      "extensionUpdated": "Extensie bijgewerkt, ververs de pagina en probeer opnieuw",
+      "duplicateWord": "Dit woord is al opgeslagen",
+      "saveFailed": "Opslaan mislukt",
+      "saveRetry": "Opslaan mislukt, probeer opnieuw",
+      "cannotLocate": "Kan dit woord niet vinden op de huidige pagina, inhoud is mogelijk gewijzigd"
+    },
+    "errors": {
+      "network": "Netwerkverbinding mislukt",
+      "networkHint": "Controleer je verbinding en probeer opnieuw",
+      "timeout": "Verzoek time-out",
+      "timeoutHint": "AI-reactie is traag, probeer opnieuw",
+      "apiKey": "API-configuratiefout",
+      "apiKeyHint": "Controleer je API-sleutelinstellingen",
+      "config": "Configuratiefout",
+      "configHint": "Controleer de instellingen in de extensie",
+      "refresh": "Extensie bijgewerkt",
+      "refreshHint": "Ververs de pagina en probeer opnieuw",
+      "generic": "Analyse mislukt",
+      "genericHint": "Probeer het later opnieuw"
+    }
+  },
+  "dialog": {
+    "confirmAction": "Actie bevestigen",
+    "processing": "Verwerken..."
+  },
+  "toast": {
+    "close": "Sluiten"
+  }
+}
