@@ -46,8 +46,8 @@
 
 1. 克隆仓库
 ```bash
-git clone https://github.com/your-repo/lingorecall-ai.git
-cd lingorecall-ai
+git clone https://github.com/YuancFeng/LearnWordsFromPage.git
+cd LearnWordsFromPage
 ```
 
 2. 安装依赖并构建
@@ -342,6 +342,6 @@ npm test
 
 **Made with ❤️ for language learners**
 
-[报告问题](https://github.com/your-repo/lingorecall-ai/issues) · [功能建议](https://github.com/your-repo/lingorecall-ai/issues)
+[报告问题](https://github.com/YuancFeng/LearnWordsFromPage/issues) · [功能建议](https://github.com/YuancFeng/LearnWordsFromPage/issues)
 
 </div>
