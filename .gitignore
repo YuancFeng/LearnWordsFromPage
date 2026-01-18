@@ -14,6 +14,14 @@ dist-ssr
 
 # Local private configs (never commit)
 .local/
+.env
+.env.*
+
+# BMAD Method outputs (development artifacts with sensitive local paths)
+_bmad/
+_bmad-output/
+.opencode/
+docs/project-scan-report.json
 
 # Editor directories and files
 .vscode/*
