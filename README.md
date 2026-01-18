@@ -32,9 +32,9 @@
 
 ### AI 服务支持
 
-| Provider | 说明 | 推荐场景 |
+| Provider | 说明 | 适用场景 |
 |----------|------|----------|
-| 🤖 **Gemini API** | Google 官方 API，免费额度充足 | 日常使用，推荐首选 |
+| 🤖 **Gemini API** | Google 官方 API，免费额度充足 | 日常使用 |
 | 🔧 **OpenAI 兼容** | 支持各种 OpenAI 格式的 API | CLI Proxy、第三方服务 |
 | 💻 **本地模型** | 支持 Ollama、LM Studio 等本地部署 | 隐私优先、离线使用 |
 
@@ -66,50 +66,62 @@ npm run build
 
 ## ⚙️ AI Provider 配置
 
-### 方式一：Gemini API（推荐）
+### 方式一：Gemini API
 
-最简单的配置方式，适合大多数用户：
+配置简单，适合大多数用户：
 
 1. 获取 [Google AI Studio API Key](https://aistudio.google.com/app/apikey)（免费）
 2. 在扩展设置中选择「Gemini」
 3. 填入 API Key 即可使用
 
-> 💡 **提示**: Gemini API 提供充足的免费额度，足够日常学习使用。
+> 💡 **提示**: Gemini API 提供免费额度，足够日常学习使用。
 
-### 方式二：本地模型（隐私优先）
+### 方式二：OpenAI 兼容 API
+
+适合使用 CLI Proxy 或其他 OpenAI 兼容服务的用户：
+
+1. 在扩展设置中选择「OpenAI 兼容」
+2. 配置 API 端点，例如：
+   - [CLI Proxy](https://github.com/router-for-me/CLIProxyAPI): `http://localhost:8317/v1/chat/completions`
+   - 其他服务: 根据服务商提供的端点配置
+3. 填入模型名称和 API Key（如需要）
+
+> 💡 **CLI Proxy**: 可以将 Claude CLI 等命令行工具转换为 OpenAI 兼容的 API 服务，详见 [CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI)。
+
+### 方式三：本地模型
 
 适合注重隐私或需要离线使用的用户。本地模型完全在您的电脑上运行，数据不会上传到云端。
+
+> ⚠️ **注意**: 本地模型的响应速度取决于您的硬件配置，通常比云端 API 慢。
 
 #### 支持的本地模型工具
 
 | 工具 | 默认端点 | 特点 |
 |------|----------|------|
-| [Ollama](https://ollama.ai)（推荐） | `http://localhost:11434` | 易用，模型丰富，跨平台 |
+| [Ollama](https://ollama.ai) | `http://localhost:11434` | 易用，模型丰富，跨平台 |
 | [LM Studio](https://lmstudio.ai) | `http://localhost:1234` | 图形界面，适合新手 |
 | [llama.cpp](https://github.com/ggerganov/llama.cpp) | `http://localhost:8080` | 轻量，高性能 |
 
-#### 🌟 推荐模型：TranslateGemma（翻译专用）
+#### 翻译专用模型：TranslateGemma
 
-**TranslateGemma** 是 Google 基于 Gemma 3 架构开发的专业翻译模型，针对翻译任务进行了专门优化，速度比通用模型快 **8 倍**，是本扩展的首选推荐。
+**TranslateGemma** 是 Google 基于 Gemma 3 架构开发的专业翻译模型，针对翻译任务进行了专门优化。
 
 | 模型 | 大小 | 内存要求 | 适用场景 |
 |------|------|----------|----------|
-| `translategemma:4b` ⚡ | 3.3GB | ≥8GB | 速度最快，日常查词 |
-| `translategemma:12b` 🏆 | 8.1GB | ≥16GB | **强烈推荐**：专业翻译质量 |
-| `translategemma:27b` | 17GB | ≥32GB | 最高翻译质量 |
+| `translategemma:4b` | 3.3GB | ≥8GB | 速度较快，日常查词 |
+| `translategemma:12b` | 8.1GB | ≥16GB | 翻译质量较好 |
+| `translategemma:27b` | 17GB | ≥32GB | 翻译质量最高 |
 
-#### 备选模型（通用大语言模型）
+#### 通用大语言模型
 
 如果您已有其他模型或需要额外功能，这些通用模型也可使用：
 
-| 内存 | 推荐模型 | 模型大小 | 适用场景 |
+| 内存 | 可选模型 | 模型大小 | 适用场景 |
 |------|----------|----------|----------|
 | < 6GB | `llama3.2:1b` | 1.3GB | 基础查词，快速响应 |
 | 6-8GB | `llama3.2:3b` | 2GB | 平衡速度和质量 |
 | ≥8GB | `llama3.2` | 4.7GB | 通用模型，功能全面 |
 | Apple Silicon | `qwen2.5:7b` | 4.4GB | 中文优化 |
-
-> 💡 **性能对比**: TranslateGemma 12B 响应时间约 0.7s，而通用模型如 Qwen2.5 约 6s，快 8 倍！
 
 #### 安装步骤（以 Ollama 为例）
 
@@ -118,10 +130,9 @@ npm run build
 # 1. 下载安装 Ollama
 # 访问 https://ollama.ai/download 下载 .dmg 文件并安装
 
-# 2. 下载翻译专用模型（强烈推荐）
+# 2. 下载模型（根据需要选择）
 ollama pull translategemma:12b
-
-# 或者下载通用模型
+# 或
 # ollama pull llama3.2
 
 # 3. Ollama 会自动在后台运行，无需额外启动
@@ -132,7 +143,7 @@ ollama pull translategemma:12b
 # 1. 下载安装 Ollama
 # 访问 https://ollama.ai/download 下载安装程序
 
-# 2. 打开命令提示符，下载翻译专用模型
+# 2. 打开命令提示符，下载模型
 ollama pull translategemma:12b
 ```
 
@@ -141,7 +152,7 @@ ollama pull translategemma:12b
 # 1. 安装 Ollama
 curl -fsSL https://ollama.ai/install.sh | sh
 
-# 2. 下载翻译专用模型
+# 2. 下载模型
 ollama pull translategemma:12b
 
 # 3. 启动服务（如果未自动启动）
@@ -160,36 +171,25 @@ ollama serve
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    模型选择决策树                            │
+│                    模型选择参考                              │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │  您的内存有多少？                                            │
 │       │                                                     │
-│       ├── ≥16GB ──→ translategemma:12b 🏆 (强烈推荐)        │
+│       ├── ≥16GB ──→ translategemma:12b (翻译质量较好)       │
 │       │                                                     │
-│       ├── 8-16GB ──→ translategemma:4b ⚡ (速度优先)         │
+│       ├── 8-16GB ──→ translategemma:4b (速度较快)           │
 │       │                                                     │
 │       └── <8GB ──→ llama3.2:1b 或 llama3.2:3b              │
 │                                                             │
 │  已有其他模型？                                              │
 │       │                                                     │
-│       └── 可以继续使用，但推荐尝试 TranslateGemma           │
-│           翻译质量更高，速度更快                             │
+│       └── 可以继续使用现有模型                               │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 > 🔒 **隐私说明**: 本地模型完全在您的设备上运行，不需要 API Key，翻译数据不会发送到任何服务器。
-
-### 方式三：OpenAI 兼容 API
-
-适合使用 CLI Proxy 或其他 OpenAI 兼容服务的用户：
-
-1. 在扩展设置中选择「OpenAI 兼容」
-2. 配置 API 端点，例如：
-   - CLI Proxy: `http://localhost:8317/v1/chat/completions`
-   - 其他服务: 根据服务商提供的端点配置
-3. 填入模型名称和 API Key（如需要）
 
 ---
 
