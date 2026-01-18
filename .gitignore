@@ -30,6 +30,18 @@ docs/project-scan-report.json
 .cursor/
 ruv_swarm/
 
+# Research outputs (internal strategy documents)
+runs/
+
+# Legacy prototype files (replaced by src/)
+/App.tsx
+/index.tsx
+/constants.ts
+/manifest.json
+/metadata.json
+/components/
+/services/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
