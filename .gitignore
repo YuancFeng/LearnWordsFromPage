@@ -23,6 +23,13 @@ _bmad-output/
 .opencode/
 docs/project-scan-report.json
 
+# AI IDE integration files (development tools)
+.agent/
+.claude/
+.codex/
+.cursor/
+ruv_swarm/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
