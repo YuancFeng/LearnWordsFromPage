@@ -34,13 +34,16 @@ describe('textMatcher', () => {
       expect(result.confidence).toBe(1.0);
     });
 
-    it('returns no match when full context is not found', () => {
+    it('falls back to text-only when full context is not found', () => {
       document.body.innerHTML = '<p>The quick brown fox.</p>';
 
+      // Context doesn't match exactly ("brown" is between "quick" and " fox.")
+      // but text-only fallback will still find "quick"
       const result = findTextByContext('The ', 'quick', ' fox.');
-      expect(result.found).toBe(false);
-      expect(result.method).toBe('none');
-      expect(result.range).toBeNull();
+      expect(result.found).toBe(true);
+      expect(result.method).toBe('text-only');
+      expect(result.confidence).toBe(0.7);
+      expect(result.range?.toString()).toBe('quick');
     });
 
     it('handles text in nested elements', () => {

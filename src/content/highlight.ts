@@ -67,6 +67,7 @@ let fadeOutTimer: number | null = null;
 
 /**
  * 注入高亮样式
+ * 安全处理 document.head 可能为 null 的情况（file:// 协议或不规范 HTML）
  */
 function injectHighlightStyles(): void {
   const styleId = 'lingorecall-highlight-styles';
@@ -77,7 +78,12 @@ function injectHighlightStyles(): void {
   const style = document.createElement('style');
   style.id = styleId;
   style.textContent = HIGHLIGHT_STYLES;
-  document.head.appendChild(style);
+
+  // 优先使用 document.head，如果不存在则使用 document.documentElement
+  const target = document.head || document.documentElement;
+  if (target) {
+    target.appendChild(style);
+  }
 }
 
 /**

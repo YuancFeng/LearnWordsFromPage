@@ -25,7 +25,17 @@ import {
   type JumpToSourceResult,
   type ReviewWordPayload,
   type ReviewWordResult,
+  type TranslatePageSegmentPayload,
+  type TranslatePageSegmentResult,
+  type TestLocalConnectionPayload,
+  type TestLocalConnectionResult,
+  type GetLocalModelsPayload,
+  type GetLocalModelsResult,
+  type TestApiConnectionPayload,
+  type TestApiConnectionResult,
 } from '../shared/messaging';
+
+import { LOCAL_TOOLS } from '../services/localModelService';
 
 // Story 2.3: Navigation handlers
 import { handleJumpToSource } from './handlers/navigationHandlers';
@@ -38,10 +48,12 @@ import { setupReviewAlarm, handleReviewAlarm, checkAndUpdateBadge } from './alar
 
 import {
   analyzeWordUnified,
+  translateBatchUnified,
   buildAIConfig,
   type AnalyzeWordRequest,
   type AIAnalysisResult,
 } from '../services/aiService';
+import { validateApiKey as validateGeminiApiKey } from '../services/geminiService';
 
 import { ErrorCode } from '../shared/types/errors';
 import { matchesBlacklist } from '../shared/utils/urlMatcher';
@@ -425,6 +437,554 @@ registerHandler(MessageTypes.JUMP_TO_SOURCE, async (message): Promise<Response<J
 registerHandler(MessageTypes.REVIEW_WORD, async (message): Promise<Response<ReviewWordResult>> => {
   const payload = message.payload as ReviewWordPayload;
   return handleReviewWord(payload);
+});
+
+/**
+ * TRANSLATE_PAGE_SEGMENT handler
+ * 批量翻译页面文本段落
+ * 用于全页翻译功能
+ */
+registerHandler(MessageTypes.TRANSLATE_PAGE_SEGMENT, async (message): Promise<Response<TranslatePageSegmentResult>> => {
+  const payload = message.payload as TranslatePageSegmentPayload;
+  console.log('[LingoRecall] TRANSLATE_PAGE_SEGMENT:', payload.texts.length, 'texts');
+
+  try {
+    // 使用缓存的配置
+    const { settings, apiKey } = await getCachedConfig();
+
+    // 验证 API 配置
+    if (settings.aiProvider === 'gemini' && !apiKey) {
+      return {
+        success: false,
+        error: {
+          code: ErrorCode.AI_INVALID_KEY,
+          message: '请先在设置中配置 Gemini API Key',
+        },
+      };
+    }
+
+    if (settings.aiProvider === 'openai-compatible' && !settings.customApiEndpoint) {
+      console.error('[LingoRecall] TRANSLATE_PAGE_SEGMENT: No custom API endpoint configured');
+      return {
+        success: false,
+        error: {
+          code: ErrorCode.AI_API_ERROR,
+          message: '请先在设置中配置自定义 API 端点',
+        },
+      };
+    }
+
+    // 构建 AI 配置
+    const aiConfig = buildAIConfig(settings, apiKey);
+
+    // 调试日志：打印配置信息
+    console.log('[LingoRecall] TRANSLATE_PAGE_SEGMENT config:', {
+      provider: aiConfig.provider,
+      hasApiKey: !!aiConfig.apiKey,
+      customEndpoint: aiConfig.customEndpoint,
+      customModel: aiConfig.customModel,
+    });
+
+    // 确定目标语言
+    const targetLanguage = (payload.targetLanguage || settings.targetLanguage || 'zh-CN') as import('../shared/types/settings').TargetLanguage;
+
+    console.log('[LingoRecall] TRANSLATE_PAGE_SEGMENT: Starting translation to', targetLanguage, 'with', payload.texts.length, 'texts');
+
+    // 调用批量翻译服务
+    const translations = await translateBatchUnified(payload.texts, targetLanguage, aiConfig);
+
+    console.log('[LingoRecall] TRANSLATE_PAGE_SEGMENT: Translation completed, got', translations.length, 'results');
+
+    return {
+      success: true,
+      data: { translations },
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[LingoRecall] TRANSLATE_PAGE_SEGMENT error:', errorMessage);
+
+    return {
+      success: false,
+      error: {
+        code: ErrorCode.AI_API_ERROR,
+        message: '批量翻译失败，请重试',
+      },
+    };
+  }
+});
+
+// ============================================================
+// API Connection Test Handlers
+// ============================================================
+
+/**
+ * 检测是否为 CLI Proxy 的 API Key 格式
+ * CLI Proxy 的 Key 格式: sk-cliproxy-*
+ */
+function isCliProxyApiKey(apiKey: string): boolean {
+  return apiKey.startsWith('sk-cliproxy-');
+}
+
+/**
+ * CLI Proxy 的默认端点
+ */
+const CLI_PROXY_ENDPOINT = 'http://localhost:8317/v1/chat/completions';
+
+/**
+ * 测试 OpenAI 兼容 API 连接
+ * 提取为独立函数以便复用
+ */
+async function testOpenAICompatibleConnection(
+  apiKey: string,
+  endpoint: string,
+  model: string,
+  startTime: number
+): Promise<TestApiConnectionResult> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+  try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (apiKey) {
+      headers['Authorization'] = `Bearer ${apiKey}`;
+    }
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        model: model || 'gpt-4',
+        messages: [{ role: 'user', content: 'Say OK' }],
+        max_tokens: 10,
+      }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+
+      if (response.status === 401 || response.status === 403) {
+        return {
+          success: false,
+          error: 'API Key 无效或权限不足',
+          errorCode: 'API_KEY_INVALID',
+        };
+      }
+      if (response.status === 429) {
+        return {
+          success: false,
+          error: '请求过于频繁，请稍后再试',
+          errorCode: 'RATE_LIMIT',
+        };
+      }
+      if (response.status === 404) {
+        return {
+          success: false,
+          error: 'API 端点不存在，请检查配置',
+          errorCode: 'ENDPOINT_ERROR',
+        };
+      }
+      return {
+        success: false,
+        error: `API 错误: ${response.status} ${errorText.slice(0, 100)}`,
+        errorCode: 'ENDPOINT_ERROR',
+      };
+    }
+
+    const latencyMs = Math.round(performance.now() - startTime);
+    return {
+      success: true,
+      latencyMs,
+    };
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      return {
+        success: false,
+        error: '连接超时，请检查网络和端点配置',
+        errorCode: 'TIMEOUT',
+      };
+    }
+    if (error instanceof Error && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError'))) {
+      return {
+        success: false,
+        error: '无法连接到 API 端点',
+        errorCode: 'NETWORK_ERROR',
+      };
+    }
+    throw error;
+  }
+}
+
+/**
+ * TEST_API_CONNECTION handler
+ * 测试 Gemini 或 OpenAI 兼容 API 的连接
+ *
+ * 智能检测: 如果用户选择 Gemini 但使用 CLI Proxy 格式的 Key (sk-cliproxy-*)，
+ * 会自动使用 OpenAI 兼容 API 进行测试
+ */
+registerHandler(MessageTypes.TEST_API_CONNECTION, async (message): Promise<Response<TestApiConnectionResult>> => {
+  const payload = message.payload as TestApiConnectionPayload;
+  const { provider, customEndpoint, customModel } = payload;
+  let { apiKey } = payload;
+  const startTime = performance.now();
+
+  // 如果没有提供 API Key，尝试从存储中读取
+  // 支持 gemini 和 openai-compatible 两种 provider
+  if (!apiKey && (provider === 'gemini' || provider === 'openai-compatible')) {
+    const apiKeyResult = await getApiKey();
+    if (apiKeyResult.success && apiKeyResult.data) {
+      apiKey = apiKeyResult.data;
+    }
+  }
+
+  console.log('[LingoRecall] TEST_API_CONNECTION:', { provider, hasApiKey: !!apiKey, customEndpoint });
+
+  try {
+    if (provider === 'gemini') {
+      // Gemini API 测试
+      if (!apiKey) {
+        return {
+          success: true,
+          data: {
+            success: false,
+            error: '请先输入 API Key',
+            errorCode: 'API_KEY_INVALID',
+          },
+        };
+      }
+
+      // 智能检测: 如果是 CLI Proxy 格式的 Key，自动使用 OpenAI 兼容 API 测试
+      if (isCliProxyApiKey(apiKey)) {
+        console.log('[LingoRecall] Detected CLI Proxy API Key, using OpenAI-compatible test method');
+        const result = await testOpenAICompatibleConnection(
+          apiKey,
+          CLI_PROXY_ENDPOINT,
+          'gemini-2.0-flash-lite', // CLI Proxy 支持 Gemini 模型
+          startTime
+        );
+        return { success: true, data: result };
+      }
+
+      try {
+        // 使用 Gemini SDK 进行测试（原生 Google API Key）
+        const isValid = await validateGeminiApiKey(apiKey);
+        const latencyMs = Math.round(performance.now() - startTime);
+
+        if (isValid) {
+          return {
+            success: true,
+            data: {
+              success: true,
+              latencyMs,
+            },
+          };
+        } else {
+          return {
+            success: true,
+            data: {
+              success: false,
+              error: 'API Key 无效或服务不可用',
+              errorCode: 'API_KEY_INVALID',
+            },
+          };
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error('[LingoRecall] Gemini API test error:', errorMessage);
+
+        if (errorMessage.includes('RATE_LIMIT') || errorMessage.includes('429')) {
+          return {
+            success: true,
+            data: {
+              success: false,
+              error: '请求过于频繁，请稍后再试',
+              errorCode: 'RATE_LIMIT',
+            },
+          };
+        }
+        if (errorMessage.includes('API_KEY') || errorMessage.includes('invalid')) {
+          return {
+            success: true,
+            data: {
+              success: false,
+              error: 'API Key 无效',
+              errorCode: 'API_KEY_INVALID',
+            },
+          };
+        }
+        if (errorMessage.includes('TIMEOUT') || errorMessage.includes('timeout')) {
+          return {
+            success: true,
+            data: {
+              success: false,
+              error: '连接超时，请检查网络',
+              errorCode: 'TIMEOUT',
+            },
+          };
+        }
+
+        return {
+          success: true,
+          data: {
+            success: false,
+            error: `测试失败: ${errorMessage}`,
+            errorCode: 'UNKNOWN',
+          },
+        };
+      }
+    } else if (provider === 'openai-compatible') {
+      // OpenAI 兼容 API 测试
+      if (!customEndpoint) {
+        return {
+          success: true,
+          data: {
+            success: false,
+            error: '请先配置 API 端点',
+            errorCode: 'ENDPOINT_ERROR',
+          },
+        };
+      }
+
+      const result = await testOpenAICompatibleConnection(
+        apiKey || '',
+        customEndpoint,
+        customModel || 'gpt-4',
+        startTime
+      );
+      return { success: true, data: result };
+    }
+
+    // 不支持的 provider
+    return {
+      success: true,
+      data: {
+        success: false,
+        error: '不支持测试此 Provider',
+        errorCode: 'UNKNOWN',
+      },
+    };
+  } catch (error) {
+    console.error('[LingoRecall] TEST_API_CONNECTION error:', error);
+    return {
+      success: true,
+      data: {
+        success: false,
+        error: error instanceof Error ? error.message : '发生未知错误',
+        errorCode: 'UNKNOWN',
+      },
+    };
+  }
+});
+
+// ============================================================
+// Local Model Connection Handlers
+// ============================================================
+
+/**
+ * TEST_LOCAL_CONNECTION handler
+ * 测试本地模型服务连接
+ * 通过 background service worker 转发请求，绕过 CORS 限制
+ */
+registerHandler(MessageTypes.TEST_LOCAL_CONNECTION, async (message): Promise<Response<TestLocalConnectionResult>> => {
+  const payload = message.payload as TestLocalConnectionPayload;
+  const { endpoint, modelName, tool } = payload;
+  const toolConfig = LOCAL_TOOLS[tool];
+  const startTime = performance.now();
+
+  console.log('[LingoRecall] TEST_LOCAL_CONNECTION:', { endpoint, modelName, tool });
+
+  try {
+    // 1. 首先检查服务是否在运行
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    try {
+      await fetch(endpoint, {
+        method: 'GET',
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error instanceof Error && error.name === 'AbortError') {
+        return {
+          success: true,
+          data: {
+            success: false,
+            error: `连接超时，请检查 ${toolConfig.name} 是否正在运行`,
+            errorCode: 'TIMEOUT',
+          },
+        };
+      }
+      return {
+        success: true,
+        data: {
+          success: false,
+          error: `无法连接到 ${toolConfig.name}，请确保服务正在运行`,
+          errorCode: 'CONNECTION_REFUSED',
+        },
+      };
+    }
+
+    // 2. 获取可用模型列表 (Ollama specific)
+    let availableModels: string[] = [];
+    if (tool === 'ollama' && toolConfig.modelListEndpoint) {
+      try {
+        const modelsResponse = await fetch(`${endpoint}${toolConfig.modelListEndpoint}`);
+        const modelsData = await modelsResponse.json();
+        availableModels = modelsData.models?.map((m: { name: string }) => m.name) || [];
+      } catch {
+        // Model list fetch failed, continue without it
+      }
+    }
+
+    // 3. 发送测试请求
+    const testEndpoint =
+      tool === 'ollama' ? `${endpoint}/api/chat` : `${endpoint}${toolConfig.chatEndpoint}`;
+
+    const testRequest =
+      tool === 'ollama'
+        ? {
+            model: modelName,
+            messages: [{ role: 'user', content: 'Say OK' }],
+            stream: false,
+          }
+        : {
+            model: modelName,
+            messages: [{ role: 'user', content: 'Say OK' }],
+            max_tokens: 10,
+          };
+
+    const testController = new AbortController();
+    const testTimeoutId = setTimeout(() => testController.abort(), 30000);
+
+    try {
+      const response = await fetch(testEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(testRequest),
+        signal: testController.signal,
+      });
+      clearTimeout(testTimeoutId);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        if (response.status === 404 || errorText.includes('not found')) {
+          return {
+            success: true,
+            data: {
+              success: false,
+              error: `未找到模型 "${modelName}"，请先下载该模型`,
+              errorCode: 'MODEL_NOT_FOUND',
+              availableModels,
+            },
+          };
+        }
+        return {
+          success: true,
+          data: {
+            success: false,
+            error: `服务器错误: ${response.status}`,
+            errorCode: 'INVALID_RESPONSE',
+            availableModels,
+          },
+        };
+      }
+
+      const latencyMs = Math.round(performance.now() - startTime);
+
+      return {
+        success: true,
+        data: {
+          success: true,
+          latencyMs,
+          availableModels,
+        },
+      };
+    } catch (error) {
+      clearTimeout(testTimeoutId);
+      if (error instanceof Error && error.name === 'AbortError') {
+        return {
+          success: true,
+          data: {
+            success: false,
+            error: '模型响应超时，可能正在加载中，请稍后重试',
+            errorCode: 'TIMEOUT',
+            availableModels,
+          },
+        };
+      }
+      throw error;
+    }
+  } catch (error) {
+    console.error('[LingoRecall] TEST_LOCAL_CONNECTION error:', error);
+    if (error instanceof Error) {
+      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        return {
+          success: true,
+          data: {
+            success: false,
+            error: `无法连接到 ${toolConfig.name}`,
+            errorCode: 'CONNECTION_REFUSED',
+          },
+        };
+      }
+    }
+    return {
+      success: true,
+      data: {
+        success: false,
+        error: '发生未知错误',
+        errorCode: 'INVALID_RESPONSE',
+      },
+    };
+  }
+});
+
+/**
+ * GET_LOCAL_MODELS handler
+ * 获取本地模型列表
+ * 通过 background service worker 转发请求，绕过 CORS 限制
+ */
+registerHandler(MessageTypes.GET_LOCAL_MODELS, async (message): Promise<Response<GetLocalModelsResult>> => {
+  const payload = message.payload as GetLocalModelsPayload;
+  const { endpoint, tool } = payload;
+
+  console.log('[LingoRecall] GET_LOCAL_MODELS:', { endpoint, tool });
+
+  // 仅 Ollama 支持模型列表查询
+  if (tool !== 'ollama') {
+    return {
+      success: true,
+      data: { models: [] },
+    };
+  }
+
+  try {
+    const response = await fetch(`${endpoint}/api/tags`);
+    if (!response.ok) {
+      return {
+        success: true,
+        data: { models: [] },
+      };
+    }
+    const data = await response.json();
+    const models = data.models?.map((m: { name: string }) => m.name) || [];
+    return {
+      success: true,
+      data: { models },
+    };
+  } catch (error) {
+    console.error('[LingoRecall] GET_LOCAL_MODELS error:', error);
+    return {
+      success: true,
+      data: { models: [] },
+    };
+  }
 });
 
 // ============================================================

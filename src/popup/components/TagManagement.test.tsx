@@ -51,7 +51,8 @@ describe('TagManagement', () => {
       render(<TagManagement />);
 
       await waitFor(() => {
-        expect(screen.getByText('标签管理')).toBeInTheDocument();
+        // i18n: settings.tags.title = "Tag Management"
+        expect(screen.getByText('Tag Management')).toBeInTheDocument();
       });
     });
 
@@ -66,14 +67,16 @@ describe('TagManagement', () => {
     it('应该在加载时显示加载状态', () => {
       render(<TagManagement />);
 
-      expect(screen.getByText('加载标签...')).toBeInTheDocument();
+      // i18n: settings.tags.loading = "Loading tags..."
+      expect(screen.getByText('Loading tags...')).toBeInTheDocument();
     });
 
     it('应该在无标签时显示空状态', async () => {
       render(<TagManagement />);
 
       await waitFor(() => {
-        expect(screen.getByText('还没有创建标签')).toBeInTheDocument();
+        // i18n: settings.tags.empty = "No tags created yet"
+        expect(screen.getByText('No tags created yet')).toBeInTheDocument();
       });
     });
   });
@@ -128,12 +131,14 @@ describe('TagManagement', () => {
       render(<TagManagement />);
 
       await waitFor(() => {
-        expect(screen.queryByText('加载标签...')).not.toBeInTheDocument();
+        // i18n: settings.tags.loading = "Loading tags..."
+        expect(screen.queryByText('Loading tags...')).not.toBeInTheDocument();
       });
 
       fireEvent.click(screen.getByTestId('tag-create-button'));
 
       expect(screen.getByTestId('tag-edit-modal')).toBeInTheDocument();
+      // TagEditModal still has hardcoded Chinese
       expect(screen.getByText('新建标签')).toBeInTheDocument();
     });
 
@@ -141,7 +146,8 @@ describe('TagManagement', () => {
       render(<TagManagement />);
 
       await waitFor(() => {
-        expect(screen.queryByText('加载标签...')).not.toBeInTheDocument();
+        // i18n: settings.tags.loading = "Loading tags..."
+        expect(screen.queryByText('Loading tags...')).not.toBeInTheDocument();
       });
 
       // 打开弹窗
@@ -284,7 +290,8 @@ describe('TagManagement', () => {
       render(<TagManagement />);
 
       await waitFor(() => {
-        expect(screen.queryByText('加载标签...')).not.toBeInTheDocument();
+        // i18n: settings.tags.loading = "Loading tags..."
+        expect(screen.queryByText('Loading tags...')).not.toBeInTheDocument();
       });
 
       // 打开弹窗
@@ -301,7 +308,8 @@ describe('TagManagement', () => {
       render(<TagManagement />);
 
       await waitFor(() => {
-        expect(screen.queryByText('加载标签...')).not.toBeInTheDocument();
+        // i18n: settings.tags.loading = "Loading tags..."
+        expect(screen.queryByText('Loading tags...')).not.toBeInTheDocument();
       });
 
       // 打开弹窗

@@ -11,6 +11,7 @@
 
 import React, { useEffect, useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
+import { DraggablePopup } from './DraggablePopup';
 
 /**
  * 分析模式类型
@@ -59,6 +60,10 @@ const POPUP_WIDTH_TRANSLATE = 420;
 const MAX_HEIGHT_WORD = 400;
 /** 最大高度 - 翻译模式 */
 const MAX_HEIGHT_TRANSLATE = 500;
+/** 浮动按钮尺寸 */
+const BUTTON_SIZE = 32;
+/** 弹窗与按钮之间的间距 */
+const POPUP_BUTTON_GAP = 8;
 
 /**
  * 设计令牌
@@ -100,12 +105,23 @@ const tokens = {
 
 /**
  * 样式定义
- * 注意：width 和 maxHeight 会在组件中动态覆盖
+ * 注意：width 和 maxHeight 由 DraggablePopup 控制
  */
 const styles: Record<string, CSSProperties> = {
+  /** 内容容器样式（不包含定位，由 DraggablePopup 处理） */
+  innerContainer: {
+    backgroundColor: tokens.colors.background,
+    borderRadius: tokens.borderRadius.lg,
+    boxShadow: tokens.shadow,
+    overflow: 'hidden',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  /** 旧的 container 样式（为 AnalysisError 保留，它不使用 DraggablePopup） */
   container: {
     position: 'fixed',
-    // width 和 maxHeight 在组件中根据模式动态设置
     backgroundColor: tokens.colors.background,
     borderRadius: tokens.borderRadius.lg,
     boxShadow: tokens.shadow,
@@ -152,7 +168,8 @@ const styles: Record<string, CSSProperties> = {
   body: {
     padding: tokens.spacing.lg,
     overflowY: 'auto' as const,
-    // maxHeight 在组件中根据模式动态设置
+    flex: 1,
+    minHeight: 0, // 允许 flex 子元素收缩
   },
   section: {
     marginBottom: tokens.spacing.md,
@@ -205,12 +222,18 @@ const styles: Record<string, CSSProperties> = {
 };
 
 /**
- * 计算弹窗位置，确保在视口内
- * @param position - 初始位置
+ * 计算弹窗位置，使其出现在按钮附近
+ *
+ * 位置策略：
+ * 1. 优先在按钮下方显示（按钮底部 + 间距）
+ * 2. 如果下方空间不足，则在按钮上方显示
+ * 3. 水平方向：弹窗左边缘与按钮左边缘对齐，但确保不超出视口
+ *
+ * @param buttonPosition - 浮动按钮的位置（左上角坐标）
  * @param isTranslateMode - 是否为翻译模式
  */
 function calculatePosition(
-  position: { x: number; y: number },
+  buttonPosition: { x: number; y: number },
   isTranslateMode: boolean = false
 ): { x: number; y: number } {
   const padding = 16;
@@ -219,24 +242,36 @@ function calculatePosition(
   const popupWidth = isTranslateMode ? POPUP_WIDTH_TRANSLATE : POPUP_WIDTH_WORD;
   const maxHeight = isTranslateMode ? MAX_HEIGHT_TRANSLATE : MAX_HEIGHT_WORD;
 
-  let x = position.x;
-  let y = position.y + 8; // 向下偏移 8px
+  // 计算按钮的位置信息
+  const buttonBottom = buttonPosition.y + BUTTON_SIZE;
+  const buttonTop = buttonPosition.y;
 
-  // 水平边界检查
+  // 水平位置：弹窗左边缘与按钮左边缘对齐
+  let x = buttonPosition.x;
+
+  // 水平边界检查 - 确保弹窗不超出右边界
   if (x + popupWidth + padding > viewportWidth) {
     x = viewportWidth - popupWidth - padding;
   }
+  // 确保弹窗不超出左边界
   if (x < padding) {
     x = padding;
   }
 
-  // 垂直边界检查
-  if (y + maxHeight + padding > viewportHeight) {
-    // 显示在选择区域上方
-    y = position.y - maxHeight - 8;
-  }
-  if (y < padding) {
-    y = padding;
+  // 垂直位置：优先在按钮下方显示
+  let y = buttonBottom + POPUP_BUTTON_GAP;
+
+  // 检查下方空间是否足够
+  const spaceBelow = viewportHeight - buttonBottom - padding;
+  const spaceAbove = buttonTop - padding;
+
+  if (spaceBelow < maxHeight && spaceAbove > spaceBelow) {
+    // 下方空间不足且上方空间更多，在按钮上方显示
+    y = buttonTop - maxHeight - POPUP_BUTTON_GAP;
+    // 确保不超出顶部
+    if (y < padding) {
+      y = padding;
+    }
   }
 
   return { x, y };
@@ -267,6 +302,7 @@ function SaveIcon() {
 /**
  * AnalysisPopup 组件
  * 显示 AI 分析结果
+ * 支持拖动移动和调整大小
  */
 export function AnalysisPopup({
   position,
@@ -295,98 +331,91 @@ export function AnalysisPopup({
     });
   }, []);
 
-  const adjustedPosition = calculatePosition(position, isTranslateMode);
-
   // 截断显示的选中文本（翻译模式下可能很长）
   const displayText = isTranslateMode && selectedText.length > 50
     ? selectedText.substring(0, 50) + '...'
     : selectedText;
 
   return (
-    <div
-      style={{
-        ...styles.container,
-        width: `${popupWidth}px`,
-        maxHeight: `${maxHeight}px`,
-        left: `${adjustedPosition.x}px`,
-        top: `${adjustedPosition.y}px`,
-        opacity,
-        transition: 'opacity 0.2s ease-out',
-      }}
-      onClick={(e) => e.stopPropagation()}
+    <DraggablePopup
+      initialPosition={position}
+      defaultWidth={popupWidth}
+      defaultMaxHeight={maxHeight}
+      resizable={true}
+      opacity={opacity}
+      onClickCapture={(e) => e.stopPropagation()}
     >
-      {/* Header */}
-      <div style={styles.header}>
-        <div style={styles.headerContent}>
-          <div style={{
-            ...styles.word,
-            // 翻译模式使用较小字体
-            fontSize: isTranslateMode ? tokens.fontSize.sm : tokens.fontSize.md,
-          }}>
-            {displayText}
+      <div style={styles.innerContainer}>
+        {/* Header */}
+        <div style={styles.header}>
+          <div style={styles.headerContent}>
+            <div style={{
+              ...styles.word,
+              // 翻译模式使用较小字体
+              fontSize: isTranslateMode ? tokens.fontSize.sm : tokens.fontSize.md,
+            }}>
+              {displayText}
+            </div>
+            {!isTranslateMode && result.pronunciation && (
+              <div style={styles.pronunciation}>{result.pronunciation}</div>
+            )}
           </div>
-          {!isTranslateMode && result.pronunciation && (
-            <div style={styles.pronunciation}>{result.pronunciation}</div>
-          )}
-        </div>
-        <button
-          style={{
-            ...styles.closeButton,
-            backgroundColor: isHoveringClose ? tokens.colors.border : 'transparent',
-          }}
-          onClick={onClose}
-          onMouseEnter={() => setIsHoveringClose(true)}
-          onMouseLeave={() => setIsHoveringClose(false)}
-          title={t('common.close')}
-        >
-          <CloseIcon />
-        </button>
-      </div>
-
-      {/* Body */}
-      <div style={{
-        ...styles.body,
-        maxHeight: `${maxHeight - 140}px`,
-      }}>
-        {/* 词性 - 仅在单词模式显示 */}
-        {!isTranslateMode && result.partOfSpeech && (
-          <span style={styles.partOfSpeech}>{result.partOfSpeech}</span>
-        )}
-
-        {/* 含义/翻译 */}
-        <div style={isTranslateMode || !result.usage ? styles.sectionLast : styles.section}>
-          <div style={styles.label}>{isTranslateMode ? t('analysis.translation') : t('analysis.meaning')}</div>
-          <div style={styles.value}>{result.meaning}</div>
-        </div>
-
-        {/* 用法 - 仅在单词模式显示 */}
-        {!isTranslateMode && result.usage && (
-          <div style={styles.sectionLast}>
-            <div style={styles.label}>{t('analysis.usage')}</div>
-            <div style={styles.value}>{result.usage}</div>
-          </div>
-        )}
-      </div>
-
-      {/* Footer - 仅在单词模式显示保存按钮 */}
-      {!isTranslateMode && (
-        <div style={styles.footer}>
           <button
             style={{
-              ...styles.saveButton,
-              backgroundColor: isHoveringSave ? tokens.colors.successHover : tokens.colors.success,
+              ...styles.closeButton,
+              backgroundColor: isHoveringClose ? tokens.colors.border : 'transparent',
             }}
-            onClick={onSave}
-            onMouseEnter={() => setIsHoveringSave(true)}
-            onMouseLeave={() => setIsHoveringSave(false)}
-            title={t('analysis.saveWord')}
+            onClick={onClose}
+            onMouseEnter={() => setIsHoveringClose(true)}
+            onMouseLeave={() => setIsHoveringClose(false)}
+            title={t('common.close')}
           >
-            <SaveIcon />
-            {t('analysis.saveWord')}
+            <CloseIcon />
           </button>
         </div>
-      )}
-    </div>
+
+        {/* Body */}
+        <div style={styles.body}>
+          {/* 词性 - 仅在单词模式显示 */}
+          {!isTranslateMode && result.partOfSpeech && (
+            <span style={styles.partOfSpeech}>{result.partOfSpeech}</span>
+          )}
+
+          {/* 含义/翻译 */}
+          <div style={isTranslateMode || !result.usage ? styles.sectionLast : styles.section}>
+            <div style={styles.label}>{isTranslateMode ? t('analysis.translation') : t('analysis.meaning')}</div>
+            <div style={styles.value}>{result.meaning}</div>
+          </div>
+
+          {/* 用法 - 仅在单词模式显示 */}
+          {!isTranslateMode && result.usage && (
+            <div style={styles.sectionLast}>
+              <div style={styles.label}>{t('analysis.usage')}</div>
+              <div style={styles.value}>{result.usage}</div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer - 仅在单词模式显示保存按钮 */}
+        {!isTranslateMode && (
+          <div style={styles.footer}>
+            <button
+              style={{
+                ...styles.saveButton,
+                backgroundColor: isHoveringSave ? tokens.colors.successHover : tokens.colors.success,
+              }}
+              onClick={onSave}
+              onMouseEnter={() => setIsHoveringSave(true)}
+              onMouseLeave={() => setIsHoveringSave(false)}
+              title={t('analysis.saveWord')}
+            >
+              <SaveIcon />
+              {t('analysis.saveWord')}
+            </button>
+          </div>
+        )}
+      </div>
+    </DraggablePopup>
   );
 }
 
@@ -574,9 +603,13 @@ function ErrorIcon({ type, color }: { type: string; color: string }) {
   }
 }
 
+/** 错误弹窗的估计高度 */
+const ERROR_POPUP_HEIGHT = 220;
+
 /**
  * AnalysisError 组件
  * 显示友好的错误信息
+ * 支持拖动移动（错误弹窗不支持缩放，因为内容固定）
  */
 export function AnalysisError({
   position,
@@ -597,65 +630,62 @@ export function AnalysisError({
     });
   }, []);
 
-  const adjustedPosition = calculatePosition(position);
-
   return (
-    <div
-      style={{
-        ...styles.container,
-        width: `${POPUP_WIDTH_WORD}px`,
-        left: `${adjustedPosition.x}px`,
-        top: `${adjustedPosition.y}px`,
-        opacity,
-        transition: 'opacity 0.2s ease-out',
-      }}
-      onClick={(e) => e.stopPropagation()}
+    <DraggablePopup
+      initialPosition={position}
+      defaultWidth={POPUP_WIDTH_WORD}
+      defaultMaxHeight={ERROR_POPUP_HEIGHT}
+      resizable={false}
+      opacity={opacity}
+      onClickCapture={(e) => e.stopPropagation()}
     >
-      <div style={errorStyles.container}>
-        {/* 图标容器 */}
-        <div
-          style={{
-            ...errorStyles.iconContainer,
-            backgroundColor: `${errorConfig.color}15`,
-          }}
-        >
-          <ErrorIcon type={errorConfig.icon} color={errorConfig.color} />
-        </div>
-
-        {/* 错误标题 */}
-        <div style={errorStyles.title}>{t(errorConfig.titleKey)}</div>
-
-        {/* 建议信息 */}
-        <div style={errorStyles.suggestion}>{t(errorConfig.suggestionKey)}</div>
-
-        {/* 操作按钮 */}
-        <div style={errorStyles.buttons}>
-          <button
+      <div style={styles.innerContainer}>
+        <div style={errorStyles.container}>
+          {/* 图标容器 */}
+          <div
             style={{
-              ...errorStyles.button,
-              ...errorStyles.closeBtn,
-              backgroundColor: isHoveringClose ? '#D1D5DB' : tokens.colors.border,
+              ...errorStyles.iconContainer,
+              backgroundColor: `${errorConfig.color}15`,
             }}
-            onClick={onClose}
-            onMouseEnter={() => setIsHoveringClose(true)}
-            onMouseLeave={() => setIsHoveringClose(false)}
           >
-            {t('common.close')}
-          </button>
-          <button
-            style={{
-              ...errorStyles.button,
-              ...errorStyles.retryBtn,
-              backgroundColor: isHoveringRetry ? '#2563EB' : tokens.colors.primary,
-            }}
-            onClick={onRetry}
-            onMouseEnter={() => setIsHoveringRetry(true)}
-            onMouseLeave={() => setIsHoveringRetry(false)}
-          >
-            {t('common.retry')}
-          </button>
+            <ErrorIcon type={errorConfig.icon} color={errorConfig.color} />
+          </div>
+
+          {/* 错误标题 */}
+          <div style={errorStyles.title}>{t(errorConfig.titleKey)}</div>
+
+          {/* 建议信息 */}
+          <div style={errorStyles.suggestion}>{t(errorConfig.suggestionKey)}</div>
+
+          {/* 操作按钮 */}
+          <div style={errorStyles.buttons}>
+            <button
+              style={{
+                ...errorStyles.button,
+                ...errorStyles.closeBtn,
+                backgroundColor: isHoveringClose ? '#D1D5DB' : tokens.colors.border,
+              }}
+              onClick={onClose}
+              onMouseEnter={() => setIsHoveringClose(true)}
+              onMouseLeave={() => setIsHoveringClose(false)}
+            >
+              {t('common.close')}
+            </button>
+            <button
+              style={{
+                ...errorStyles.button,
+                ...errorStyles.retryBtn,
+                backgroundColor: isHoveringRetry ? '#2563EB' : tokens.colors.primary,
+              }}
+              onClick={onRetry}
+              onMouseEnter={() => setIsHoveringRetry(true)}
+              onMouseLeave={() => setIsHoveringRetry(false)}
+            >
+              {t('common.retry')}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </DraggablePopup>
   );
 }

@@ -7,10 +7,55 @@
  * @module popup/components/TagSelector
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { Tag as TagIcon, Check, Plus, X } from 'lucide-react';
 import type { Tag } from '../../shared/types/tag';
 import { getColorWithOpacity } from '../../shared/types/tag';
+
+/**
+ * 计算弹出框位置，避免超出视口
+ * @param containerRef 弹出框容器元素引用（用于获取父元素位置）
+ * @returns 定位样式对象
+ */
+function usePopoverPosition(containerRef: React.RefObject<HTMLDivElement | null>) {
+  const [positionStyle, setPositionStyle] = useState<React.CSSProperties>({ left: 0 });
+
+  useLayoutEffect(() => {
+    if (!containerRef.current) return;
+
+    // 获取父元素（带 relative 定位的包装 div）的位置
+    const parentElement = containerRef.current.parentElement;
+    if (!parentElement) return;
+
+    const parentRect = parentElement.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const popoverWidth = 256; // w-64 = 16rem = 256px
+    const padding = 8; // 边距
+
+    // 计算弹出框应该向左还是向右展开
+    // 检查向右展开是否会超出视口（从父元素左边缘开始向右）
+    const rightOverflow = parentRect.left + popoverWidth + padding > viewportWidth;
+    // 检查向左展开是否会超出视口（从父元素右边缘开始向左）
+    const leftOverflow = parentRect.right - popoverWidth - padding < 0;
+
+    if (rightOverflow && !leftOverflow) {
+      // 向左展开：右边缘对齐到父元素右边缘
+      setPositionStyle({ right: 0, left: 'auto' });
+    } else if (!rightOverflow) {
+      // 默认向右展开：左边缘对齐到父元素左边缘
+      setPositionStyle({ left: 0, right: 'auto' });
+    } else {
+      // 两边都会溢出，尝试居中或尽可能靠左
+      // 计算最佳左偏移量，确保不超出右边界
+      const maxLeft = viewportWidth - popoverWidth - padding;
+      const idealLeft = Math.max(padding - parentRect.left, 0);
+      const adjustedLeft = Math.min(idealLeft, maxLeft - parentRect.left);
+      setPositionStyle({ left: adjustedLeft, right: 'auto' });
+    }
+  }, [containerRef]);
+
+  return positionStyle;
+}
 
 /**
  * TagSelector 属性
@@ -54,6 +99,9 @@ export function TagSelector({
 }: TagSelectorProps): React.ReactElement {
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // 智能定位：根据可用空间决定向左或向右展开
+  const positionStyle = usePopoverPosition(containerRef);
+
   // 点击外部关闭
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -87,7 +135,8 @@ export function TagSelector({
   return (
     <div
       ref={containerRef}
-      className="absolute right-0 top-full mt-1 z-30 w-64 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 shadow-lg"
+      className="absolute top-full mt-1 z-30 w-64 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 shadow-lg"
+      style={positionStyle}
       data-testid="tag-selector"
     >
       {/* 头部 */}

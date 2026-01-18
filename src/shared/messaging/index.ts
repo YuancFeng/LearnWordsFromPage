@@ -32,6 +32,17 @@ export {
   // Story 3.4: Review Word
   type ReviewWordPayload,
   type ReviewWordResult,
+  // Full Page Translation
+  type TranslatePageSegmentPayload,
+  type TranslatePageSegmentResult,
+  // Local Model Connection
+  type TestLocalConnectionPayload,
+  type TestLocalConnectionResult,
+  type GetLocalModelsPayload,
+  type GetLocalModelsResult,
+  // API Connection Test
+  type TestApiConnectionPayload,
+  type TestApiConnectionResult,
 } from './types';
 
 // Sender utilities

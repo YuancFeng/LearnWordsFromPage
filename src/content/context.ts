@@ -116,44 +116,90 @@ function getSurroundingText(range: Range): { before: string; after: string } {
 /**
  * 查找块级容器元素
  * 向上遍历 DOM 树，找到合适的块级父元素
+ * 优先选择较小的语义容器，避免获取过多无关内容
  *
  * @param element - 起始元素
  * @returns 块级容器元素，如果未找到则返回 null
  */
 function findBlockContainer(element: Element): Element | null {
-  const blockTags = new Set([
+  // 优先级最高的块级标签（段落级别，内容紧凑）
+  const preferredTags = new Set([
     'P',
-    'DIV',
-    'ARTICLE',
-    'SECTION',
-    'MAIN',
-    'ASIDE',
-    'BLOCKQUOTE',
+    'H1',
+    'H2',
+    'H3',
+    'H4',
+    'H5',
+    'H6',
     'LI',
     'TD',
     'TH',
     'DD',
     'DT',
     'FIGCAPTION',
+    'BLOCKQUOTE',
+    'LABEL',
+    'SPAN', // 行内元素但在某些网站用作容器
+  ]);
+
+  // 次优先级的块级标签（较大容器，但仍可接受）
+  const acceptableTags = new Set([
+    'DIV',
+  ]);
+
+  // 不应该作为上下文容器的标签（太大，会包含不相关内容）
+  const avoidTags = new Set([
+    'ARTICLE',
+    'SECTION',
+    'MAIN',
+    'ASIDE',
     'HEADER',
     'FOOTER',
     'NAV',
+    'BODY',
+    'HTML',
   ]);
 
   let current: Element | null = element;
+  let bestCandidate: Element | null = null;
 
-  // 限制向上查找的层级，避免获取过多无关内容
+  // 限制向上查找的层级
   let maxDepth = 5;
 
   while (current && maxDepth > 0) {
-    if (blockTags.has(current.tagName)) {
+    const tagName = current.tagName;
+
+    // 如果是优先级最高的标签，直接返回
+    if (preferredTags.has(tagName)) {
       return current;
     }
+
+    // 如果是次优先级的标签，先记录但继续往上找
+    // 只接受内容不太长的 DIV（避免选择包含大量子元素的容器）
+    if (acceptableTags.has(tagName)) {
+      // 检查这个 DIV 是否适合作为上下文容器
+      // 1. 文本内容不要太长（<500 字符表示内容紧凑）
+      // 2. 子元素不要太多（避免选择包含列表、评论等的大容器）
+      const textLength = current.textContent?.length || 0;
+      const childElementCount = current.childElementCount;
+
+      if (textLength < 500 && childElementCount < 10) {
+        if (!bestCandidate) {
+          bestCandidate = current;
+        }
+      }
+    }
+
+    // 如果遇到应该避免的大容器，停止查找并返回之前找到的候选
+    if (avoidTags.has(tagName)) {
+      break;
+    }
+
     current = current.parentElement;
     maxDepth--;
   }
 
-  return null;
+  return bestCandidate;
 }
 
 /**

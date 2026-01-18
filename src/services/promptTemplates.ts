@@ -288,6 +288,102 @@ export function buildTranslateUserMessage(text: string): string {
 }
 
 // ============================================================
+// Full Page Translation Prompts (Batch)
+// ============================================================
+
+/**
+ * 构建批量翻译提示词（用于全页翻译功能）
+ *
+ * @param texts - 待翻译的文本数组
+ * @param targetLanguage - 目标翻译语言
+ * @returns 完整的翻译提示词
+ */
+export function buildBatchTranslationPrompt(
+  texts: string[],
+  targetLanguage: TargetLanguage
+): string {
+  const langInfo = LANGUAGE_INFO[targetLanguage];
+
+  // 将文本数组转换为带编号的格式
+  const numberedTexts = texts.map((text, index) => `[${index + 1}] ${text}`).join('\n');
+
+  return `You are a professional translator. Translate the following texts to ${langInfo.name}.
+
+**Important requirements**:
+- Translate each text accurately while maintaining natural flow in ${langInfo.name}
+- Keep the original meaning and tone
+- Return ONLY a valid JSON array of translated strings
+- The array MUST have exactly ${texts.length} items
+- Each item must correspond to the input text at the same position
+- Do NOT add any explanatory text or markdown formatting
+
+**Texts to translate** (${texts.length} items):
+${numberedTexts}
+
+**Response format** (JSON array only):
+["translation 1", "translation 2", ...]`;
+}
+
+/**
+ * 构建批量翻译系统提示词（OpenAI 兼容服务使用）
+ *
+ * @param targetLanguage - 目标翻译语言
+ * @returns 系统提示词
+ */
+export function buildBatchTranslateSystemPrompt(targetLanguage: TargetLanguage): string {
+  const langInfo = LANGUAGE_INFO[targetLanguage];
+
+  return `Professional batch translator to ${langInfo.name}. Return JSON array of translations. Each element corresponds to input text at same position. No extra text, JSON array only.`;
+}
+
+/**
+ * 构建批量翻译用户消息（OpenAI 兼容服务使用）
+ *
+ * @param texts - 待翻译的文本数组
+ * @returns 用户消息
+ */
+export function buildBatchTranslateUserMessage(texts: string[]): string {
+  return texts.map((text, index) => `[${index + 1}] ${text}`).join('\n');
+}
+
+/**
+ * 解析批量翻译响应
+ *
+ * @param response - AI 响应文本
+ * @param originalTexts - 原始文本数组（用于失败时回退）
+ * @returns 翻译后的文本数组
+ */
+export function parseBatchTranslationResponse(
+  response: string,
+  originalTexts: string[]
+): string[] {
+  try {
+    // 尝试提取 JSON 数组
+    const jsonMatch = response.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      if (Array.isArray(parsed) && parsed.length === originalTexts.length) {
+        return parsed.map((item, index) =>
+          typeof item === 'string' ? item : originalTexts[index]
+        );
+      }
+    }
+
+    // 如果解析失败，尝试按行分割
+    const lines = response.trim().split('\n');
+    if (lines.length === originalTexts.length) {
+      return lines.map((line) => line.replace(/^\[\d+\]\s*/, '').trim());
+    }
+
+    console.warn('[LingoRecall] Failed to parse batch translation, returning original');
+    return originalTexts;
+  } catch (error) {
+    console.error('[LingoRecall] Batch translation parse error:', error);
+    return originalTexts;
+  }
+}
+
+// ============================================================
 // Fallback Messages
 // ============================================================
 

@@ -13,6 +13,7 @@
 
 import React, { useEffect, useState, useMemo, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
+import { DraggablePopup } from './DraggablePopup';
 
 interface LoadingPopupProps {
   /** 弹窗位置 */
@@ -27,6 +28,12 @@ interface LoadingPopupProps {
 
 /** 弹窗宽度 */
 const POPUP_WIDTH = 280;
+/** 弹窗高度（估计值，用于位置计算） */
+const POPUP_HEIGHT = 160;
+/** 浮动按钮尺寸 */
+const BUTTON_SIZE = 32;
+/** 弹窗与按钮之间的间距 */
+const POPUP_BUTTON_GAP = 8;
 
 /** 设计令牌 */
 const tokens = {
@@ -73,29 +80,50 @@ const TRANSLATE_TIP_KEYS = [
 ];
 
 /**
- * 计算弹窗位置，确保在视口内
+ * 计算弹窗位置，使其出现在按钮附近
+ *
+ * 位置策略：
+ * 1. 优先在按钮下方显示（按钮底部 + 间距）
+ * 2. 如果下方空间不足，则在按钮上方显示
+ * 3. 水平方向：弹窗左边缘与按钮左边缘对齐，但确保不超出视口
+ *
+ * @param buttonPosition - 浮动按钮的位置（左上角坐标）
  */
-function calculatePosition(position: { x: number; y: number }): { x: number; y: number } {
+function calculatePosition(buttonPosition: { x: number; y: number }): { x: number; y: number } {
   const padding = 16;
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
-  const popupHeight = 160;
 
-  let x = position.x;
-  let y = position.y + 8;
+  // 计算按钮的位置信息
+  const buttonBottom = buttonPosition.y + BUTTON_SIZE;
+  const buttonTop = buttonPosition.y;
 
+  // 水平位置：弹窗左边缘与按钮左边缘对齐
+  let x = buttonPosition.x;
+
+  // 水平边界检查 - 确保弹窗不超出右边界
   if (x + POPUP_WIDTH + padding > viewportWidth) {
     x = viewportWidth - POPUP_WIDTH - padding;
   }
+  // 确保弹窗不超出左边界
   if (x < padding) {
     x = padding;
   }
 
-  if (y + popupHeight + padding > viewportHeight) {
-    y = position.y - popupHeight - 8;
-  }
-  if (y < padding) {
-    y = padding;
+  // 垂直位置：优先在按钮下方显示
+  let y = buttonBottom + POPUP_BUTTON_GAP;
+
+  // 检查下方空间是否足够
+  const spaceBelow = viewportHeight - buttonBottom - padding;
+  const spaceAbove = buttonTop - padding;
+
+  if (spaceBelow < POPUP_HEIGHT && spaceAbove > spaceBelow) {
+    // 下方空间不足且上方空间更多，在按钮上方显示
+    y = buttonTop - POPUP_HEIGHT - POPUP_BUTTON_GAP;
+    // 确保不超出顶部
+    if (y < padding) {
+      y = padding;
+    }
   }
 
   return { x, y };
@@ -103,15 +131,14 @@ function calculatePosition(position: { x: number; y: number }): { x: number; y: 
 
 /** 样式定义 */
 const styles: Record<string, CSSProperties> = {
-  container: {
-    position: 'fixed',
-    width: `${POPUP_WIDTH}px`,
+  /** 内容容器样式（不包含定位，由 DraggablePopup 处理） */
+  innerContainer: {
     backgroundColor: tokens.colors.background,
     borderRadius: tokens.borderRadius.lg,
     boxShadow: tokens.shadow,
     overflow: 'hidden',
-    zIndex: 2147483647,
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    height: '100%',
   },
   content: {
     padding: tokens.spacing.lg,
@@ -119,6 +146,8 @@ const styles: Record<string, CSSProperties> = {
     flexDirection: 'column',
     alignItems: 'center',
     gap: tokens.spacing.md,
+    height: '100%',
+    boxSizing: 'border-box',
   },
   spinnerContainer: {
     position: 'relative',
@@ -175,6 +204,7 @@ const styles: Record<string, CSSProperties> = {
 /**
  * LoadingPopup 组件
  * 显示加载中状态
+ * 支持拖动移动（LoadingPopup 不支持缩放，因为内容固定）
  */
 export function LoadingPopup({
   position,
@@ -214,56 +244,54 @@ export function LoadingPopup({
     return () => clearInterval(interval);
   }, [tips.length]);
 
-  const adjustedPosition = calculatePosition(position);
-
   // 截断显示的文本
   const displayText = selectedText.length > 30
     ? selectedText.substring(0, 30) + '...'
     : selectedText;
 
   return (
-    <div
-      style={{
-        ...styles.container,
-        left: `${adjustedPosition.x}px`,
-        top: `${adjustedPosition.y}px`,
-        opacity,
-        transition: 'opacity 0.2s ease-out',
-      }}
-      onClick={(e) => e.stopPropagation()}
+    <DraggablePopup
+      initialPosition={position}
+      defaultWidth={POPUP_WIDTH}
+      defaultMaxHeight={POPUP_HEIGHT}
+      resizable={false}
+      opacity={opacity}
+      onClickCapture={(e) => e.stopPropagation()}
     >
-      <div style={styles.content}>
-        {/* 加载动画 */}
-        <div style={styles.spinnerContainer}>
-          <div style={styles.pulseRing} />
-          <div style={styles.spinner} />
-        </div>
+      <div style={styles.innerContainer}>
+        <div style={styles.content}>
+          {/* 加载动画 */}
+          <div style={styles.spinnerContainer}>
+            <div style={styles.pulseRing} />
+            <div style={styles.spinner} />
+          </div>
 
-        {/* 选中文本预览 */}
-        <div style={styles.textPreview}>
-          "{displayText}"
-        </div>
+          {/* 选中文本预览 */}
+          <div style={styles.textPreview}>
+            "{displayText}"
+          </div>
 
-        {/* 动态提示语 */}
-        <div style={styles.tip}>
-          {tips[tipIndex]}{dots}
-        </div>
+          {/* 动态提示语 */}
+          <div style={styles.tip}>
+            {tips[tipIndex]}{dots}
+          </div>
 
-        {/* 取消按钮 */}
-        <button
-          style={{
-            ...styles.cancelButton,
-            backgroundColor: isHoveringCancel ? tokens.colors.backgroundSecondary : 'transparent',
-            borderColor: isHoveringCancel ? tokens.colors.textSecondary : tokens.colors.border,
-          }}
-          onClick={onCancel}
-          onMouseEnter={() => setIsHoveringCancel(true)}
-          onMouseLeave={() => setIsHoveringCancel(false)}
-        >
-          {t('common.cancel')}
-        </button>
+          {/* 取消按钮 */}
+          <button
+            style={{
+              ...styles.cancelButton,
+              backgroundColor: isHoveringCancel ? tokens.colors.backgroundSecondary : 'transparent',
+              borderColor: isHoveringCancel ? tokens.colors.textSecondary : tokens.colors.border,
+            }}
+            onClick={onCancel}
+            onMouseEnter={() => setIsHoveringCancel(true)}
+            onMouseLeave={() => setIsHoveringCancel(false)}
+          >
+            {t('common.cancel')}
+          </button>
+        </div>
       </div>
-    </div>
+    </DraggablePopup>
   );
 }
 

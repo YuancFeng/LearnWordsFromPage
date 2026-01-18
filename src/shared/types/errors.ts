@@ -13,6 +13,8 @@ export enum ErrorCode {
   AI_API_ERROR = 'AI_API_ERROR',
   AI_RATE_LIMIT = 'AI_RATE_LIMIT',
   AI_INVALID_KEY = 'AI_INVALID_KEY',
+  AI_QUOTA_EXCEEDED = 'AI_QUOTA_EXCEEDED',
+  AI_CREDITS_LOW = 'AI_CREDITS_LOW',
 
   // 存储相关错误
   STORAGE_ERROR = 'STORAGE_ERROR',
@@ -60,6 +62,8 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.AI_API_ERROR]: 'AI service error',
   [ErrorCode.AI_RATE_LIMIT]: 'AI rate limit exceeded',
   [ErrorCode.AI_INVALID_KEY]: 'Invalid API key',
+  [ErrorCode.AI_QUOTA_EXCEEDED]: 'API credits exhausted. Please add credits to your account.',
+  [ErrorCode.AI_CREDITS_LOW]: 'API credits running low. Consider adding more credits.',
   [ErrorCode.STORAGE_ERROR]: 'Storage operation failed',
   [ErrorCode.STORAGE_QUOTA_EXCEEDED]: 'Storage quota exceeded',
   [ErrorCode.INVALID_INPUT]: 'Invalid input provided',

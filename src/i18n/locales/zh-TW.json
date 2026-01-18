@@ -16,7 +16,9 @@
     "back": "返回",
     "new": "新增",
     "processing": "處理中...",
-    "saving": "儲存中..."
+    "saving": "儲存中...",
+    "previous": "上一個",
+    "next": "下一個"
   },
   "settings": {
     "title": "設定",
@@ -62,6 +64,11 @@
       "configured": "API 金鑰已設定",
       "geminiHelp": "使用 Gemini API，請輸入您的 Google AI API 金鑰",
       "customHelp": "使用自訂 API，API 金鑰為選填",
+      "testApi": "測試 API",
+      "testApiTesting": "測試中...",
+      "testApiSuccess": "API 連線成功！",
+      "testApiFailed": "API 連線失敗",
+      "testApiLatency": "延遲：{{ms}}ms",
       "clearConfirmTitle": "確認清除",
       "clearConfirmMessage": "確定要清除 API 金鑰嗎？您需要重新設定才能使用翻譯功能。"
     },
@@ -142,7 +149,8 @@
       "select": "選取",
       "deselect": "取消選取",
       "settings": "設定",
-      "startReview": "開始複習"
+      "startReview": "開始複習",
+      "fullscreen": "全螢幕模式"
     }
   },
   "review": {
@@ -228,5 +236,53 @@
   },
   "toast": {
     "close": "關閉"
+  },
+  "usage": {
+    "title": "用量監控",
+    "refresh": "重新整理",
+    "remaining": "剩餘額度",
+    "todayUsage": "今日",
+    "todayTokens": "今日 Tokens",
+    "todayCost": "今日費用",
+    "totalCost": "累計費用",
+    "freeTier": "免費版",
+    "paidTier": "付費版",
+    "localProvider": "本機服務",
+    "unknownProvider": "未知服務",
+    "localTrackingNote": "本機用量追蹤（僅為估算值）",
+    "lowBalanceWarning": "餘額不足！請為您的帳戶儲值。",
+    "lastUpdated": "更新時間"
+  },
+  "errors": {
+    "quotaExceeded": "API 額度已用盡，請為您的 CLI Proxy 帳戶儲值。",
+    "creditsLow": "API 額度即將用盡，建議儘快儲值。",
+    "rateLimit": "請求過於頻繁，請稍後再試。",
+    "invalidApiKey": "API Key 無效，請檢查設定。"
+  },
+  "options": {
+    "nav": {
+      "vocabulary": "單字本",
+      "review": "複習",
+      "settings": "設定",
+      "backToPopup": "關閉"
+    }
+  },
+  "pageTranslation": {
+    "analyzing": "正在分析頁面...",
+    "translating": "正在翻譯",
+    "applying": "正在應用翻譯...",
+    "completed": "翻譯完成",
+    "error": "翻譯失敗",
+    "showOriginal": "顯示原文",
+    "showTranslation": "顯示譯文",
+    "original": "原文",
+    "translation": "譯文",
+    "restore": "恢復",
+    "showControls": "顯示翻譯控制",
+    "clickToToggle": "點擊切換原文/譯文",
+    "success": "已翻譯 {{count}} 個文字段落",
+    "noContent": "未找到可翻譯的內容",
+    "failed": "翻譯失敗",
+    "restored": "已恢復原文"
   }
 }

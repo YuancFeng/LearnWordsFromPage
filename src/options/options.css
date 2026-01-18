@@ -1,0 +1,18 @@
+/**
+ * Options Page CSS
+ * 覆盖 popup 的固定宽度限制
+ */
+
+/* 覆盖 popup 的 body 宽度限制 */
+body {
+  width: 100% !important;
+  min-width: 100vw !important;
+  min-height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#root {
+  width: 100% !important;
+  min-height: 100vh !important;
+}

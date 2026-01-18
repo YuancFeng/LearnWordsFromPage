@@ -7,9 +7,47 @@
  * @module popup/components/SortDropdown
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowUpDown, Check } from 'lucide-react';
+
+/**
+ * 计算下拉框位置，避免超出视口
+ * @param dropdownRef 下拉框容器引用
+ * @param isOpen 是否打开状态
+ * @returns 定位样式对象
+ */
+function useDropdownPosition(
+  dropdownRef: React.RefObject<HTMLDivElement | null>,
+  isOpen: boolean
+) {
+  const [positionStyle, setPositionStyle] = useState<React.CSSProperties>({ right: 0 });
+
+  useLayoutEffect(() => {
+    if (!isOpen || !dropdownRef.current) return;
+
+    const parent = dropdownRef.current;
+    const parentRect = parent.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const dropdownWidth = 160; // w-40 = 10rem = 160px
+    const padding = 8;
+
+    // 检查向左展开是否会超出视口
+    const leftOverflow = parentRect.right - dropdownWidth - padding < 0;
+    // 检查向右展开是否会超出视口
+    const rightOverflow = parentRect.left + dropdownWidth + padding > viewportWidth;
+
+    if (leftOverflow && !rightOverflow) {
+      // 向右展开
+      setPositionStyle({ left: 0, right: 'auto' });
+    } else {
+      // 默认向左展开（从按钮右边缘）
+      setPositionStyle({ right: 0, left: 'auto' });
+    }
+  }, [dropdownRef, isOpen]);
+
+  return positionStyle;
+}
 
 /**
  * 排序选项类型
@@ -80,6 +118,9 @@ export function SortDropdown({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // 智能定位：根据可用空间决定向左或向右展开
+  const positionStyle = useDropdownPosition(dropdownRef, isOpen);
+
   /**
    * 点击外部关闭下拉菜单
    */
@@ -132,7 +173,7 @@ export function SortDropdown({
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        aria-label={t('vocabulary.sortBy')}
+        aria-label={t('vocabulary.sort.label')}
         type="button"
       >
         <ArrowUpDown size={14} className="text-gray-400" />
@@ -142,9 +183,10 @@ export function SortDropdown({
       {/* 下拉菜单 */}
       {isOpen && (
         <div
-          className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 overflow-hidden"
+          className="absolute mt-2 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 overflow-hidden"
+          style={positionStyle}
           role="listbox"
-          aria-label={t('vocabulary.sortOptions')}
+          aria-label={t('vocabulary.sort.options')}
         >
           {sortOptions.map((option) => (
             <button

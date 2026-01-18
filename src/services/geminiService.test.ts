@@ -11,6 +11,7 @@ describe('parseAIResponse', () => {
       pronunciation: '/test/',
       partOfSpeech: 'noun',
       usage: 'example',
+      mode: 'word',
     });
   });
 
@@ -22,6 +23,7 @@ describe('parseAIResponse', () => {
       pronunciation: '',
       partOfSpeech: '',
       usage: '',
+      mode: 'word',
     });
   });
 });

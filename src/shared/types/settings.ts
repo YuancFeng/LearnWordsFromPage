@@ -22,9 +22,79 @@ export type ThemeType = 'light' | 'dark' | 'system';
 /**
  * AI Provider 类型
  * - gemini: Google Gemini API (默认)
- * - openai-compatible: OpenAI 兼容 API (CLI Proxy, Ollama, etc.)
+ * - openai-compatible: OpenAI 兼容 API (CLI Proxy, 自定义端点等)
+ * - localhost: 本地模型 (Ollama, LM Studio, llama.cpp)
  */
-export type AIProviderType = 'gemini' | 'openai-compatible';
+export type AIProviderType = 'gemini' | 'openai-compatible' | 'localhost';
+
+/**
+ * 本地模型工具类型
+ * - ollama: Ollama (推荐，最易用)
+ * - lm-studio: LM Studio (图形界面)
+ * - llama-cpp: llama.cpp (高级用户)
+ * - other: 其他兼容工具
+ */
+export type LocalModelTool = 'ollama' | 'lm-studio' | 'llama-cpp' | 'other';
+
+/**
+ * 本地模型配置接口
+ */
+export interface LocalModelConfig {
+  /** 使用的本地模型工具 */
+  tool: LocalModelTool;
+  /** API 端点 URL */
+  endpoint: string;
+  /** 模型名称 */
+  modelName: string;
+}
+
+/**
+ * OpenAI 兼容 API 配置接口
+ * 用于保存 OpenAI 兼容模式的配置（切换 Provider 时不会丢失）
+ */
+export interface OpenAICompatibleConfig {
+  /** API 端点 URL */
+  endpoint: string;
+  /** 模型名称 */
+  modelName: string;
+}
+
+/**
+ * Gemini API 配置接口
+ * 用于保存 Gemini 模式的配置（切换 Provider 时不会丢失）
+ */
+export interface GeminiConfig {
+  /** 模型名称（可选，用于指定特定模型版本） */
+  modelName: string;
+}
+
+/**
+ * 各 Provider 的配置存储
+ * 切换 Provider 时保留之前的配置，方便用户切换回来时恢复
+ */
+export interface ProviderConfigs {
+  /** Gemini 配置 */
+  gemini: GeminiConfig;
+  /** OpenAI 兼容 API 配置 */
+  openaiCompatible: OpenAICompatibleConfig;
+  /** 本地模型配置 */
+  localhost: LocalModelConfig;
+}
+
+/**
+ * 默认 Gemini 配置
+ */
+export const DEFAULT_GEMINI_CONFIG: Readonly<GeminiConfig> = Object.freeze({
+  modelName: 'gemini-2.0-flash-lite',
+});
+
+/**
+ * 默认 OpenAI 兼容配置
+ */
+export const DEFAULT_OPENAI_COMPATIBLE_CONFIG: Readonly<OpenAICompatibleConfig> = Object.freeze({
+  endpoint: '',
+  modelName: '',
+});
 
 // ============================================================
 // Language Types (i18n)
@@ -108,8 +178,38 @@ export const THEME_OPTIONS: ReadonlyArray<{ value: ThemeType; label: string }> =
  */
 export const AI_PROVIDER_OPTIONS: ReadonlyArray<{ value: AIProviderType; label: string; description: string }> = Object.freeze([
   { value: 'gemini', label: 'Gemini', description: 'Google Gemini API' },
-  { value: 'openai-compatible', label: 'OpenAI 兼容', description: 'CLI Proxy / Ollama / 其他兼容 API' },
+  { value: 'localhost', label: '本地模型', description: 'Ollama / LM Studio / llama.cpp' },
+  { value: 'openai-compatible', label: 'OpenAI 兼容', description: '自定义 API 端点' },
 ]);
+
+/**
+ * 本地模型工具选项列表
+ */
+export const LOCAL_MODEL_TOOL_OPTIONS: ReadonlyArray<{ value: LocalModelTool; label: string; defaultEndpoint: string }> = Object.freeze([
+  { value: 'ollama', label: 'Ollama（推荐）', defaultEndpoint: 'http://localhost:11434' },
+  { value: 'lm-studio', label: 'LM Studio', defaultEndpoint: 'http://localhost:1234' },
+  { value: 'llama-cpp', label: 'llama.cpp', defaultEndpoint: 'http://localhost:8080' },
+  { value: 'other', label: '其他', defaultEndpoint: 'http://localhost:8000' },
+]);
+
+/**
+ * 默认本地模型配置
+ */
+export const DEFAULT_LOCAL_MODEL_CONFIG: Readonly<LocalModelConfig> = Object.freeze({
+  tool: 'ollama' as LocalModelTool,
+  endpoint: 'http://localhost:11434',
+  modelName: 'translategemma:12b', // 推荐：Google 翻译专用模型，速度快质量高
+});
+
+/**
+ * 默认 Provider 配置集合
+ * 注意：必须在 DEFAULT_LOCAL_MODEL_CONFIG 之后定义
+ */
+export const DEFAULT_PROVIDER_CONFIGS: Readonly<ProviderConfigs> = Object.freeze({
+  gemini: { ...DEFAULT_GEMINI_CONFIG },
+  openaiCompatible: { ...DEFAULT_OPENAI_COMPATIBLE_CONFIG },
+  localhost: { ...DEFAULT_LOCAL_MODEL_CONFIG },
+});
 
 // ============================================================
 // Settings Interface
@@ -198,6 +298,19 @@ export interface Settings {
    * @default 'auto'
    */
   targetLanguage: TargetLanguage | 'auto';
+
+  /**
+   * 本地模型配置
+   * 仅当 aiProvider 为 'localhost' 时使用
+   */
+  localModelConfig: LocalModelConfig;
+
+  /**
+   * 各 Provider 的配置存储
+   * 切换 Provider 时保留之前的配置，方便用户切换回来时恢复
+   * @since 1.1.0
+   */
+  providerConfigs: ProviderConfigs;
 }
 
 // ============================================================
@@ -224,6 +337,12 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
   customModelName: '',
   uiLanguage: 'auto',
   targetLanguage: 'auto',
+  localModelConfig: { ...DEFAULT_LOCAL_MODEL_CONFIG },
+  providerConfigs: {
+    gemini: { ...DEFAULT_GEMINI_CONFIG },
+    openaiCompatible: { ...DEFAULT_OPENAI_COMPATIBLE_CONFIG },
+    localhost: { ...DEFAULT_LOCAL_MODEL_CONFIG },
+  },
 });
 
 // ============================================================
@@ -245,7 +364,106 @@ export function isValidTheme(value: unknown): value is ThemeType {
  * @returns 是否为有效的 AIProviderType
  */
 export function isValidAIProvider(value: unknown): value is AIProviderType {
-  return value === 'gemini' || value === 'openai-compatible';
+  return value === 'gemini' || value === 'openai-compatible' || value === 'localhost';
+}
+
+/**
+ * 检查是否为有效的本地模型工具类型
+ * @param value - 待检查的值
+ * @returns 是否为有效的 LocalModelTool
+ */
+export function isValidLocalModelTool(value: unknown): value is LocalModelTool {
+  return value === 'ollama' || value === 'lm-studio' || value === 'llama-cpp' || value === 'other';
+}
+
+/**
+ * 检查是否为有效的本地模型配置
+ * @param value - 待检查的值
+ * @returns 是否为有效的 LocalModelConfig
+ */
+export function isValidLocalModelConfig(value: unknown): value is LocalModelConfig {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  const config = value as Record<string, unknown>;
+  return (
+    isValidLocalModelTool(config.tool) &&
+    typeof config.endpoint === 'string' &&
+    typeof config.modelName === 'string'
+  );
+}
+
+/**
+ * 检查是否为有效的 OpenAI 兼容配置
+ * @param value - 待检查的值
+ * @returns 是否为有效的 OpenAICompatibleConfig
+ */
+export function isValidOpenAICompatibleConfig(value: unknown): value is OpenAICompatibleConfig {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  const config = value as Record<string, unknown>;
+  return (
+    typeof config.endpoint === 'string' &&
+    typeof config.modelName === 'string'
+  );
+}
+
+/**
+ * 检查是否为有效的 Gemini 配置
+ * @param value - 待检查的值
+ * @returns 是否为有效的 GeminiConfig
+ */
+export function isValidGeminiConfig(value: unknown): value is GeminiConfig {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  const config = value as Record<string, unknown>;
+  return typeof config.modelName === 'string';
+}
+
+/**
+ * 检查是否为有效的 Provider 配置集合
+ * @param value - 待检查的值
+ * @returns 是否为有效的 ProviderConfigs
+ */
+export function isValidProviderConfigs(value: unknown): value is ProviderConfigs {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  const configs = value as Record<string, unknown>;
+  return (
+    isValidGeminiConfig(configs.gemini) &&
+    isValidOpenAICompatibleConfig(configs.openaiCompatible) &&
+    isValidLocalModelConfig(configs.localhost)
+  );
+}
+
+/**
+ * 合并 Provider 配置与默认值
+ * @param partial - 部分配置
+ * @returns 完整的 ProviderConfigs 对象
+ */
+export function mergeProviderConfigs(partial: Partial<ProviderConfigs> | null | undefined): ProviderConfigs {
+  if (!partial) {
+    return {
+      gemini: { ...DEFAULT_GEMINI_CONFIG },
+      openaiCompatible: { ...DEFAULT_OPENAI_COMPATIBLE_CONFIG },
+      localhost: { ...DEFAULT_LOCAL_MODEL_CONFIG },
+    };
+  }
+
+  return {
+    gemini: isValidGeminiConfig(partial.gemini)
+      ? partial.gemini
+      : { ...DEFAULT_GEMINI_CONFIG },
+    openaiCompatible: isValidOpenAICompatibleConfig(partial.openaiCompatible)
+      ? partial.openaiCompatible
+      : { ...DEFAULT_OPENAI_COMPATIBLE_CONFIG },
+    localhost: isValidLocalModelConfig(partial.localhost)
+      ? partial.localhost
+      : { ...DEFAULT_LOCAL_MODEL_CONFIG },
+  };
 }
 
 /**
@@ -316,7 +534,8 @@ export function isValidSettings(value: unknown): value is Settings {
     typeof settings.customApiEndpoint === 'string' &&
     typeof settings.customModelName === 'string' &&
     isValidUILanguageSetting(settings.uiLanguage) &&
-    isValidTargetLanguageSetting(settings.targetLanguage)
+    isValidTargetLanguageSetting(settings.targetLanguage) &&
+    (settings.localModelConfig === undefined || isValidLocalModelConfig(settings.localModelConfig))
   );
 }
 
@@ -333,7 +552,11 @@ export function isValidSettings(value: unknown): value is Settings {
  */
 export function mergeWithDefaults(partial: Partial<Settings> | null | undefined): Settings {
   if (!partial) {
-    return { ...DEFAULT_SETTINGS, blacklistUrls: [...DEFAULT_SETTINGS.blacklistUrls] };
+    return {
+      ...DEFAULT_SETTINGS,
+      blacklistUrls: [...DEFAULT_SETTINGS.blacklistUrls],
+      providerConfigs: mergeProviderConfigs(null),
+    };
   }
 
   return {
@@ -350,5 +573,9 @@ export function mergeWithDefaults(partial: Partial<Settings> | null | undefined)
     customModelName: typeof partial.customModelName === 'string' ? partial.customModelName : DEFAULT_SETTINGS.customModelName,
     uiLanguage: isValidUILanguageSetting(partial.uiLanguage) ? partial.uiLanguage : DEFAULT_SETTINGS.uiLanguage,
     targetLanguage: isValidTargetLanguageSetting(partial.targetLanguage) ? partial.targetLanguage : DEFAULT_SETTINGS.targetLanguage,
+    localModelConfig: isValidLocalModelConfig(partial.localModelConfig)
+      ? partial.localModelConfig
+      : { ...DEFAULT_LOCAL_MODEL_CONFIG },
+    providerConfigs: mergeProviderConfigs(partial.providerConfigs),
   };
 }

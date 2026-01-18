@@ -11,7 +11,7 @@ import React from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../i18n';
-import { ShadowApp, type UIState, type UICallbacks, type AnalysisResult, type ToastState } from './components/ShadowApp';
+import { ShadowApp, type UIState, type UICallbacks, type AnalysisResult, type ToastState, type PageTranslationState } from './components/ShadowApp';
 import { SHADOW_STYLES } from './styles/reset';
 import type { ToastType } from './components/Toast';
 
@@ -49,6 +49,7 @@ let currentState: UIState = {
   selectedText: '',
   isClosing: false,
   toast: null,
+  pageTranslation: null,
 };
 
 /** Toast ID 计数器 */
@@ -64,7 +65,7 @@ let currentCallbacks: UICallbacks = {};
 // Re-export Types
 // ============================================
 
-export type { UIState, UICallbacks, AnalysisResult, ToastState };
+export type { UIState, UICallbacks, AnalysisResult, ToastState, PageTranslationState };
 export type { ToastType };
 
 // ============================================
@@ -274,6 +275,7 @@ export function removeUI(): void {
     selectedText: '',
     isClosing: false,
     toast: null,
+    pageTranslation: null,
   };
 
   console.log('[LingoRecall] Shadow DOM removed');
@@ -316,6 +318,22 @@ export function showButton(
     analysisResult: null,
     analysisError: null,
     isClosing: false,
+  });
+}
+
+/**
+ * Update button/popup position without clearing state
+ * Used for scroll/zoom position updates to prevent losing analysis results
+ *
+ * @param position - New screen coordinates
+ */
+export function updatePosition(position: { x: number; y: number }): void {
+  if (!currentState.buttonPosition) {
+    return; // No UI to update
+  }
+  // Only update position, preserve all other state (analysis result, loading state, etc.)
+  updateUI({
+    buttonPosition: position,
   });
 }
 
@@ -408,6 +426,7 @@ export function hideUI(): void {
       isAnalyzing: false,
       analysisResult: null,
       analysisError: null,
+      // Keep pageTranslation state
     };
     renderUI();
     hideTimeoutId = null;
@@ -438,6 +457,18 @@ export function showToast(message: string, type: ToastType = 'info'): void {
 export function dismissToast(): void {
   updateUI({
     toast: null,
+  });
+}
+
+/**
+ * Update page translation state
+ * Used by the page translator module to show progress
+ *
+ * @param state - Page translation state
+ */
+export function updatePageTranslation(state: PageTranslationState | null): void {
+  updateUI({
+    pageTranslation: state,
   });
 }
 

@@ -37,6 +37,16 @@ export const MessageTypes = {
 
   // 设置相关 - Story 4.2
   SETTINGS_CHANGED: 'SETTINGS_CHANGED',
+
+  // 全页翻译相关
+  TRANSLATE_PAGE_SEGMENT: 'TRANSLATE_PAGE_SEGMENT',
+
+  // 本地模型相关
+  TEST_LOCAL_CONNECTION: 'TEST_LOCAL_CONNECTION',
+  GET_LOCAL_MODELS: 'GET_LOCAL_MODELS',
+
+  // API 测试相关
+  TEST_API_CONNECTION: 'TEST_API_CONNECTION',
 } as const;
 
 export type MessageType = typeof MessageTypes[keyof typeof MessageTypes];
@@ -217,6 +227,115 @@ export interface SettingsChangedPayload {
 }
 
 // ============================================================
+// Full Page Translation Payloads
+// ============================================================
+
+/**
+ * 翻译页面文本段落请求
+ * 用于全页翻译功能，分段翻译以提高性能
+ */
+export interface TranslatePageSegmentPayload {
+  /** 待翻译的文本段落列表 */
+  texts: string[];
+  /** 目标翻译语言（可选，默认使用设置中的语言） */
+  targetLanguage?: string;
+}
+
+/**
+ * 翻译页面文本段落响应
+ */
+export interface TranslatePageSegmentResult {
+  /** 翻译后的文本列表（与输入顺序对应） */
+  translations: string[];
+}
+
+// ============================================================
+// Local Model Connection Payloads
+// ============================================================
+
+import type { LocalModelTool } from '../types/settings';
+
+/**
+ * 测试本地模型连接请求
+ */
+export interface TestLocalConnectionPayload {
+  /** API 端点 */
+  endpoint: string;
+  /** 模型名称 */
+  modelName: string;
+  /** 工具类型 */
+  tool: LocalModelTool;
+}
+
+/**
+ * 测试本地模型连接响应
+ */
+export interface TestLocalConnectionResult {
+  /** 是否成功 */
+  success: boolean;
+  /** 响应延迟（毫秒） */
+  latencyMs?: number;
+  /** 可用模型列表 */
+  availableModels?: string[];
+  /** 错误信息 */
+  error?: string;
+  /** 错误代码 */
+  errorCode?: 'CONNECTION_REFUSED' | 'TIMEOUT' | 'INVALID_RESPONSE' | 'MODEL_NOT_FOUND';
+}
+
+/**
+ * 获取本地模型列表请求
+ */
+export interface GetLocalModelsPayload {
+  /** API 端点 */
+  endpoint: string;
+  /** 工具类型 */
+  tool: LocalModelTool;
+}
+
+/**
+ * 获取本地模型列表响应
+ */
+export interface GetLocalModelsResult {
+  /** 模型名称列表 */
+  models: string[];
+}
+
+// ============================================================
+// API Connection Test Payloads
+// ============================================================
+
+import type { AIProviderType } from '../types/settings';
+
+/**
+ * 测试 API 连接请求
+ */
+export interface TestApiConnectionPayload {
+  /** AI 服务提供商类型 */
+  provider: AIProviderType;
+  /** API Key（Gemini 必需，OpenAI 兼容可选） */
+  apiKey?: string;
+  /** 自定义 API 端点（OpenAI 兼容必需） */
+  customEndpoint?: string;
+  /** 自定义模型名称 */
+  customModel?: string;
+}
+
+/**
+ * 测试 API 连接响应
+ */
+export interface TestApiConnectionResult {
+  /** 是否成功 */
+  success: boolean;
+  /** 响应延迟（毫秒） */
+  latencyMs?: number;
+  /** 错误信息 */
+  error?: string;
+  /** 错误代码 */
+  errorCode?: 'API_KEY_INVALID' | 'ENDPOINT_ERROR' | 'TIMEOUT' | 'NETWORK_ERROR' | 'RATE_LIMIT' | 'UNKNOWN';
+}
+
+// ============================================================
 // Payload Type Mapping
 // ============================================================
 
@@ -234,6 +353,10 @@ export type PayloadMap = {
   [MessageTypes.UPDATE_BADGE]: UpdateBadgePayload;
   [MessageTypes.REVIEW_WORD]: ReviewWordPayload;
   [MessageTypes.SETTINGS_CHANGED]: SettingsChangedPayload;
+  [MessageTypes.TRANSLATE_PAGE_SEGMENT]: TranslatePageSegmentPayload;
+  [MessageTypes.TEST_LOCAL_CONNECTION]: TestLocalConnectionPayload;
+  [MessageTypes.GET_LOCAL_MODELS]: GetLocalModelsPayload;
+  [MessageTypes.TEST_API_CONNECTION]: TestApiConnectionPayload;
 };
 
 // ============================================================
@@ -254,6 +377,10 @@ export type ResponseDataMap = {
   [MessageTypes.UPDATE_BADGE]: void;
   [MessageTypes.REVIEW_WORD]: ReviewWordResult;
   [MessageTypes.SETTINGS_CHANGED]: void;
+  [MessageTypes.TRANSLATE_PAGE_SEGMENT]: TranslatePageSegmentResult;
+  [MessageTypes.TEST_LOCAL_CONNECTION]: TestLocalConnectionResult;
+  [MessageTypes.GET_LOCAL_MODELS]: GetLocalModelsResult;
+  [MessageTypes.TEST_API_CONNECTION]: TestApiConnectionResult;
 };
 
 // ============================================================

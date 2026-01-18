@@ -101,7 +101,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
     return (
       <div className="flex flex-col items-center justify-center p-6 min-h-[300px]">
         <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-gray-500">{t('common.loading')}</p>
+        <p className="text-gray-500 dark:text-gray-400">{t('common.loading')}</p>
       </div>
     );
   }
@@ -113,7 +113,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
         <span className="text-4xl mb-4" role="img" aria-label={t('common.error')}>
           😕
         </span>
-        <p className="text-gray-500 mb-4">{error}</p>
+        <p className="text-gray-500 dark:text-gray-400 mb-4">{error}</p>
         <button
           onClick={onBack}
           className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
@@ -158,7 +158,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={onBack}
-          className="text-gray-500 hover:text-gray-700 transition-colors p-1"
+          className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors p-1"
           type="button"
           aria-label={t('common.back')}
         >
@@ -178,7 +178,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
         </button>
 
         {/* 进度显示 - Story 3.3 AC3 */}
-        <span className="text-gray-500 text-sm font-medium">
+        <span className="text-gray-500 dark:text-gray-400 text-sm font-medium">
           {currentIndex + 1} / {dueWords.length}
         </span>
 
@@ -187,7 +187,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
       </div>
 
       {/* 进度条 */}
-      <div className="h-1 bg-gray-200 rounded-full mb-6 overflow-hidden">
+      <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full mb-6 overflow-hidden">
         <div
           className="h-full bg-blue-500 rounded-full transition-all duration-300"
           style={{ width: `${((currentIndex + 1) / dueWords.length) * 100}%` }}
@@ -209,7 +209,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
 
       {/* 底部提示 */}
       {!isFlipped && (
-        <p className="text-center text-gray-400 text-xs mt-4">
+        <p className="text-center text-gray-400 dark:text-gray-500 text-xs mt-4">
           {t('review.clickToReveal')}
         </p>
       )}

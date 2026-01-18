@@ -19,7 +19,7 @@ describe('SortDropdown', () => {
   it('renders button with current sort label', () => {
     render(<SortDropdown {...defaultProps} value="recent" />);
 
-    expect(screen.getByRole('button', { name: /排序方式/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Sort by/i })).toBeInTheDocument();
     expect(screen.getByText('Most Recent')).toBeInTheDocument();
   });
 
@@ -38,7 +38,7 @@ describe('SortDropdown', () => {
   it('opens dropdown menu when button is clicked', () => {
     render(<SortDropdown {...defaultProps} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /排序方式/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Sort by/i }));
 
     expect(screen.getByRole('listbox')).toBeInTheDocument();
     expect(screen.getAllByRole('option')).toHaveLength(3);
@@ -47,7 +47,7 @@ describe('SortDropdown', () => {
   it('shows all sort options in dropdown', () => {
     render(<SortDropdown {...defaultProps} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /排序方式/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Sort by/i }));
 
     expect(screen.getAllByText('Most Recent').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Oldest First')).toBeInTheDocument();
@@ -58,7 +58,7 @@ describe('SortDropdown', () => {
     const onChange = vi.fn();
     render(<SortDropdown {...defaultProps} onChange={onChange} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /排序方式/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Sort by/i }));
     fireEvent.click(screen.getByRole('option', { name: /Oldest First/i }));
 
     expect(onChange).toHaveBeenCalledWith('oldest');
@@ -67,7 +67,7 @@ describe('SortDropdown', () => {
   it('closes dropdown after selection', () => {
     render(<SortDropdown {...defaultProps} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /排序方式/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Sort by/i }));
     expect(screen.getByRole('listbox')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('option', { name: /Alphabetical/i }));
@@ -78,7 +78,7 @@ describe('SortDropdown', () => {
   it('highlights currently selected option', () => {
     render(<SortDropdown {...defaultProps} value="alphabetical" />);
 
-    fireEvent.click(screen.getByRole('button', { name: /排序方式/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Sort by/i }));
 
     const alphabeticalOption = screen.getByRole('option', { name: /Alphabetical/i });
     expect(alphabeticalOption).toHaveAttribute('aria-selected', 'true');
@@ -90,7 +90,7 @@ describe('SortDropdown', () => {
     const onChange = vi.fn();
     render(<SortDropdown {...defaultProps} onChange={onChange} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /排序方式/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Sort by/i }));
     fireEvent.click(screen.getByRole('option', { name: /Oldest First/i }));
 
     expect(onChange).toHaveBeenCalledWith('oldest');
@@ -99,7 +99,7 @@ describe('SortDropdown', () => {
   it('closes dropdown after selection', () => {
     render(<SortDropdown {...defaultProps} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /排序方式/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Sort by/i }));
     expect(screen.getByRole('listbox')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('option', { name: /Alphabetical/i }));
@@ -115,7 +115,7 @@ describe('SortDropdown', () => {
       </div>
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /排序方式/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Sort by/i }));
     expect(screen.getByRole('listbox')).toBeInTheDocument();
 
     fireEvent.mouseDown(screen.getByTestId('outside'));
@@ -126,7 +126,7 @@ describe('SortDropdown', () => {
   it('closes dropdown when Escape key is pressed', () => {
     render(<SortDropdown {...defaultProps} />);
 
-    const button = screen.getByRole('button', { name: /排序方式/i });
+    const button = screen.getByRole('button', { name: /Sort by/i });
     fireEvent.click(button);
     expect(screen.getByRole('listbox')).toBeInTheDocument();
 
@@ -138,7 +138,7 @@ describe('SortDropdown', () => {
   it('does not open dropdown when disabled', () => {
     render(<SortDropdown {...defaultProps} disabled={true} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /排序方式/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Sort by/i }));
 
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
   });
@@ -146,7 +146,7 @@ describe('SortDropdown', () => {
   it('highlights currently selected option', () => {
     render(<SortDropdown {...defaultProps} value="alphabetical" />);
 
-    fireEvent.click(screen.getByRole('button', { name: /排序方式/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Sort by/i }));
 
     const alphabeticalOption = screen.getByRole('option', { name: /Alphabetical/i });
     expect(alphabeticalOption).toHaveAttribute('aria-selected', 'true');

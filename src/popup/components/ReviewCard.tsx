@@ -63,7 +63,7 @@ export function ReviewCard({
       >
         {/* 卡片正面 */}
         <div
-          className="absolute w-full h-full bg-white rounded-lg shadow-lg p-6 flex flex-col items-center justify-center"
+          className="absolute w-full h-full bg-white dark:bg-gray-800 rounded-lg shadow-lg dark:shadow-gray-900/50 p-6 flex flex-col items-center justify-center border border-gray-100 dark:border-gray-700"
           style={{ backfaceVisibility: 'hidden' }}
         >
           <span className="text-3xl font-bold text-gray-800 dark:text-gray-100 text-center break-words max-w-full">
@@ -76,7 +76,7 @@ export function ReviewCard({
               e.stopPropagation();
               onFlip();
             }}
-            className="mt-4 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400 rounded-md hover:bg-blue-100 dark:hover:bg-blue-900/50 active:bg-blue-200 transition-colors"
+            className="mt-4 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400 rounded-md hover:bg-blue-100 dark:hover:bg-blue-900/50 active:bg-blue-200 dark:active:bg-blue-900/70 transition-colors"
           >
             {t('review.showAnswer')}
           </button>
@@ -84,7 +84,7 @@ export function ReviewCard({
 
         {/* 卡片背面 */}
         <div
-          className="absolute w-full h-full bg-white rounded-lg shadow-lg p-4 overflow-hidden"
+          className="absolute w-full h-full bg-white dark:bg-gray-800 rounded-lg shadow-lg dark:shadow-gray-900/50 p-4 overflow-hidden border border-gray-100 dark:border-gray-700"
           style={{
             backfaceVisibility: 'hidden',
             transform: 'rotateY(180deg)',
@@ -95,32 +95,32 @@ export function ReviewCard({
             <div className="flex-1 overflow-y-auto min-h-0">
               {/* 单词和发音 */}
               <div className="mb-2">
-                <h3 className="text-xl font-bold text-gray-800 break-words">
+                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 break-words">
                   {word.text}
                 </h3>
                 {word.pronunciation && (
-                  <p className="text-gray-500 text-sm">{word.pronunciation}</p>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">{word.pronunciation}</p>
                 )}
               </div>
 
               {/* 释义 */}
-              <p className="text-base text-gray-700 mb-3">{word.meaning}</p>
+              <p className="text-base text-gray-700 dark:text-gray-300 mb-3">{word.meaning}</p>
 
               {/* 原文语境 */}
-              <div className="p-2 bg-gray-50 rounded text-sm text-gray-600">
+              <div className="p-2 bg-gray-50 dark:bg-gray-700/50 rounded text-sm text-gray-600 dark:text-gray-300">
                 <p className="italic leading-relaxed">
                   &ldquo;{word.contextBefore}
-                  <span className="font-bold text-blue-600">{word.text}</span>
+                  <span className="font-bold text-blue-600 dark:text-blue-400">{word.text}</span>
                   {word.contextAfter}&rdquo;
                 </p>
-                <p className="text-xs text-gray-400 mt-1 truncate">
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 truncate">
                   — {word.sourceTitle}
                 </p>
               </div>
             </div>
 
             {/* 操作按钮 - Story 3.3 AC2: 翻转后显示 */}
-            <div className="flex gap-3 mt-3 pt-2 border-t border-gray-100">
+            <div className="flex gap-3 mt-3 pt-2 border-t border-gray-100 dark:border-gray-700">
               <button
                 onClick={(e) => {
                   e.stopPropagation();

@@ -37,7 +37,21 @@ import {
   showToast,
   dismissToast,
   setCallbacks,
+  updatePageTranslation,
 } from './shadow';
+
+// 全页翻译功能
+import {
+  translatePage,
+  toggleTranslation,
+  restoreOriginal,
+  isPageTranslated,
+  isShowingTranslation,
+  setProgressCallback,
+  getTranslationState,
+  initSpaNavigationListener,
+  type TranslationState,
+} from './pageTranslator';
 
 import { ErrorCode } from '../shared/types/errors';
 
@@ -48,10 +62,16 @@ import {
   type SourceLocation,
 } from './extraction';
 
+// 上下文提取功能
+import { extractContext } from './context';
+
 // Story 2.4: 高亮定位功能
 import { locateTextByXPath } from './xpath';
 import { findTextByContext } from './textMatcher';
 import { highlightAndScroll, clearHighlights } from './highlight';
+
+// 智能页面类型检测，用于生成精确的定位失败提示
+import { detectPageType, generateLocationFailureMessage } from './pageDetector';
 
 console.log('[LingoRecall] Content script loaded');
 
@@ -212,7 +232,11 @@ registerHandler(MessageTypes.HIGHLIGHT_WORD, async (message) => {
   if (isTopFrame) {
     // 延迟显示 Toast，给其他 iframe 时间响应
     setTimeout(() => {
-      showToast(i18n.t('analysis.toast.cannotLocate'), 'warning');
+      // 使用智能页面检测生成具体的失败原因和建议
+      const pageInfo = detectPageType();
+      const message = generateLocationFailureMessage(pageInfo);
+      console.log(`[LingoRecall] Page type detected: ${pageInfo.type} (${pageInfo.name})`);
+      showToast(message, 'warning');
     }, 500);
   }
 
@@ -404,15 +428,76 @@ interface SelectionInfo {
 let currentSelection: SelectionInfo | null = null;
 let currentAnalysisResult: AnalyzeWordResult | null = null;
 
+// ============================================================
+// Position Update for Scroll/Zoom
+// ============================================================
+
+// 注意：弹窗使用 position: fixed，滚动时不需要更新位置
+// 弹窗会固定在屏幕上的位置，不随页面滚动移动
+
 /**
- * Calculate button position from selection
- * Places button at selection top-right with 8px offset
+ * 滚动事件处理器
+ * 弹窗使用 position: fixed，滚动时不需要更新位置
+ * 弹窗会固定在屏幕上的位置，不随页面滚动移动
  */
-function getButtonPosition(range: Range): { x: number; y: number } {
-  const rect = range.getBoundingClientRect();
+function handleScroll(): void {
+  // 弹窗使用 position: fixed，无需在滚动时更新位置
+  // 这样弹窗会保持在屏幕上的固定位置
+}
+
+/**
+ * resize 事件处理器（包括 zoom 变化）
+ * 弹窗使用 position: fixed，保持在屏幕固定位置
+ * 只在窗口大小变化时检查边界，避免弹窗超出视口
+ */
+function handleResize(): void {
+  // 弹窗使用 position: fixed，resize 时不需要更新位置
+  // 弹窗会保持在屏幕上的固定位置
+}
+
+/**
+ * visualViewport 变化处理器
+ * 弹窗使用 position: fixed，保持在屏幕固定位置
+ */
+function handleVisualViewportChange(): void {
+  // 弹窗使用 position: fixed，无需更新位置
+}
+
+/**
+ * Calculate button position from mouse event
+ * 将按钮放置在鼠标释放位置附近
+ * 这样无论用户从哪个方向选择文本，按钮都会出现在鼠标位置
+ */
+function getButtonPositionFromMouse(event: MouseEvent): { x: number; y: number } {
   return {
-    x: rect.right + BUTTON_OFFSET_PX,
-    y: rect.top - BUTTON_OFFSET_PX,
+    x: event.clientX + BUTTON_OFFSET_PX,
+    y: event.clientY - BUTTON_OFFSET_PX,
+  };
+}
+
+/**
+ * Calculate button position from range (降级方案)
+ * 当没有鼠标事件时使用，放置在选区末尾
+ */
+function getButtonPositionFromRange(range: Range): { x: number; y: number } {
+  // 获取选区的所有矩形（每行一个矩形）
+  const rects = range.getClientRects();
+
+  if (rects.length === 0) {
+    // 降级：使用整体边界框
+    const rect = range.getBoundingClientRect();
+    return {
+      x: rect.right + BUTTON_OFFSET_PX,
+      y: rect.top - BUTTON_OFFSET_PX,
+    };
+  }
+
+  // 使用最后一个矩形（选区末尾所在行）
+  const lastRect = rects[rects.length - 1];
+
+  return {
+    x: lastRect.right + BUTTON_OFFSET_PX,
+    y: lastRect.top - BUTTON_OFFSET_PX,
   };
 }
 
@@ -442,6 +527,10 @@ function handleMouseUp(event: MouseEvent): void {
   if (isClickInsideShadow(event)) {
     return;
   }
+
+  // 保存鼠标位置，用于在 setTimeout 中使用
+  const mouseX = event.clientX;
+  const mouseY = event.clientY;
 
   // Small delay to ensure selection is finalized
   setTimeout(() => {
@@ -483,7 +572,11 @@ function handleMouseUp(event: MouseEvent): void {
     }
 
     const range = selection.getRangeAt(0);
-    const position = getButtonPosition(range);
+    // 使用鼠标释放位置来定位按钮
+    const position = {
+      x: mouseX + BUTTON_OFFSET_PX,
+      y: mouseY - BUTTON_OFFSET_PX,
+    };
 
     // Extract source location for XPath positioning (Story 1.5)
     const sourceLocation = extractSourceLocation(selection);
@@ -548,7 +641,8 @@ function handleKeyUp(event: KeyboardEvent): void {
   }
 
   const range = selection.getRangeAt(0);
-  const position = getButtonPosition(range);
+  // 键盘选择时使用 range 位置作为降级方案
+  const position = getButtonPositionFromRange(range);
 
   // Extract source location for XPath positioning (Story 1.5)
   const sourceLocation = extractSourceLocation(selection);
@@ -782,27 +876,169 @@ function handleClose(): void {
   currentAnalysisResult = null;
 }
 
+// ============================================================
+// Full Page Translation Handlers
+// ============================================================
+
+/**
+ * Handle keyboard shortcut for full page translation
+ * Option+A (Alt+A) triggers full page translation
+ */
+function handleKeyboardShortcut(event: KeyboardEvent): void {
+  // Debug: Log all key events with Alt/Option key
+  if (event.altKey) {
+    console.log('[LingoRecall] Alt key detected, key:', event.key, 'code:', event.code);
+  }
+
+  // Check for Option+A (Alt+A) on Mac, or Alt+A on Windows/Linux
+  // On Mac, Option+A may produce special characters like 'å', so we also check for code
+  if (event.altKey && (event.key === 'a' || event.key === 'A' || event.key === 'å' || event.code === 'KeyA')) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    console.log('[LingoRecall] Full page translation shortcut triggered (Option+A)');
+    handleFullPageTranslation();
+  }
+}
+
+/**
+ * Handle full page translation
+ * Triggered by Option+A keyboard shortcut
+ */
+async function handleFullPageTranslation(): Promise<void> {
+  const state = getTranslationState();
+
+  // If already translated, toggle between original and translated
+  if (state === 'translated') {
+    handleToggleTranslation();
+    return;
+  }
+
+  // If currently translating, ignore
+  if (state === 'translating') {
+    console.log('[LingoRecall] Translation already in progress');
+    return;
+  }
+
+  // Start translation
+  console.log('[LingoRecall] Starting full page translation');
+
+  // 立即显示加载状态，让用户知道翻译已开始
+  updatePageTranslation({
+    state: 'translating',
+    progress: 0,
+    total: 0,
+    showingTranslation: false,
+  });
+
+  // Get target language from settings
+  const targetLanguage = currentSettings.targetLanguage === 'auto'
+    ? 'zh-CN' // Default to Simplified Chinese if auto
+    : currentSettings.targetLanguage;
+
+  try {
+    const result = await translatePage(targetLanguage as import('../shared/types/settings').TargetLanguage);
+
+    if (result.success) {
+      if (result.translatedCount > 0) {
+        showToast(
+          i18n.t('pageTranslation.success', {
+            count: result.translatedCount,
+            defaultValue: `Translated ${result.translatedCount} text segments`,
+          }),
+          'success'
+        );
+      } else {
+        showToast(
+          i18n.t('pageTranslation.noContent', 'No translatable content found'),
+          'info'
+        );
+      }
+    } else {
+      showToast(
+        result.error || i18n.t('pageTranslation.failed', 'Translation failed'),
+        'error'
+      );
+    }
+  } catch (error) {
+    // 更好地处理错误信息
+    let errorMessage: string;
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'object' && error !== null) {
+      const errObj = error as Record<string, unknown>;
+      errorMessage = errObj.message as string || errObj.error as string || JSON.stringify(error);
+    } else {
+      errorMessage = String(error) || 'Unknown error';
+    }
+    console.error('[LingoRecall] Full page translation error:', errorMessage);
+
+    // 清除翻译状态
+    updatePageTranslation(null);
+
+    showToast(
+      errorMessage || i18n.t('pageTranslation.failed', 'Translation failed'),
+      'error'
+    );
+  }
+}
+
+/**
+ * Handle toggle between original and translated text
+ */
+function handleToggleTranslation(): void {
+  toggleTranslation();
+
+  // Update UI state
+  updatePageTranslation({
+    state: 'translated',
+    progress: 0,
+    total: 0,
+    showingTranslation: isShowingTranslation(),
+  });
+}
+
+/**
+ * Handle restore original text
+ */
+function handleRestoreOriginal(): void {
+  restoreOriginal();
+
+  // Clear translation state
+  updatePageTranslation(null);
+
+  showToast(
+    i18n.t('pageTranslation.restored', 'Original text restored'),
+    'info'
+  );
+}
+
+/**
+ * Handle translation bar close
+ */
+function handleTranslationBarClose(): void {
+  // Just hide the bar, don't restore original text
+  updatePageTranslation(null);
+}
+
 /**
  * Get surrounding context for selected text
  * Returns up to 100 characters before and after selection
+ * 使用 extractContext 函数确保获取的上下文来自紧凑的语义容器，
+ * 避免包含不相关的页面元素（如 Twitter 的互动数据等）
  */
 function getSelectionContext(range: Range): string {
   try {
-    const container = range.commonAncestorContainer;
-    const textContent = container.textContent || '';
     const selectedText = range.toString();
 
-    // Find selection position in text
-    const startOffset = textContent.indexOf(selectedText);
-    if (startOffset === -1) {
-      return selectedText;
-    }
+    // 使用 extractContext 获取更精确的上下文
+    // 它会优先选择较小的语义容器（如 <p>、<span>），避免大容器（如 <article>）
+    const contextInfo = extractContext(range, 100);
 
-    // Get surrounding context
-    const contextStart = Math.max(0, startOffset - 100);
-    const contextEnd = Math.min(textContent.length, startOffset + selectedText.length + 100);
+    // 组合上下文
+    const context = `${contextInfo.contextBefore}${selectedText}${contextInfo.contextAfter}`;
 
-    return textContent.slice(contextStart, contextEnd).trim();
+    return context.trim() || selectedText;
   } catch {
     return range.toString();
   }
@@ -1021,7 +1257,24 @@ async function init(): Promise<void> {
     onSave: handleSave,
     onClose: handleClose,
     onToastClose: dismissToast,
+    onToggleTranslation: handleToggleTranslation,
+    onRestoreOriginal: handleRestoreOriginal,
+    onTranslationBarClose: handleTranslationBarClose,
   });
+
+  // Set up page translation progress callback
+  setProgressCallback((progress, total, state) => {
+    updatePageTranslation({
+      state,
+      progress,
+      total,
+      showingTranslation: isShowingTranslation(),
+    });
+  });
+
+  // Initialize SPA navigation listener to clear translation state on page navigation
+  // This prevents translated text from being reapplied to new pages in SPAs like Twitter
+  initSpaNavigationListener();
 
   // Set up selection event listeners
   // 使用 bubble phase (false) 而不是 capture phase (true)
@@ -1029,6 +1282,23 @@ async function init(): Promise<void> {
   document.addEventListener('mouseup', handleMouseUp, false);
   document.addEventListener('keyup', handleKeyUp, false);
   document.addEventListener('click', handleDocumentClick, false);
+
+  // Set up keyboard shortcut listener for full page translation (Option+A)
+  document.addEventListener('keydown', handleKeyboardShortcut, false);
+  console.log('[LingoRecall] Keyboard shortcut listener registered (Option+A / Alt+A for full page translation)');
+
+  // Set up scroll and resize listeners for position updates (fix drift issue)
+  // 使用 passive: true 提高滚动性能
+  window.addEventListener('scroll', handleScroll, { passive: true });
+  window.addEventListener('resize', handleResize, { passive: true });
+
+  // 监听 visualViewport 变化（用于检测 pinch-zoom 等）
+  // 注意：弹窗使用 position: fixed，这些事件处理器目前不做任何操作
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', handleVisualViewportChange);
+    window.visualViewport.addEventListener('scroll', handleVisualViewportChange);
+  }
+
   mark('Event listeners attached');
 
   // Story 1.3 + 1.5 已实现:
@@ -1039,8 +1309,9 @@ async function init(): Promise<void> {
   mark(`Initialization complete (total: ${loadTime.toFixed(2)}ms)`);
 
   // Performance check per Story 1.3 requirement
+  // 使用 console.log 而非 console.warn，避免在 Chrome 扩展错误面板显示
   if (loadTime > 100) {
-    console.warn(`[LingoRecall] Slow initialization: ${loadTime.toFixed(2)}ms (target: <100ms) - check detailed timing above`);
+    console.log(`[LingoRecall] Initialization took ${loadTime.toFixed(2)}ms (target: <100ms) - check detailed timing above`);
   }
 
   // 如果初始设置加载超时，异步加载完整设置
@@ -1088,7 +1359,8 @@ if (document.readyState === 'loading') {
 export {
   init,
   testMessaging,
-  getButtonPosition,
+  getButtonPositionFromMouse,
+  getButtonPositionFromRange,
   isValidSelection,
   // Story 4.3: Blacklist functions
   checkBlacklist,

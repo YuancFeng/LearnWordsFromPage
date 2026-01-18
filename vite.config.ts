@@ -101,7 +101,7 @@ export default defineConfig(({ mode }) => {
   }
 
   if (buildTarget === 'background') {
-    // 单独构建 background script
+    // 单独构建 background 主脚本 (background-main.js)
     return {
       ...baseConfig,
       mode: 'production',
@@ -114,7 +114,7 @@ export default defineConfig(({ mode }) => {
           entry: path.resolve(__dirname, 'src/background/index.ts'),
           name: 'LingoRecallBackground',
           formats: ['iife'],
-          fileName: () => 'background.js',
+          fileName: () => 'background-main.js',
         },
         rollupOptions: {
           output: {
@@ -127,7 +127,33 @@ export default defineConfig(({ mode }) => {
     };
   }
 
-  // 默认：构建 popup (可以使用 ESM)
+  if (buildTarget === 'sw-wrapper') {
+    // 构建 Service Worker wrapper 脚本 (background.js)
+    // 这个 wrapper 提供更好的错误处理和调试能力
+    return {
+      ...baseConfig,
+      mode: 'production',
+      define: sharedDefine,
+      build: {
+        outDir: 'dist',
+        emptyOutDir: false,
+        minify: 'esbuild',
+        lib: {
+          entry: path.resolve(__dirname, 'src/background/sw-wrapper.ts'),
+          name: 'LingoRecallSWWrapper',
+          formats: ['iife'],
+          fileName: () => 'background.js',
+        },
+        rollupOptions: {
+          output: {
+            inlineDynamicImports: true,
+          },
+        },
+      },
+    };
+  }
+
+  // 默认：构建 popup 和 options (可以使用 ESM)
   return {
     ...baseConfig,
     build: {
@@ -136,6 +162,7 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         input: {
           popup: path.resolve(__dirname, 'popup.html'),
+          options: path.resolve(__dirname, 'options.html'),
         },
         output: {
           entryFileNames: 'assets/[name]-[hash].js',

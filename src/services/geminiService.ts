@@ -11,7 +11,10 @@ import {
   buildWordAnalysisPrompt as buildWordPrompt,
   buildTranslationPrompt as buildTranslatePrompt,
   getFallbackMeaningMessage,
+  buildBatchTranslationPrompt,
+  parseBatchTranslationResponse,
 } from './promptTemplates';
+import { trackUsage } from './usageService';
 
 /**
  * 分析模式类型
@@ -216,6 +219,18 @@ export async function analyzeWord(
     const response = result.response;
     const text = response.text();
 
+    // 追踪 token 使用量 (Gemini API 提供 usageMetadata)
+    const usageMetadata = response.usageMetadata;
+    if (usageMetadata) {
+      const inputTokens = usageMetadata.promptTokenCount || 0;
+      const outputTokens = usageMetadata.candidatesTokenCount || 0;
+      const actualModelName = modelName || DEFAULT_MODEL;
+      // 异步追踪，不阻塞主流程
+      trackUsage(inputTokens, outputTokens, actualModelName).catch((err) => {
+        console.warn('[LingoRecall Usage] Failed to track Gemini usage:', err);
+      });
+    }
+
     const elapsed = Date.now() - startTime;
     console.log(`[LingoRecall] AI response in ${elapsed}ms (mode: ${mode}, lang: ${targetLanguage})`);
 
@@ -246,6 +261,74 @@ export async function analyzeWord(
     }
 
     throw error;
+  }
+}
+
+/**
+ * 批量翻译文本
+ * 用于全页翻译功能
+ *
+ * @param texts - 待翻译的文本数组
+ * @param targetLanguage - 目标翻译语言
+ * @param apiKey - Google AI API Key
+ * @param modelName - 可选模型名称
+ * @returns 翻译后的文本数组
+ */
+export async function translateBatchGemini(
+  texts: string[],
+  targetLanguage: TargetLanguage,
+  apiKey: string,
+  modelName?: string
+): Promise<string[]> {
+  if (texts.length === 0) {
+    return [];
+  }
+
+  try {
+    const model = getModel(apiKey, modelName);
+    const prompt = buildBatchTranslationPrompt(texts, targetLanguage);
+
+    // 批量翻译可能需要更长时间
+    const timeout = RESPONSE_TIMEOUT_MS * 5;
+
+    const result = await withTimeout(
+      model.generateContent(prompt),
+      timeout,
+      `TIMEOUT: Batch translation exceeded ${timeout / 1000}s limit.`
+    );
+
+    const response = result.response;
+    const text = response.text();
+
+    // 追踪 token 使用量
+    const usageMetadata = response.usageMetadata;
+    if (usageMetadata) {
+      const inputTokens = usageMetadata.promptTokenCount || 0;
+      const outputTokens = usageMetadata.candidatesTokenCount || 0;
+      const actualModelName = modelName || DEFAULT_MODEL;
+      trackUsage(inputTokens, outputTokens, actualModelName).catch((err) => {
+        console.warn('[LingoRecall Usage] Failed to track Gemini batch usage:', err);
+      });
+    }
+
+    return parseBatchTranslationResponse(text, texts);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[LingoRecall] Gemini batch translation error:', errorMessage);
+
+    // 检测特定错误类型
+    if (errorMessage.toUpperCase().includes('API_KEY')) {
+      throw new Error('API_KEY_INVALID: Please check your API key configuration.');
+    }
+    if (errorMessage.toUpperCase().includes('RATE_LIMIT') || errorMessage.includes('429')) {
+      throw new Error('RATE_LIMIT: Too many requests. Please try again later.');
+    }
+    if (errorMessage.toUpperCase().includes('TIMEOUT')) {
+      throw new Error('TIMEOUT: Request timed out. Please try again.');
+    }
+
+    // 失败时返回原文
+    return texts;
   }
 }
 

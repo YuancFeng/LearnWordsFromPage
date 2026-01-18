@@ -11,7 +11,7 @@
  */
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { BookOpen, Trash2, ExternalLink, Clock, AlertCircle, Loader2, ChevronDown, ChevronUp, GraduationCap, Settings, CheckSquare } from 'lucide-react';
+import { BookOpen, Trash2, ExternalLink, Clock, AlertCircle, Loader2, ChevronDown, ChevronUp, GraduationCap, Settings, CheckSquare, Maximize2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSearch } from '../../hooks/useSearch';
 import { useDueCount } from '../../hooks/useDueCount';
@@ -795,6 +795,17 @@ export function VocabularyList({
 
         {/* 按钮组 */}
         <div className="flex items-center gap-2">
+          {/* 全屏模式按钮 - 打开 Options Page */}
+          <button
+            onClick={() => chrome.runtime.openOptionsPage()}
+            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
+            type="button"
+            aria-label={t('vocabulary.actions.fullscreen')}
+            title={t('vocabulary.actions.fullscreen')}
+          >
+            <Maximize2 size={20} />
+          </button>
+
           {/* Story 4.6 - AC4: 批量选择按钮 */}
           {totalCount > 0 && tags.length > 0 && (
             <button

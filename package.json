@@ -6,10 +6,11 @@
   "scripts": {
     "dev": "vite",
     "prebuild": "node -e \"require('fs').copyFileSync('public/manifest.json','manifest.json')\"",
-    "build": "npm run build:popup && npm run build:content && npm run build:background",
+    "build": "npm run build:popup && npm run build:content && npm run build:background && npm run build:sw-wrapper",
     "build:popup": "vite build",
     "build:content": "BUILD_TARGET=content vite build",
     "build:background": "BUILD_TARGET=background vite build",
+    "build:sw-wrapper": "BUILD_TARGET=sw-wrapper vite build",
     "preview": "vite preview",
     "test": "vitest run"
   },

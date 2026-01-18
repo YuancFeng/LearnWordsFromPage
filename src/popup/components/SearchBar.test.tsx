@@ -23,9 +23,10 @@ describe('SearchBar', () => {
   it('renders search input with placeholder', () => {
     render(<SearchBar {...defaultProps} />);
 
-    const input = screen.getByRole('textbox', { name: /搜索词汇/i });
+    // i18n: vocabulary.search.placeholder = "Search words..."
+    const input = screen.getByRole('textbox', { name: /Search words/i });
     expect(input).toBeInTheDocument();
-    expect(input).toHaveAttribute('placeholder', '搜索词汇...');
+    expect(input).toHaveAttribute('placeholder', 'Search words...');
   });
 
   it('displays custom placeholder when provided', () => {
@@ -48,13 +49,14 @@ describe('SearchBar', () => {
   it('shows loading spinner when isSearching is true', () => {
     render(<SearchBar {...defaultProps} isSearching={true} />);
 
-    expect(screen.getByLabelText('搜索中')).toBeInTheDocument();
+    // i18n: vocabulary.search.searching = "Searching..."
+    expect(screen.getByLabelText('Searching...')).toBeInTheDocument();
   });
 
   it('does not show loading spinner when isSearching is false', () => {
     render(<SearchBar {...defaultProps} isSearching={false} />);
 
-    expect(screen.queryByLabelText('搜索中')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Searching...')).not.toBeInTheDocument();
   });
 
   it('shows match count badge when value is present and not searching', () => {
@@ -96,20 +98,20 @@ describe('SearchBar', () => {
   it('shows clear button when value is present', () => {
     render(<SearchBar {...defaultProps} value="test" />);
 
-    expect(screen.getByRole('button', { name: /清除搜索/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Clear search/i })).toBeInTheDocument();
   });
 
   it('does not show clear button when value is empty', () => {
     render(<SearchBar {...defaultProps} value="" />);
 
-    expect(screen.queryByRole('button', { name: /清除搜索/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Clear search/i })).not.toBeInTheDocument();
   });
 
   it('calls onClear when clear button is clicked', () => {
     const onClear = vi.fn();
     render(<SearchBar {...defaultProps} value="test" onClear={onClear} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /清除搜索/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Clear search/i }));
 
     expect(onClear).toHaveBeenCalled();
   });

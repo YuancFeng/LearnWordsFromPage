@@ -13,7 +13,11 @@ import {
   buildWordUserMessage as buildWordMsg,
   buildTranslateUserMessage as buildTranslateMsg,
   getFallbackMeaningMessage,
+  buildBatchTranslateSystemPrompt,
+  buildBatchTranslateUserMessage,
+  parseBatchTranslationResponse,
 } from './promptTemplates';
+import { trackUsage } from './usageService';
 
 /** 响应时间上限（毫秒）*/
 const RESPONSE_TIMEOUT_MS = 10000; // OpenAI 兼容 API 可能较慢，给 10s
@@ -181,6 +185,9 @@ export async function analyzeWordOpenAI(
       if (status === 401 || status === 403) {
         throw new Error('API_KEY_INVALID: Please check your API key configuration.');
       }
+      if (status === 402) {
+        throw new Error('QUOTA_EXCEEDED: API credits exhausted. Please add credits to your CLI Proxy account.');
+      }
       if (status === 429) {
         throw new Error('RATE_LIMIT: Too many requests. Please try again later.');
       }
@@ -193,6 +200,16 @@ export async function analyzeWordOpenAI(
 
     const data: ChatCompletionResponse = await response.json();
     const content = data.choices?.[0]?.message?.content || '';
+
+    // 追踪 token 使用量
+    if (data.usage) {
+      const inputTokens = data.usage.prompt_tokens || 0;
+      const outputTokens = data.usage.completion_tokens || 0;
+      // 异步追踪，不阻塞主流程
+      trackUsage(inputTokens, outputTokens, modelName).catch((err) => {
+        console.warn('[LingoRecall Usage] Failed to track usage:', err);
+      });
+    }
 
     const elapsed = Date.now() - startTime;
     console.log(`[LingoRecall] OpenAI Compatible API response in ${elapsed}ms (mode: ${mode}, lang: ${targetLanguage})`);
@@ -212,6 +229,112 @@ export async function analyzeWordOpenAI(
     }
 
     throw new Error('Unknown error occurred');
+  }
+}
+
+/**
+ * 批量翻译文本
+ * 用于全页翻译功能
+ *
+ * @param texts - 待翻译的文本数组
+ * @param targetLanguage - 目标翻译语言
+ * @param apiKey - API Key
+ * @param endpoint - API 端点 URL
+ * @param modelName - 模型名称
+ * @returns 翻译后的文本数组
+ */
+export async function translateBatchOpenAI(
+  texts: string[],
+  targetLanguage: TargetLanguage,
+  apiKey: string,
+  endpoint: string,
+  modelName: string = 'gpt-4'
+): Promise<string[]> {
+  if (texts.length === 0) {
+    return [];
+  }
+
+  // 规范化端点 URL
+  let normalizedEndpoint = endpoint.trim();
+  if (!normalizedEndpoint.endsWith('/chat/completions')) {
+    normalizedEndpoint = normalizedEndpoint.replace(/\/+$/, '');
+    if (!normalizedEndpoint.includes('/v1')) {
+      normalizedEndpoint += '/v1';
+    }
+    normalizedEndpoint += '/chat/completions';
+  }
+
+  const requestBody: ChatCompletionRequest = {
+    model: modelName,
+    messages: [
+      { role: 'system', content: buildBatchTranslateSystemPrompt(targetLanguage) },
+      { role: 'user', content: buildBatchTranslateUserMessage(texts) },
+    ],
+    temperature: 0.3,
+    max_tokens: 4000, // 批量翻译需要更多 tokens
+  };
+
+  // 批量翻译使用更长的超时时间
+  const timeout = 60000; // 60 seconds
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(normalizedEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(requestBody),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => 'Unknown error');
+      console.error('[LingoRecall] OpenAI batch translation error:', response.status, errorText);
+
+      // 解析错误信息
+      let errorMessage = `HTTP ${response.status}`;
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorMessage = errorJson.error?.message || errorJson.message || errorText;
+      } catch {
+        errorMessage = errorText || errorMessage;
+      }
+
+      // 抛出错误让上层处理
+      throw new Error(`API_ERROR: ${errorMessage}`);
+    }
+
+    const data: ChatCompletionResponse = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+
+    // 追踪 token 使用量
+    if (data.usage) {
+      const inputTokens = data.usage.prompt_tokens || 0;
+      const outputTokens = data.usage.completion_tokens || 0;
+      trackUsage(inputTokens, outputTokens, modelName).catch((err) => {
+        console.warn('[LingoRecall Usage] Failed to track batch usage:', err);
+      });
+    }
+
+    return parseBatchTranslationResponse(content, texts);
+  } catch (error) {
+    clearTimeout(timeoutId);
+
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[LingoRecall] OpenAI batch translation error:', errorMessage);
+
+    // 检查是否是超时错误
+    if (errorMessage.includes('abort') || errorMessage.includes('timeout')) {
+      throw new Error('TIMEOUT: 翻译请求超时，请重试');
+    }
+
+    // 重新抛出错误
+    throw error;
   }
 }
 

@@ -46,7 +46,8 @@ describe('ReviewPage', () => {
 
     render(<ReviewPage onBack={vi.fn()} />);
 
-    expect(screen.getByText('加载中...')).toBeInTheDocument();
+    // i18n: common.loading = "Loading..."
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
 
   it('shows empty state when no due words', () => {
@@ -59,8 +60,10 @@ describe('ReviewPage', () => {
 
     render(<ReviewPage onBack={vi.fn()} />);
 
-    expect(screen.getByText('太棒了！')).toBeInTheDocument();
-    expect(screen.getByText('暂无待复习词汇')).toBeInTheDocument();
+    // i18n: review.empty.title = "Great!"
+    // i18n: review.empty.message = "No words due for review"
+    expect(screen.getByText('Great!')).toBeInTheDocument();
+    expect(screen.getByText('No words due for review')).toBeInTheDocument();
   });
 
   it('shows progress and current word', () => {

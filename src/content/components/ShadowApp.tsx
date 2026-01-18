@@ -12,6 +12,8 @@ import { FloatingButton } from './FloatingButton';
 import { AnalysisPopup, AnalysisError } from './AnalysisPopup';
 import { LoadingPopup } from './LoadingPopup';
 import { Toast, type ToastType } from './Toast';
+import { TranslationBar } from './TranslationBar';
+import type { TranslationState } from '../pageTranslator';
 
 /**
  * 分析模式类型
@@ -50,6 +52,20 @@ export interface ToastState {
 }
 
 /**
+ * 全页翻译状态
+ */
+export interface PageTranslationState {
+  /** 翻译状态 */
+  state: TranslationState;
+  /** 当前进度 */
+  progress: number;
+  /** 总数 */
+  total: number;
+  /** 是否显示翻译内容 */
+  showingTranslation: boolean;
+}
+
+/**
  * UI state managed by the shadow module
  */
 export interface UIState {
@@ -67,6 +83,8 @@ export interface UIState {
   isClosing: boolean;
   /** Toast 通知状态 */
   toast: ToastState | null;
+  /** 全页翻译状态 */
+  pageTranslation: PageTranslationState | null;
 }
 
 /**
@@ -83,6 +101,12 @@ export interface UICallbacks {
   onCancel?: () => void;
   /** Called when toast should be dismissed */
   onToastClose?: () => void;
+  /** Called when user toggles translation */
+  onToggleTranslation?: () => void;
+  /** Called when user restores original text */
+  onRestoreOriginal?: () => void;
+  /** Called when translation bar is closed */
+  onTranslationBarClose?: () => void;
 }
 
 interface ShadowAppProps {
@@ -105,8 +129,18 @@ export function ShadowApp({ state, callbacks = {} }: ShadowAppProps): React.Reac
     selectedText,
     isClosing,
     toast,
+    pageTranslation,
   } = state;
-  const { onAnalyze, onSave, onClose, onCancel, onToastClose } = callbacks;
+  const {
+    onAnalyze,
+    onSave,
+    onClose,
+    onCancel,
+    onToastClose,
+    onToggleTranslation,
+    onRestoreOriginal,
+    onTranslationBarClose,
+  } = callbacks;
 
   // Default handlers for development/debugging
   const handleAnalyze = () => {
@@ -152,6 +186,43 @@ export function ShadowApp({ state, callbacks = {} }: ShadowAppProps): React.Reac
     }
   };
 
+  const handleToggleTranslation = () => {
+    if (onToggleTranslation) {
+      onToggleTranslation();
+    } else {
+      console.log('[LingoRecall] Toggle translation');
+    }
+  };
+
+  const handleRestoreOriginal = () => {
+    if (onRestoreOriginal) {
+      onRestoreOriginal();
+    } else {
+      console.log('[LingoRecall] Restore original');
+    }
+  };
+
+  const handleTranslationBarClose = () => {
+    if (onTranslationBarClose) {
+      onTranslationBarClose();
+    } else {
+      console.log('[LingoRecall] Translation bar closed');
+    }
+  };
+
+  // Render Translation Bar (always visible when pageTranslation state exists)
+  const translationBarElement = pageTranslation && pageTranslation.state !== 'idle' ? (
+    <TranslationBar
+      state={pageTranslation.state}
+      progress={pageTranslation.progress}
+      total={pageTranslation.total}
+      showingTranslation={pageTranslation.showingTranslation}
+      onToggle={handleToggleTranslation}
+      onRestore={handleRestoreOriginal}
+      onClose={handleTranslationBarClose}
+    />
+  ) : null;
+
   // Render Toast independently (always visible when present)
   const toastElement = toast ? (
     <Toast
@@ -161,15 +232,21 @@ export function ShadowApp({ state, callbacks = {} }: ShadowAppProps): React.Reac
     />
   ) : null;
 
-  // No position means only show toast if present
+  // No position means only show toast and translation bar if present
   if (!buttonPosition) {
-    return toastElement;
+    return (
+      <>
+        {translationBarElement}
+        {toastElement}
+      </>
+    );
   }
 
   // Error state - show friendly message (Story 1.6)
   if (analysisError) {
     return (
       <>
+        {translationBarElement}
         <AnalysisError
           position={buttonPosition}
           message={analysisError}
@@ -188,6 +265,7 @@ export function ShadowApp({ state, callbacks = {} }: ShadowAppProps): React.Reac
 
     return (
       <>
+        {translationBarElement}
         <LoadingPopup
           position={buttonPosition}
           selectedText={selectedText}
@@ -203,6 +281,7 @@ export function ShadowApp({ state, callbacks = {} }: ShadowAppProps): React.Reac
   if (analysisResult) {
     return (
       <>
+        {translationBarElement}
         <AnalysisPopup
           position={buttonPosition}
           result={analysisResult}
@@ -218,6 +297,7 @@ export function ShadowApp({ state, callbacks = {} }: ShadowAppProps): React.Reac
   // Default state - show floating button (and toast if present)
   return (
     <>
+      {translationBarElement}
       <FloatingButton
         position={buttonPosition}
         onAnalyze={handleAnalyze}

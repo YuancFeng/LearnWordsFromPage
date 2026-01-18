@@ -41,7 +41,8 @@ describe('ReviewCard', () => {
 
     expect(screen.getAllByText('serendipity').length).toBeGreaterThan(0);
 
-    const flipButton = screen.getByRole('button', { name: '显示答案' });
+    // i18n: review.showAnswer = "Show Answer"
+    const flipButton = screen.getByRole('button', { name: 'Show Answer' });
     fireEvent.click(flipButton);
 
     expect(onFlip).toHaveBeenCalledTimes(1);
@@ -80,8 +81,9 @@ describe('ReviewCard', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: '记住了' }));
-    fireEvent.click(screen.getByRole('button', { name: '忘记了' }));
+    // i18n: review.remembered = "Remembered", review.forgotten = "Forgot"
+    fireEvent.click(screen.getByRole('button', { name: 'Remembered' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Forgot' }));
 
     expect(onRemembered).toHaveBeenCalledTimes(1);
     expect(onForgotten).toHaveBeenCalledTimes(1);

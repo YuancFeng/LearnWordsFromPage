@@ -16,7 +16,9 @@
     "back": "Back",
     "new": "New",
     "processing": "Processing...",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "previous": "Previous",
+    "next": "Next"
   },
   "settings": {
     "title": "Settings",
@@ -52,18 +54,60 @@
       "aiProvider": "AI Provider",
       "customConfig": "Custom API Configuration",
       "endpoint": "API Endpoint URL",
+      "endpointUrl": "API Endpoint URL",
       "endpointPlaceholder": "http://localhost:8080/v1/chat/completions",
       "endpointHelp": "Supports CLI Proxy, Ollama, LM Studio and other OpenAI-compatible APIs",
+      "endpointHint": "Usually auto-configured based on tool selection",
       "modelName": "Model Name",
       "modelPlaceholder": "gpt-4, claude-3-opus, llama3",
       "apiKeyPlaceholder": "Enter your API Key",
+      "placeholder": "Enter your API Key",
       "apiKeyRequired": "Please enter API Key",
+      "enterKey": "Please enter API Key",
       "getGeminiKey": "Get Gemini API Key",
+      "getKey": "Get API Key",
       "configured": "API Key configured",
       "geminiHelp": "Using Gemini API, enter your Google AI API Key",
+      "geminiDescription": "Using Google Gemini API for translation",
       "customHelp": "Using custom API, API Key is optional",
+      "customDescription": "Using custom OpenAI-compatible API",
       "clearConfirmTitle": "Confirm Clear",
-      "clearConfirmMessage": "Are you sure you want to clear the API Key? You will need to reconfigure it to use the translation feature."
+      "clearConfirmMessage": "Are you sure you want to clear the API Key? You will need to reconfigure it to use the translation feature.",
+      "clear": "Clear",
+      "hideKey": "Hide API Key",
+      "showKey": "Show API Key",
+      "saveFailed": "Failed to save API Key",
+      "clearFailed": "Failed to clear API Key",
+      "configSaveFailed": "Failed to save configuration",
+      "saveConfig": "Save Configuration",
+      "localModel": {
+        "title": "Local Model Configuration",
+        "description": "Run AI models on your device for privacy and offline use",
+        "tool": "Model Tool",
+        "endpoint": "API Endpoint",
+        "endpointHint": "Usually auto-configured based on tool selection",
+        "modelName": "Model Name",
+        "testConnection": "Test Connection",
+        "testing": "Testing...",
+        "testSuccess": "Connection successful!",
+        "testFailed": "Connection failed",
+        "latency": "Latency: {{ms}}ms",
+        "availableModels": "Available models",
+        "setupGuide": "Setup Guide",
+        "downloadTool": "Download Tool",
+        "recommendedModels": "Recommended Models",
+        "recommended": "Recommended",
+        "ramAvailable": "RAM: ~{{ram}}GB",
+        "ramRequired": "Requires {{ram}}GB RAM",
+        "saveConfig": "Save Configuration",
+        "saveFailed": "Failed to save configuration",
+        "noApiKeyRequired": "Local models don't require an API Key"
+      },
+      "testApi": "Test API",
+      "testApiTesting": "Testing...",
+      "testApiSuccess": "API connection successful!",
+      "testApiFailed": "API connection failed",
+      "testApiLatency": "Latency: {{ms}}ms"
     },
     "blacklist": {
       "title": "Blacklist",
@@ -142,7 +186,8 @@
       "select": "Select",
       "deselect": "Deselect",
       "settings": "Settings",
-      "startReview": "Start Review"
+      "startReview": "Start Review",
+      "fullscreen": "Open Full Page"
     }
   },
   "review": {
@@ -158,14 +203,19 @@
     "cardBack": "Card back",
     "complete": {
       "title": "Review Complete!",
+      "excellent": "Excellent! Perfect memory!",
       "great": "Great job!",
       "awesome": "Awesome! Great memory!",
       "good": "Great job! Keep it up!",
       "okay": "Good start! More practice helps!",
       "needPractice": "Don't give up! Review is key!",
+      "keepGoing": "Keep practicing! You'll improve!",
       "total": "Total reviewed",
+      "remembered": "Remembered",
       "rememberedCount": "Remembered",
+      "forgotten": "Forgot",
       "forgottenCount": "Forgot",
+      "retentionRate": "Memory Rate",
       "memoryRate": "Memory Rate",
       "backToVocabulary": "Back to Vocabulary"
     },
@@ -228,5 +278,53 @@
   },
   "toast": {
     "close": "Close"
+  },
+  "usage": {
+    "title": "Usage Monitor",
+    "refresh": "Refresh",
+    "remaining": "Remaining Credits",
+    "todayUsage": "Today",
+    "todayTokens": "Today Tokens",
+    "todayCost": "Today Cost",
+    "totalCost": "Total Cost",
+    "freeTier": "Free Tier",
+    "paidTier": "Paid Tier",
+    "localProvider": "Local Server",
+    "unknownProvider": "Unknown Provider",
+    "localTrackingNote": "Local usage tracking (estimates only)",
+    "lowBalanceWarning": "Low balance! Please add credits to your account.",
+    "lastUpdated": "Updated"
+  },
+  "errors": {
+    "quotaExceeded": "API credits exhausted. Please add credits to your CLI Proxy account.",
+    "creditsLow": "API credits running low. Consider adding more credits.",
+    "rateLimit": "Too many requests. Please try again later.",
+    "invalidApiKey": "Invalid API key. Please check your configuration."
+  },
+  "options": {
+    "nav": {
+      "vocabulary": "Vocabulary",
+      "review": "Review",
+      "settings": "Settings",
+      "backToPopup": "Close"
+    }
+  },
+  "pageTranslation": {
+    "analyzing": "Analyzing page...",
+    "translating": "Translating",
+    "applying": "Applying translations...",
+    "completed": "Translation complete",
+    "error": "Translation failed",
+    "showOriginal": "Show original",
+    "showTranslation": "Show translation",
+    "original": "Original",
+    "translation": "Translation",
+    "restore": "Restore",
+    "showControls": "Show translation controls",
+    "clickToToggle": "Click to toggle original/translation",
+    "success": "Translated {{count}} text segments",
+    "noContent": "No translatable content found",
+    "failed": "Translation failed",
+    "restored": "Original text restored"
   }
 }

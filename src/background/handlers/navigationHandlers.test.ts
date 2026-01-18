@@ -46,7 +46,7 @@ describe('handleJumpToSource', () => {
     vi.mocked(sendMessageToTab).mockResolvedValue({ success: true });
   });
 
-  it('switches to existing tab after highlight request succeeds', async () => {
+  it('switches to existing tab before sending highlight request', async () => {
     vi.mocked(findTabByUrl).mockResolvedValue({ id: 1, url: payload.sourceUrl } as chrome.tabs.Tab);
 
     const response = await handleJumpToSource(payload);
@@ -56,9 +56,10 @@ describe('handleJumpToSource', () => {
     expect(sendMessageToTab).toHaveBeenCalled();
     expect(switchToTab).toHaveBeenCalledWith(1);
 
-    const sendOrder = vi.mocked(sendMessageToTab).mock.invocationCallOrder[0];
+    // switchToTab is now called BEFORE sendMessageToTab to ensure SPA DOM is rendered
     const switchOrder = vi.mocked(switchToTab).mock.invocationCallOrder[0];
-    expect(sendOrder).toBeLessThan(switchOrder);
+    const sendOrder = vi.mocked(sendMessageToTab).mock.invocationCallOrder[0];
+    expect(switchOrder).toBeLessThan(sendOrder);
   });
 
   it('creates a background tab and activates it after highlight succeeds', async () => {
@@ -92,6 +93,8 @@ describe('handleJumpToSource', () => {
 
     expect(response.success).toBe(false);
     expect(response.error?.code).toBe(ErrorCode.PAGE_INACCESSIBLE);
-    expect(switchToTab).not.toHaveBeenCalled();
+    // Note: switchToTab IS called before sendMessageToTab (to ensure SPA DOM is rendered)
+    // So even when highlight fails, the tab switch has already happened
+    expect(switchToTab).toHaveBeenCalledWith(1);
   });
 });

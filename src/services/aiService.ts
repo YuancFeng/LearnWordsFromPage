@@ -9,10 +9,11 @@
  * @module services/aiService
  */
 
-import type { Settings, AIProviderType } from '../shared/types/settings';
+import type { Settings, AIProviderType, TargetLanguage, LocalModelConfig } from '../shared/types/settings';
 import { analyzeWord as analyzeWordGemini, type AIAnalysisResult, type AnalyzeWordRequest, type AnalysisMode } from './geminiService';
-import { analyzeWordOpenAI } from './openaiCompatibleService';
+import { analyzeWordOpenAI, translateBatchOpenAI } from './openaiCompatibleService';
 import { getCachedAnalysis, setCachedAnalysis, getCacheStats } from './analysisCache';
+import { translateBatchGemini } from './geminiService';
 
 export type { AIAnalysisResult, AnalyzeWordRequest, AnalysisMode };
 
@@ -28,6 +29,8 @@ export interface AIServiceConfig {
   customEndpoint?: string;
   /** 自定义模型名称 (OpenAI 兼容) */
   customModel?: string;
+  /** 本地模型配置 */
+  localModelConfig?: LocalModelConfig;
 }
 
 /**
@@ -39,6 +42,7 @@ export function buildAIConfig(settings: Settings, apiKey: string): AIServiceConf
     apiKey,
     customEndpoint: settings.customApiEndpoint,
     customModel: settings.customModelName,
+    localModelConfig: settings.localModelConfig,
   };
 }
 
@@ -72,6 +76,19 @@ export async function analyzeWordUnified(
       result = await analyzeWordGemini(request, config.apiKey, config.geminiModel);
       break;
 
+    case 'localhost':
+      // 本地模型使用 OpenAI 兼容 API 格式
+      if (!config.localModelConfig?.endpoint) {
+        throw new Error('INVALID_CONFIG: Local model endpoint is required.');
+      }
+      result = await analyzeWordOpenAI(
+        request,
+        '', // 本地模型不需要 API Key
+        config.localModelConfig.endpoint,
+        config.localModelConfig.modelName || 'llama3.2'
+      );
+      break;
+
     case 'openai-compatible':
       if (!config.customEndpoint) {
         throw new Error('INVALID_CONFIG: Custom API endpoint is required for OpenAI-compatible provider.');
@@ -99,6 +116,70 @@ export async function analyzeWordUnified(
 }
 
 /**
+ * 统一的批量翻译接口
+ * 用于全页翻译功能
+ *
+ * @param texts - 待翻译的文本数组
+ * @param targetLanguage - 目标翻译语言
+ * @param config - AI 配置
+ * @returns 翻译后的文本数组
+ */
+export async function translateBatchUnified(
+  texts: string[],
+  targetLanguage: TargetLanguage,
+  config: AIServiceConfig
+): Promise<string[]> {
+  const startTime = performance.now();
+
+  if (texts.length === 0) {
+    return [];
+  }
+
+  let translations: string[];
+
+  switch (config.provider) {
+    case 'gemini':
+      translations = await translateBatchGemini(texts, targetLanguage, config.apiKey, config.geminiModel);
+      break;
+
+    case 'localhost':
+      // 本地模型使用 OpenAI 兼容 API 格式
+      if (!config.localModelConfig?.endpoint) {
+        throw new Error('INVALID_CONFIG: Local model endpoint is required.');
+      }
+      translations = await translateBatchOpenAI(
+        texts,
+        targetLanguage,
+        '', // 本地模型不需要 API Key
+        config.localModelConfig.endpoint,
+        config.localModelConfig.modelName || 'llama3.2'
+      );
+      break;
+
+    case 'openai-compatible':
+      if (!config.customEndpoint) {
+        throw new Error('INVALID_CONFIG: Custom API endpoint is required for OpenAI-compatible provider.');
+      }
+      translations = await translateBatchOpenAI(
+        texts,
+        targetLanguage,
+        config.apiKey,
+        config.customEndpoint,
+        config.customModel || 'gpt-4'
+      );
+      break;
+
+    default:
+      throw new Error(`INVALID_PROVIDER: Unknown AI provider: ${config.provider}`);
+  }
+
+  const elapsed = performance.now() - startTime;
+  console.log(`[LingoRecall AI] Batch translation (${texts.length} texts) in ${elapsed.toFixed(1)}ms`);
+
+  return translations;
+}
+
+/**
  * 验证 AI 配置是否有效
  *
  * @param config - AI 配置
@@ -110,8 +191,20 @@ export async function validateAIConfig(config: AIServiceConfig): Promise<{
 }> {
   try {
     // 基础验证
-    if (!config.apiKey && config.provider !== 'openai-compatible') {
+    if (!config.apiKey && config.provider === 'gemini') {
       return { valid: false, error: 'API Key is required' };
+    }
+
+    if (config.provider === 'localhost') {
+      if (!config.localModelConfig?.endpoint) {
+        return { valid: false, error: 'Local model endpoint is required' };
+      }
+      // URL 格式验证
+      try {
+        new URL(config.localModelConfig.endpoint);
+      } catch {
+        return { valid: false, error: 'Invalid local model endpoint URL' };
+      }
     }
 
     if (config.provider === 'openai-compatible') {

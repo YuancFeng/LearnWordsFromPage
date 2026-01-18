@@ -12,10 +12,11 @@ describe('ReviewComplete', () => {
       />
     );
 
-    expect(screen.getByText('复习完成！')).toBeInTheDocument();
-    expect(screen.getByText('总复习')).toBeInTheDocument();
-    expect(screen.getByText('记住了')).toBeInTheDocument();
-    expect(screen.getByText('忘记了')).toBeInTheDocument();
+    // i18n translations
+    expect(screen.getByText('Review Complete!')).toBeInTheDocument();
+    expect(screen.getByText('Total reviewed')).toBeInTheDocument();
+    expect(screen.getByText('Remembered')).toBeInTheDocument();
+    expect(screen.getByText('Forgot')).toBeInTheDocument();
     expect(screen.getByText('10', { selector: 'p' })).toBeInTheDocument();
     expect(screen.getByText('7', { selector: 'p' })).toBeInTheDocument();
     expect(screen.getByText('3', { selector: 'p' })).toBeInTheDocument();
@@ -31,7 +32,8 @@ describe('ReviewComplete', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: '返回词库' }));
+    // i18n: review.complete.backToVocabulary = "Back to Vocabulary"
+    fireEvent.click(screen.getByRole('button', { name: 'Back to Vocabulary' }));
 
     expect(onBack).toHaveBeenCalledTimes(1);
   });

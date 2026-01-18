@@ -16,7 +16,9 @@
     "back": "返回",
     "new": "新建",
     "processing": "处理中...",
-    "saving": "保存中..."
+    "saving": "保存中...",
+    "previous": "上一个",
+    "next": "下一个"
   },
   "settings": {
     "title": "设置",
@@ -49,21 +51,63 @@
     },
     "apiKey": {
       "title": "API Key",
-      "aiProvider": "AI Provider",
+      "aiProvider": "AI 服务提供商",
       "customConfig": "自定义 API 配置",
       "endpoint": "API 端点 URL",
+      "endpointUrl": "API 端点 URL",
       "endpointPlaceholder": "http://localhost:8080/v1/chat/completions",
       "endpointHelp": "支持 CLI Proxy、Ollama、LM Studio 等 OpenAI 兼容 API",
+      "endpointHint": "通常根据工具选择自动配置",
       "modelName": "模型名称",
       "modelPlaceholder": "gpt-4, claude-3-opus, llama3",
       "apiKeyPlaceholder": "输入您的 API Key",
+      "placeholder": "输入您的 API Key",
       "apiKeyRequired": "请输入 API Key",
+      "enterKey": "请输入 API Key",
       "getGeminiKey": "获取 Gemini API Key",
+      "getKey": "获取 API Key",
       "configured": "API Key 已配置",
       "geminiHelp": "使用 Gemini API，请输入您的 Google AI API Key",
+      "geminiDescription": "使用 Google Gemini API 进行翻译",
       "customHelp": "使用自定义 API，API Key 为可选项",
+      "customDescription": "使用自定义 OpenAI 兼容 API",
       "clearConfirmTitle": "确认清除",
-      "clearConfirmMessage": "确定要清除 API Key 吗？清除后需要重新配置才能使用翻译功能。"
+      "clearConfirmMessage": "确定要清除 API Key 吗？清除后需要重新配置才能使用翻译功能。",
+      "clear": "清除",
+      "hideKey": "隐藏 API Key",
+      "showKey": "显示 API Key",
+      "saveFailed": "保存 API Key 失败",
+      "clearFailed": "清除 API Key 失败",
+      "configSaveFailed": "保存配置失败",
+      "saveConfig": "保存配置",
+      "localModel": {
+        "title": "本地模型配置",
+        "description": "在本地运行 AI 模型，保护隐私并支持离线使用",
+        "tool": "模型工具",
+        "endpoint": "API 端点",
+        "endpointHint": "通常根据工具选择自动配置",
+        "modelName": "模型名称",
+        "testConnection": "测试连接",
+        "testing": "测试中...",
+        "testSuccess": "连接成功！",
+        "testFailed": "连接失败",
+        "latency": "延迟: {{ms}}ms",
+        "availableModels": "可用模型",
+        "setupGuide": "安装指南",
+        "downloadTool": "下载工具",
+        "recommendedModels": "推荐模型",
+        "recommended": "推荐",
+        "ramAvailable": "内存: ~{{ram}}GB",
+        "ramRequired": "需要 {{ram}}GB 内存",
+        "saveConfig": "保存配置",
+        "saveFailed": "保存配置失败",
+        "noApiKeyRequired": "本地模型无需 API Key"
+      },
+      "testApi": "测试 API",
+      "testApiTesting": "测试中...",
+      "testApiSuccess": "API 连接成功！",
+      "testApiFailed": "API 连接失败",
+      "testApiLatency": "延迟: {{ms}}ms"
     },
     "blacklist": {
       "title": "黑名单",
@@ -142,7 +186,8 @@
       "select": "选中",
       "deselect": "取消选中",
       "settings": "设置",
-      "startReview": "开始复习"
+      "startReview": "开始复习",
+      "fullscreen": "全屏模式"
     }
   },
   "review": {
@@ -228,5 +273,53 @@
   },
   "toast": {
     "close": "关闭"
+  },
+  "usage": {
+    "title": "用量监控",
+    "refresh": "刷新",
+    "remaining": "剩余额度",
+    "todayUsage": "今日",
+    "todayTokens": "今日 Tokens",
+    "todayCost": "今日费用",
+    "totalCost": "累计费用",
+    "freeTier": "免费版",
+    "paidTier": "付费版",
+    "localProvider": "本地服务",
+    "unknownProvider": "未知服务",
+    "localTrackingNote": "本地用量追踪（仅为估算值）",
+    "lowBalanceWarning": "余额不足！请为您的账户充值。",
+    "lastUpdated": "更新时间"
+  },
+  "errors": {
+    "quotaExceeded": "API 额度已用尽，请为您的 CLI Proxy 账户充值。",
+    "creditsLow": "API 额度即将用尽，建议尽快充值。",
+    "rateLimit": "请求过于频繁，请稍后重试。",
+    "invalidApiKey": "API Key 无效，请检查配置。"
+  },
+  "options": {
+    "nav": {
+      "vocabulary": "词库",
+      "review": "复习",
+      "settings": "设置",
+      "backToPopup": "关闭"
+    }
+  },
+  "pageTranslation": {
+    "analyzing": "正在分析页面...",
+    "translating": "正在翻译",
+    "applying": "正在应用翻译...",
+    "completed": "翻译完成",
+    "error": "翻译失败",
+    "showOriginal": "显示原文",
+    "showTranslation": "显示译文",
+    "original": "原文",
+    "translation": "译文",
+    "restore": "恢复",
+    "showControls": "显示翻译控制",
+    "clickToToggle": "点击切换原文/译文",
+    "success": "已翻译 {{count}} 个文本段落",
+    "noContent": "未找到可翻译的内容",
+    "failed": "翻译失败",
+    "restored": "已恢复原文"
   }
 }
