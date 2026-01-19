@@ -337,8 +337,8 @@ export function getContentSettings(): Settings {
 const MIN_SELECTION_LENGTH = 1;
 /** 最大选择长度：支持词汇、短语和段落翻译（增加到 2000 字符） */
 const MAX_SELECTION_LENGTH = 2000;
-/** 单词/短语模式的长度阈值，超过此长度视为段落翻译模式 */
-const PARAGRAPH_THRESHOLD = 100;
+/** 句末标点符号正则（英文和中文） */
+const SENTENCE_END_PUNCTUATION = /[.!?。！？]/g;
 
 // ============================================================
 // Chinese Text Detection
@@ -378,12 +378,23 @@ function isPredominantlyChinese(text: string): boolean {
 }
 
 /**
+ * 统计文本中的句子数量
+ * 通过句末标点符号（. ! ? 。！？）来判断
+ *
+ * @param text - 待检测的文本
+ * @returns 句子数量
+ */
+function countSentences(text: string): number {
+  const matches = text.match(SENTENCE_END_PUNCTUATION);
+  return matches ? matches.length : 0;
+}
+
+/**
  * 根据选中文本确定分析模式
- * 使用多种启发式规则判断是单词/短语还是句子/段落：
- * - 长文本（>= 100 字符）: 段落翻译模式
- * - 多词（>= 5 个单词）: 句子翻译模式
- * - 3-4 词且以句号结尾: 句子翻译模式
- * - 其他情况: 单词/短语分析模式
+ * 判断逻辑：
+ * - 单词/短语（无句末标点）: 单词模式（可保存）
+ * - 一句话（只有1个句末标点）: 单词模式（可保存）
+ * - 多句/段落（≥2个句末标点）: 翻译模式（不可保存）
  *
  * @param text - 选中的文本
  * @returns 分析模式
@@ -391,27 +402,15 @@ function isPredominantlyChinese(text: string): boolean {
 function getAnalysisMode(text: string): AnalysisMode {
   const trimmed = text.trim();
 
-  // 长文本始终使用翻译模式
-  if (trimmed.length >= PARAGRAPH_THRESHOLD) {
+  // 统计句子数量
+  const sentenceCount = countSentences(trimmed);
+
+  // 多句（≥2个句末标点）→ 翻译模式（不可保存）
+  if (sentenceCount >= 2) {
     return 'translate';
   }
 
-  // 统计单词数量（按空白字符分割）
-  const words = trimmed.split(/\s+/).filter(w => w.length > 0);
-  const wordCount = words.length;
-
-  // 多词（5个及以上）视为句子，使用翻译模式
-  if (wordCount >= 5) {
-    return 'translate';
-  }
-
-  // 3-4 个单词且以句号/问号/感叹号结尾，视为完整句子
-  const endsWithSentencePunctuation = /[.!?。！？]$/.test(trimmed);
-  if (wordCount >= 3 && endsWithSentencePunctuation) {
-    return 'translate';
-  }
-
-  // 其他情况使用单词/短语分析模式
+  // 单词、短语、一句话（0或1个句末标点）→ 单词模式（可保存）
   return 'word';
 }
 /** Button offset in pixels from selection top-right */
@@ -786,10 +785,11 @@ async function handleSave(): Promise<void> {
   console.log('[LingoRecall] Saving:', currentSelection.text);
 
   const analysisResult = currentAnalysisResult;
+  // 验证分析结果：meaning 和 partOfSpeech 是必需的
+  // pronunciation 对短语来说是可选的（AI 可能省略短语的音标）
   const hasAnalysis = Boolean(
     analysisResult &&
       analysisResult.meaning.trim() &&
-      analysisResult.pronunciation.trim() &&
       analysisResult.partOfSpeech.trim()
   );
 
