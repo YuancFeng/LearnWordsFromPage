@@ -59,6 +59,11 @@ type DragType = 'move' | 'resize-se' | 'resize-sw' | 'resize-ne' | 'resize-nw' |
  * 计算初始弹窗位置
  * 如果用户有自定义偏好，使用偏好位置
  * 否则使用基于按钮位置的智能定位
+ *
+ * 定位策略优先级：
+ * 1. 优先在按钮下方显示（最自然的交互体验）
+ * 2. 如果下方空间不足，在按钮上方显示
+ * 3. 如果上下都不够，在空间较大的一侧显示，并限制弹窗高度以适应可用空间
  */
 function calculateInitialPosition(
   buttonPosition: { x: number; y: number },
@@ -81,31 +86,65 @@ function calculateInitialPosition(
     return { x, y };
   }
 
-  // 默认智能定位：按钮下方
+  // 默认智能定位：基于按钮位置
   const buttonSize = 32;
   const gap = 8;
-  const buttonBottom = buttonPosition.y + buttonSize;
+
+  // buttonPosition 是按钮的左上角坐标
   const buttonTop = buttonPosition.y;
+  const buttonBottom = buttonPosition.y + buttonSize;
 
+  // 水平位置：弹窗左边缘与按钮左边缘对齐
   let x = buttonPosition.x;
-  let y = buttonBottom + gap;
 
-  // 水平边界检查
+  // 水平边界检查 - 确保弹窗不超出右边界
   if (x + width + EDGE_PADDING > viewportWidth) {
     x = viewportWidth - width - EDGE_PADDING;
   }
+  // 确保弹窗不超出左边界
   if (x < EDGE_PADDING) {
     x = EDGE_PADDING;
   }
 
-  // 垂直边界检查
+  // 计算可用空间
   const spaceBelow = viewportHeight - buttonBottom - EDGE_PADDING;
   const spaceAbove = buttonTop - EDGE_PADDING;
 
-  if (spaceBelow < maxHeight && spaceAbove > spaceBelow) {
-    y = buttonTop - maxHeight - gap;
+  // 使用较小的预估高度来决定位置（实际内容可能不需要 maxHeight 那么高）
+  // 翻译模式的弹窗通常内容较短，使用更合理的估计
+  const estimatedHeight = Math.min(maxHeight, 300);
+
+  let y: number;
+
+  // 策略1：优先在按钮下方显示
+  if (spaceBelow >= estimatedHeight) {
+    // 下方空间足够，在按钮下方显示
+    y = buttonBottom + gap;
+  }
+  // 策略2：下方不够，检查上方
+  else if (spaceAbove >= estimatedHeight) {
+    // 上方空间足够，在按钮上方显示
+    // 计算位置：从按钮顶部往上偏移 gap + 预估高度
+    // 但实际弹窗高度由内容决定，这里使用预估高度定位
+    y = buttonTop - estimatedHeight - gap;
+    // 确保不超出顶部
     if (y < EDGE_PADDING) {
       y = EDGE_PADDING;
+    }
+  }
+  // 策略3：上下都不够理想，选择空间更大的一侧
+  else {
+    if (spaceBelow >= spaceAbove) {
+      // 下方空间更大或相等，在按钮下方显示
+      y = buttonBottom + gap;
+    } else {
+      // 上方空间更大，在按钮上方显示
+      // 使用实际可用空间作为定位参考
+      const availableHeight = Math.min(spaceAbove, maxHeight);
+      y = buttonTop - availableHeight - gap;
+      if (y < EDGE_PADDING) {
+        y = EDGE_PADDING;
+      }
     }
   }
 
