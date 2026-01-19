@@ -24,11 +24,14 @@ import i18n from '../i18n';
 // Constants
 // ============================================================
 
-/** 每批翻译的最大文本数量（增大以减少请求次数） */
-const BATCH_SIZE = 30;
+/** 每批翻译的最大文本数量（减小以避免超时） */
+const BATCH_SIZE = 10;
 
-/** 并发请求数量（同时发送多少批次） */
-const CONCURRENT_BATCHES = 3;
+/** 并发请求数量（设为1避免触发速率限制） */
+const CONCURRENT_BATCHES = 1;
+
+/** 批次间延迟（毫秒），避免触发速率限制 */
+const BATCH_DELAY_MS = 500;
 
 /** 单个文本的最大字符数（超过则截断） */
 const MAX_TEXT_LENGTH = 2000;
@@ -292,12 +295,13 @@ function reapplyTranslationsFromRegistry(): void {
 
 /**
  * 直接应用翻译（不检查注册表，用于重新应用）
+ * 使用 span 包装器包装每个翻译的文本节点，避免多个文本节点共享父元素时属性被覆盖
  */
 function applyTranslationDirect(
   node: Text,
   originalText: string,
   translatedText: string,
-  parentElement: HTMLElement
+  _parentElement: HTMLElement
 ): void {
   // 存储到节点映射
   translatedNodes.set(node, {
@@ -305,43 +309,40 @@ function applyTranslationDirect(
     translated: translatedText,
   });
 
-  // 更新文本内容
+  // 创建 span 包装器来包装这个文本节点
+  const wrapper = document.createElement('span');
+  wrapper.setAttribute(TRANSLATED_ATTR, 'true');
+  wrapper.setAttribute(ORIGINAL_TEXT_ATTR, originalText);
+  wrapper.setAttribute(TRANSLATED_TEXT_ATTR, translatedText);
+  wrapper.setAttribute(TRANSLATION_STATE_ATTR, 'showing-translation');
+  wrapper.classList.add(TRANSLATED_CLASS);
+  wrapper.style.cursor = 'pointer';
+  wrapper.title = i18n.t('pageTranslation.clickToToggle', 'Click to toggle original/translation');
+
+  // 将文本节点用 wrapper 包装
+  node.parentNode?.insertBefore(wrapper, node);
+  wrapper.appendChild(node);
+
+  // 更新文本内容为翻译结果
   node.textContent = translatedText;
 
-  // 标记父元素
-  parentElement.setAttribute(TRANSLATED_ATTR, 'true');
-  parentElement.setAttribute(ORIGINAL_TEXT_ATTR, originalText);
-  parentElement.setAttribute(TRANSLATED_TEXT_ATTR, translatedText);
-  parentElement.setAttribute(TRANSLATION_STATE_ATTR, 'showing-translation');
-  parentElement.classList.add(TRANSLATED_CLASS);
-
   // 添加点击切换功能
-  if (!parentElement.hasAttribute('data-lingorecall-clickable')) {
-    parentElement.setAttribute('data-lingorecall-clickable', 'true');
-    parentElement.style.cursor = 'pointer';
-    parentElement.title = i18n.t('pageTranslation.clickToToggle', 'Click to toggle original/translation');
+  wrapper.addEventListener('click', (e) => {
+    // 如果点击的是链接或链接内的元素，不拦截，让链接正常跳转
+    const target = e.target as HTMLElement;
+    if (target.closest('a') || target.tagName === 'A') {
+      return;
+    }
 
-    parentElement.addEventListener('click', (e) => {
-      const target = e.target as HTMLElement;
+    // 如果点击的是按钮或其他交互元素，也不拦截
+    if (target.closest('button') || target.tagName === 'BUTTON') {
+      return;
+    }
 
-      // 如果点击的是链接或链接内的元素，不拦截，让链接正常跳转
-      if (target.closest('a') || target.tagName === 'A') {
-        return;
-      }
-
-      // 如果点击的是按钮或其他交互元素，也不拦截
-      if (target.closest('button') || target.tagName === 'BUTTON') {
-        return;
-      }
-
-      // 只在点击纯文本区域时切换原文/译文
-      if (e.target === parentElement || (e.target as Node).nodeType === Node.TEXT_NODE) {
-        e.preventDefault();
-        e.stopPropagation();
-        toggleSingleElement(parentElement);
-      }
-    });
-  }
+    e.preventDefault();
+    e.stopPropagation();
+    toggleSingleElement(wrapper);
+  });
 }
 
 /**
@@ -801,16 +802,16 @@ export async function translatePage(
 
     console.log(`[LingoRecall PageTranslator] Split into ${batches.length} batches, processing ${CONCURRENT_BATCHES} at a time`);
 
-    // 并行处理多个批次
+    // 顺序处理批次（避免速率限制）
     for (let i = 0; i < batches.length; i += CONCURRENT_BATCHES) {
       const concurrentBatches = batches.slice(i, i + CONCURRENT_BATCHES);
 
-      // 并行发送翻译请求
+      // 发送翻译请求（CONCURRENT_BATCHES=1 时为顺序执行）
       const translationPromises = concurrentBatches.map(({ texts }) =>
         translateBatch(texts, targetLanguage)
       );
 
-      // 等待所有并发请求完成
+      // 等待请求完成
       const translationResults = await Promise.all(translationPromises);
 
       // 应用翻译结果
@@ -829,8 +830,10 @@ export async function translatePage(
       const progress = Math.min((i + CONCURRENT_BATCHES) * BATCH_SIZE, totalCount);
       progressCallback?.(progress, totalCount, 'translating');
 
-      // 短暂延迟，让 UI 有机会更新
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      // 批次间延迟，避免触发 API 速率限制
+      if (i + CONCURRENT_BATCHES < batches.length) {
+        await new Promise((resolve) => setTimeout(resolve, BATCH_DELAY_MS));
+      }
     }
 
     currentState = 'translated';
@@ -875,7 +878,7 @@ export async function translatePage(
 
 /**
  * 切换显示原文/译文
- * 使用 DOM 查询遍历所有已翻译元素，以支持 SPA 重新渲染后的切换
+ * 使用 DOM 查询遍历所有已翻译的 span 包装器
  */
 export function toggleTranslation(): void {
   if (currentState !== 'translated') {
@@ -884,24 +887,25 @@ export function toggleTranslation(): void {
 
   showingTranslation = !showingTranslation;
 
-  // 查找所有已翻译的元素（使用 DOM 查询而非内存中的 Map）
-  const translatedElements = document.querySelectorAll<HTMLElement>(`[${TRANSLATED_ATTR}]`);
+  // 查找所有已翻译的 span 包装器
+  const translatedElements = document.querySelectorAll<HTMLElement>(`span[${TRANSLATED_ATTR}]`);
 
-  translatedElements.forEach((element) => {
-    const original = element.getAttribute(ORIGINAL_TEXT_ATTR);
-    const translated = element.getAttribute(TRANSLATED_TEXT_ATTR);
+  translatedElements.forEach((wrapper) => {
+    const original = wrapper.getAttribute(ORIGINAL_TEXT_ATTR);
+    const translated = wrapper.getAttribute(TRANSLATED_TEXT_ATTR);
 
     if (!original || !translated) return;
 
-    const textNode = findTextNode(element);
-    if (!textNode) return;
+    // span 包装器内应该只有一个直接的文本节点
+    const textNode = wrapper.firstChild;
+    if (!textNode || textNode.nodeType !== Node.TEXT_NODE) return;
 
     if (showingTranslation) {
       textNode.textContent = translated;
-      element.setAttribute(TRANSLATION_STATE_ATTR, 'showing-translation');
+      wrapper.setAttribute(TRANSLATION_STATE_ATTR, 'showing-translation');
     } else {
       textNode.textContent = original;
-      element.setAttribute(TRANSLATION_STATE_ATTR, 'showing-original');
+      wrapper.setAttribute(TRANSLATION_STATE_ATTR, 'showing-original');
     }
   });
 
@@ -911,30 +915,42 @@ export function toggleTranslation(): void {
 /**
  * 恢复原文（清除所有翻译）
  * 使用 DOM 查询遍历所有已翻译元素，以支持 SPA 重新渲染后的恢复
+ * 移除 span 包装器，将文本节点放回原位
  */
 export function restoreOriginal(): void {
-  // 查找所有已翻译的元素（使用 DOM 查询）
-  const translatedElements = document.querySelectorAll<HTMLElement>(`[${TRANSLATED_ATTR}]`);
+  // 查找所有已翻译的 span 包装器（使用 DOM 查询）
+  const translatedElements = document.querySelectorAll<HTMLElement>(`span[${TRANSLATED_ATTR}]`);
+  let restoredCount = 0;
 
-  translatedElements.forEach((element) => {
-    const original = element.getAttribute(ORIGINAL_TEXT_ATTR);
+  translatedElements.forEach((wrapper) => {
+    const original = wrapper.getAttribute(ORIGINAL_TEXT_ATTR);
+    const parent = wrapper.parentNode;
 
-    if (original) {
-      const textNode = findTextNode(element);
-      if (textNode) {
-        textNode.textContent = original;
+    if (!parent) return;
+
+    // 找到 wrapper 内的文本节点
+    const textNode = findTextNode(wrapper);
+
+    if (textNode && original) {
+      // 恢复原文
+      textNode.textContent = original;
+
+      // 将文本节点从 wrapper 中移出，放回原位置
+      parent.insertBefore(textNode, wrapper);
+
+      // 移除 wrapper
+      parent.removeChild(wrapper);
+
+      restoredCount++;
+    } else {
+      // 如果没有文本节点，创建一个新的
+      if (original) {
+        const newTextNode = document.createTextNode(original);
+        parent.insertBefore(newTextNode, wrapper);
       }
+      parent.removeChild(wrapper);
+      restoredCount++;
     }
-
-    // 清除所有翻译相关的属性
-    element.removeAttribute(TRANSLATED_ATTR);
-    element.removeAttribute(ORIGINAL_TEXT_ATTR);
-    element.removeAttribute(TRANSLATED_TEXT_ATTR);
-    element.removeAttribute(TRANSLATION_STATE_ATTR);
-    element.removeAttribute('data-lingorecall-clickable');
-    element.classList.remove(TRANSLATED_CLASS);
-    element.style.cursor = '';
-    element.title = '';
   });
 
   // 清空内存中的 Map 和注册表
@@ -946,7 +962,7 @@ export function restoreOriginal(): void {
   // 停止 MutationObserver
   stopMutationObserver();
 
-  console.log(`[LingoRecall PageTranslator] Restored original text (${translatedElements.length} elements)`);
+  console.log(`[LingoRecall PageTranslator] Restored original text (${restoredCount} elements)`);
 }
 
 /**

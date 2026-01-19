@@ -83,9 +83,10 @@ export interface ProviderConfigs {
 
 /**
  * 默认 Gemini 配置
+ * 使用配额更高的稳定版模型
  */
 export const DEFAULT_GEMINI_CONFIG: Readonly<GeminiConfig> = Object.freeze({
-  modelName: 'gemini-2.0-flash-lite',
+  modelName: 'gemini-2.0-flash',
 });
 
 /**

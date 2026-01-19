@@ -58,11 +58,20 @@ export interface AnalyzeWordRequest {
   targetLanguage?: TargetLanguage;
 }
 
-/** 默认模型 */
-const DEFAULT_MODEL = 'gemini-2.0-flash-exp';
+/** 默认模型 - 使用配额更高的稳定版 */
+const DEFAULT_MODEL = 'gemini-2.0-flash';
 
 /** 响应时间上限（毫秒）- Story 1.6 AC-3 */
 const RESPONSE_TIMEOUT_MS = 3000;
+
+/** 最大重试次数 */
+const MAX_RETRIES = 3;
+
+/** 初始重试延迟（毫秒）*/
+const INITIAL_RETRY_DELAY_MS = 1000;
+
+/** 最大重试延迟（毫秒）*/
+const MAX_RETRY_DELAY_MS = 8000;
 
 /**
  * 获取 Gemini 模型实例
@@ -141,6 +150,40 @@ function parseAIResponse(
     usage: '',
     mode,
   };
+}
+
+/**
+ * 延迟函数
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * 计算指数退避延迟（带抖动）
+ */
+function getRetryDelay(retryCount: number): number {
+  const delay = Math.min(
+    INITIAL_RETRY_DELAY_MS * Math.pow(2, retryCount),
+    MAX_RETRY_DELAY_MS
+  );
+  // 添加 ±20% 的随机抖动，避免多个请求同时重试
+  const jitter = delay * 0.2 * (Math.random() - 0.5);
+  return Math.round(delay + jitter);
+}
+
+/**
+ * 检查错误是否可重试（如速率限制）
+ */
+function isRetryableError(error: unknown): boolean {
+  if (error instanceof Error) {
+    const message = error.message.toUpperCase();
+    return message.includes('429') ||
+           message.includes('RATE_LIMIT') ||
+           message.includes('RESOURCE_EXHAUSTED') ||
+           message.includes('QUOTA_EXCEEDED');
+  }
+  return false;
 }
 
 /**
@@ -267,6 +310,7 @@ export async function analyzeWord(
 /**
  * 批量翻译文本
  * 用于全页翻译功能
+ * 支持指数退避重试机制处理速率限制
  *
  * @param texts - 待翻译的文本数组
  * @param targetLanguage - 目标翻译语言
@@ -284,52 +328,74 @@ export async function translateBatchGemini(
     return [];
   }
 
-  try {
-    const model = getModel(apiKey, modelName);
-    const prompt = buildBatchTranslationPrompt(texts, targetLanguage);
+  const model = getModel(apiKey, modelName);
+  const prompt = buildBatchTranslationPrompt(texts, targetLanguage);
+  const timeout = RESPONSE_TIMEOUT_MS * 10; // 批量翻译允许更长时间（30秒）
 
-    // 批量翻译可能需要更长时间
-    const timeout = RESPONSE_TIMEOUT_MS * 5;
+  let lastError: Error | null = null;
 
-    const result = await withTimeout(
-      model.generateContent(prompt),
-      timeout,
-      `TIMEOUT: Batch translation exceeded ${timeout / 1000}s limit.`
-    );
+  // 使用指数退避重试
+  for (let retryCount = 0; retryCount <= MAX_RETRIES; retryCount++) {
+    try {
+      const result = await withTimeout(
+        model.generateContent(prompt),
+        timeout,
+        `TIMEOUT: Batch translation exceeded ${timeout / 1000}s limit.`
+      );
 
-    const response = result.response;
-    const text = response.text();
+      const response = result.response;
+      const text = response.text();
 
-    // 追踪 token 使用量
-    const usageMetadata = response.usageMetadata;
-    if (usageMetadata) {
-      const inputTokens = usageMetadata.promptTokenCount || 0;
-      const outputTokens = usageMetadata.candidatesTokenCount || 0;
-      const actualModelName = modelName || DEFAULT_MODEL;
-      trackUsage(inputTokens, outputTokens, actualModelName).catch((err) => {
-        console.warn('[LingoRecall Usage] Failed to track Gemini batch usage:', err);
-      });
+      // 追踪 token 使用量
+      const usageMetadata = response.usageMetadata;
+      if (usageMetadata) {
+        const inputTokens = usageMetadata.promptTokenCount || 0;
+        const outputTokens = usageMetadata.candidatesTokenCount || 0;
+        const actualModelName = modelName || DEFAULT_MODEL;
+        trackUsage(inputTokens, outputTokens, actualModelName).catch((err) => {
+          console.warn('[LingoRecall Usage] Failed to track Gemini batch usage:', err);
+        });
+      }
+
+      return parseBatchTranslationResponse(text, texts);
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      const errorMessage = lastError.message;
+
+      // 检测是否为可重试的错误（速率限制）
+      if (isRetryableError(error) && retryCount < MAX_RETRIES) {
+        const delay = getRetryDelay(retryCount);
+        console.warn(
+          `[LingoRecall] Rate limit hit, retrying in ${delay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`
+        );
+        await sleep(delay);
+        continue;
+      }
+
+      // 不可重试的错误或已达最大重试次数
+      console.error('[LingoRecall] Gemini batch translation error:', errorMessage);
+
+      // 检测特定错误类型
+      if (errorMessage.toUpperCase().includes('API_KEY')) {
+        throw new Error('API_KEY_INVALID: Please check your API key configuration.');
+      }
+      if (errorMessage.toUpperCase().includes('RATE_LIMIT') || errorMessage.includes('429')) {
+        throw new Error('RATE_LIMIT: Too many requests. Please try again later.');
+      }
+      if (errorMessage.toUpperCase().includes('TIMEOUT')) {
+        throw new Error('TIMEOUT: Request timed out. Please try again.');
+      }
+
+      // 其他错误，返回原文
+      return texts;
     }
-
-    return parseBatchTranslationResponse(text, texts);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[LingoRecall] Gemini batch translation error:', errorMessage);
-
-    // 检测特定错误类型
-    if (errorMessage.toUpperCase().includes('API_KEY')) {
-      throw new Error('API_KEY_INVALID: Please check your API key configuration.');
-    }
-    if (errorMessage.toUpperCase().includes('RATE_LIMIT') || errorMessage.includes('429')) {
-      throw new Error('RATE_LIMIT: Too many requests. Please try again later.');
-    }
-    if (errorMessage.toUpperCase().includes('TIMEOUT')) {
-      throw new Error('TIMEOUT: Request timed out. Please try again.');
-    }
-
-    // 失败时返回原文
-    return texts;
   }
+
+  // 重试耗尽，抛出最后的错误
+  if (lastError) {
+    throw lastError;
+  }
+  return texts;
 }
 
 /**

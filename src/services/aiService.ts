@@ -40,6 +40,7 @@ export function buildAIConfig(settings: Settings, apiKey: string): AIServiceConf
   return {
     provider: settings.aiProvider,
     apiKey,
+    geminiModel: settings.providerConfigs?.gemini?.modelName,
     customEndpoint: settings.customApiEndpoint,
     customModel: settings.customModelName,
     localModelConfig: settings.localModelConfig,
