@@ -13,6 +13,12 @@ import { ReviewCard } from './ReviewCard';
 import { ReviewComplete, type ReviewStats } from './ReviewComplete';
 import { useReview } from '../../hooks/useReview';
 import type { ReviewResult } from '../../shared/utils/ebbinghaus';
+import type { useToast } from './Toast';
+
+/**
+ * Toast 类型定义
+ */
+type ToastInstance = ReturnType<typeof useToast>;
 
 /**
  * ReviewPage Props
@@ -20,13 +26,15 @@ import type { ReviewResult } from '../../shared/utils/ebbinghaus';
 interface ReviewPageProps {
   /** 返回词库回调 */
   onBack: () => void;
+  /** Toast 通知实例 */
+  toast?: ToastInstance;
 }
 
 /**
  * 复习页面容器
  * Story 3.3 - AC1, AC3, AC5: 复习卡片界面逻辑
  */
-export function ReviewPage({ onBack }: ReviewPageProps) {
+export function ReviewPage({ onBack, toast }: ReviewPageProps) {
   const { t } = useTranslation();
   const { dueWords, isLoading, error, submitReview } = useReview();
 
@@ -88,12 +96,18 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
           setTimeout(() => {
             setCurrentIndex((prev) => prev + 1);
           }, 100);
+        } else {
+          // 提交失败时显示 Toast 通知
+          toast?.error(t('review.toast.submitFailed'));
         }
+      } catch (err) {
+        console.error('[LingoRecall] Review submit error:', err);
+        toast?.error(t('review.toast.submitFailed'));
       } finally {
         setIsSubmitting(false);
       }
     },
-    [currentIndex, dueWords, isSubmitting, submitReview]
+    [currentIndex, dueWords, isSubmitting, submitReview, toast, t]
   );
 
   // 加载状态

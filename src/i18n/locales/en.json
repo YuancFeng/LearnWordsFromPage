@@ -175,7 +175,10 @@
       "select": "Batch Select",
       "cancel": "Cancel Selection",
       "selected": "{{count}} selected",
-      "addTags": "Add Tags"
+      "addTags": "Add Tags",
+      "addTagsTitle": "Add Tags to Selected",
+      "addTagsDesc": "Add tags to {{count}} selected words",
+      "selectTagsHint": "Select tags to add (multiple selection):"
     },
     "filter": {
       "search": "Search: \"{{query}}\"",
@@ -188,6 +191,14 @@
       "settings": "Settings",
       "startReview": "Start Review",
       "fullscreen": "Open Full Page"
+    },
+    "toast": {
+      "deleteSuccess": "Word deleted",
+      "deleteFailed": "Delete failed, please try again",
+      "tagUpdated": "Tag updated",
+      "tagUpdateFailed": "Failed to update tag",
+      "batchTagSuccess": "Added tags to {{count}} words",
+      "batchTagFailed": "Failed to add tags"
     }
   },
   "review": {
@@ -223,6 +234,9 @@
       "title": "Great!",
       "message": "No words due for review",
       "back": "Back to Vocabulary"
+    },
+    "toast": {
+      "submitFailed": "Review submit failed, please try again"
     }
   },
   "analysis": {
@@ -296,10 +310,30 @@
     "lastUpdated": "Updated"
   },
   "errors": {
-    "quotaExceeded": "API credits exhausted. Please add credits to your CLI Proxy account.",
-    "creditsLow": "API credits running low. Consider adding more credits.",
-    "rateLimit": "Too many requests. Please try again later.",
-    "invalidApiKey": "Invalid API key. Please check your configuration."
+    "network": "Network connection failed",
+    "timeout": "Request timed out",
+    "aiApi": "AI service error",
+    "rateLimit": "Too many requests, please try again later",
+    "invalidApiKey": "Invalid API key, please check your configuration",
+    "quotaExceeded": "API credits exhausted, please add credits to your account",
+    "creditsLow": "API credits running low, consider adding more credits",
+    "storage": "Storage operation failed",
+    "storageQuotaExceeded": "Storage quota exceeded",
+    "invalidInput": "Invalid input provided",
+    "missingField": "Required field is missing",
+    "notFound": "Resource not found",
+    "alreadyExists": "Resource already exists",
+    "duplicateEntry": "Entry already exists",
+    "duplicateWord": "This word has already been saved",
+    "duplicateTag": "This tag name already exists",
+    "locationFailed": "Failed to locate element",
+    "xpathInvalid": "Invalid XPath expression",
+    "elementNotFound": "Element not found on page",
+    "pageInaccessible": "Source page is inaccessible",
+    "tabError": "Tab operation failed",
+    "extensionUpdated": "Extension updated, please refresh the page",
+    "unknown": "An unknown error occurred",
+    "handlerNotFound": "Message handler not found"
   },
   "options": {
     "nav": {

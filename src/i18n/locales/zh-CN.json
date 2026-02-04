@@ -175,7 +175,10 @@
       "select": "批量选择",
       "cancel": "取消批量选择",
       "selected": "已选中 {{count}} 个",
-      "addTags": "添加标签"
+      "addTags": "添加标签",
+      "addTagsTitle": "批量添加标签",
+      "addTagsDesc": "将为 {{count}} 个词汇添加所选标签",
+      "selectTagsHint": "选择要添加的标签（可多选）："
     },
     "filter": {
       "search": "搜索: \"{{query}}\"",
@@ -188,6 +191,14 @@
       "settings": "设置",
       "startReview": "开始复习",
       "fullscreen": "全屏模式"
+    },
+    "toast": {
+      "deleteSuccess": "词汇已删除",
+      "deleteFailed": "删除失败，请重试",
+      "tagUpdated": "标签已更新",
+      "tagUpdateFailed": "标签更新失败",
+      "batchTagSuccess": "已为 {{count}} 个词汇添加标签",
+      "batchTagFailed": "批量添加标签失败"
     }
   },
   "review": {
@@ -218,6 +229,9 @@
       "title": "太棒了！",
       "message": "暂无待复习词汇",
       "back": "返回词库"
+    },
+    "toast": {
+      "submitFailed": "复习提交失败，请重试"
     }
   },
   "analysis": {
@@ -291,10 +305,30 @@
     "lastUpdated": "更新时间"
   },
   "errors": {
-    "quotaExceeded": "API 额度已用尽，请为您的 CLI Proxy 账户充值。",
-    "creditsLow": "API 额度即将用尽，建议尽快充值。",
-    "rateLimit": "请求过于频繁，请稍后重试。",
-    "invalidApiKey": "API Key 无效，请检查配置。"
+    "network": "网络连接失败",
+    "timeout": "请求超时",
+    "aiApi": "AI 服务异常",
+    "rateLimit": "请求过于频繁，请稍后重试",
+    "invalidApiKey": "API Key 无效，请检查配置",
+    "quotaExceeded": "API 额度已用尽，请为您的账户充值",
+    "creditsLow": "API 额度即将用尽，建议尽快充值",
+    "storage": "存储操作失败",
+    "storageQuotaExceeded": "存储空间已满",
+    "invalidInput": "输入内容无效",
+    "missingField": "缺少必填字段",
+    "notFound": "未找到资源",
+    "alreadyExists": "资源已存在",
+    "duplicateEntry": "条目已存在",
+    "duplicateWord": "该词汇已保存",
+    "duplicateTag": "标签名已存在",
+    "locationFailed": "无法定位元素",
+    "xpathInvalid": "XPath 表达式无效",
+    "elementNotFound": "页面中未找到元素",
+    "pageInaccessible": "来源页面无法访问",
+    "tabError": "标签页操作失败",
+    "extensionUpdated": "扩展已更新，请刷新页面后重试",
+    "unknown": "发生未知错误",
+    "handlerNotFound": "未找到消息处理器"
   },
   "options": {
     "nav": {

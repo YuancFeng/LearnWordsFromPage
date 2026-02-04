@@ -55,7 +55,7 @@ export interface ErrorInfo {
   details?: Record<string, unknown>;
 }
 
-// 标准错误消息映射
+// 标准错误消息映射 (fallback for non-i18n contexts)
 export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.NETWORK_ERROR]: 'Network communication error',
   [ErrorCode.TIMEOUT]: 'Request timed out',
@@ -78,10 +78,59 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.ELEMENT_NOT_FOUND]: 'Element not found on page',
   [ErrorCode.PAGE_INACCESSIBLE]: 'Source page is inaccessible',
   [ErrorCode.TAB_ERROR]: 'Failed to manage browser tab',
-  [ErrorCode.EXTENSION_CONTEXT_INVALIDATED]: '扩展已更新，请刷新页面后重试',
+  [ErrorCode.EXTENSION_CONTEXT_INVALIDATED]: 'Extension updated, please refresh the page',
   [ErrorCode.UNKNOWN]: 'An unknown error occurred',
   [ErrorCode.HANDLER_NOT_FOUND]: 'Message handler not found',
 };
+
+// i18n 键映射 - 用于本地化错误消息
+export const ERROR_I18N_KEYS: Record<ErrorCode, string> = {
+  [ErrorCode.NETWORK_ERROR]: 'errors.network',
+  [ErrorCode.TIMEOUT]: 'errors.timeout',
+  [ErrorCode.AI_API_ERROR]: 'errors.aiApi',
+  [ErrorCode.AI_RATE_LIMIT]: 'errors.rateLimit',
+  [ErrorCode.AI_INVALID_KEY]: 'errors.invalidApiKey',
+  [ErrorCode.AI_QUOTA_EXCEEDED]: 'errors.quotaExceeded',
+  [ErrorCode.AI_CREDITS_LOW]: 'errors.creditsLow',
+  [ErrorCode.STORAGE_ERROR]: 'errors.storage',
+  [ErrorCode.STORAGE_QUOTA_EXCEEDED]: 'errors.storageQuotaExceeded',
+  [ErrorCode.INVALID_INPUT]: 'errors.invalidInput',
+  [ErrorCode.MISSING_REQUIRED_FIELD]: 'errors.missingField',
+  [ErrorCode.NOT_FOUND]: 'errors.notFound',
+  [ErrorCode.ALREADY_EXISTS]: 'errors.alreadyExists',
+  [ErrorCode.DUPLICATE_ENTRY]: 'errors.duplicateEntry',
+  [ErrorCode.DUPLICATE_WORD]: 'errors.duplicateWord',
+  [ErrorCode.DUPLICATE_TAG]: 'errors.duplicateTag',
+  [ErrorCode.LOCATION_FAILED]: 'errors.locationFailed',
+  [ErrorCode.XPATH_INVALID]: 'errors.xpathInvalid',
+  [ErrorCode.ELEMENT_NOT_FOUND]: 'errors.elementNotFound',
+  [ErrorCode.PAGE_INACCESSIBLE]: 'errors.pageInaccessible',
+  [ErrorCode.TAB_ERROR]: 'errors.tabError',
+  [ErrorCode.EXTENSION_CONTEXT_INVALIDATED]: 'errors.extensionUpdated',
+  [ErrorCode.UNKNOWN]: 'errors.unknown',
+  [ErrorCode.HANDLER_NOT_FOUND]: 'errors.handlerNotFound',
+};
+
+/**
+ * 获取本地化错误消息
+ * @param code 错误码
+ * @param t i18n 翻译函数
+ * @returns 本地化的错误消息
+ */
+export function getLocalizedError(
+  code: ErrorCode,
+  t: (key: string) => string
+): string {
+  const i18nKey = ERROR_I18N_KEYS[code];
+  if (i18nKey) {
+    const translated = t(i18nKey);
+    // 如果翻译函数返回了键本身，说明没有找到翻译，使用 fallback
+    if (translated !== i18nKey) {
+      return translated;
+    }
+  }
+  return ERROR_MESSAGES[code] || ERROR_MESSAGES[ErrorCode.UNKNOWN];
+}
 
 // 创建错误信息的工具函数
 export function createError(

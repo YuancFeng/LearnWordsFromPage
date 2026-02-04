@@ -30,6 +30,12 @@ import { MessageTypes } from '../../shared/messaging/types';
 import type { WordRecord, JumpToSourcePayload } from '../../shared/messaging/types';
 import type { Tag } from '../../shared/types/tag';
 import { ErrorCode } from '../../shared/types/errors';
+import type { useToast } from './Toast';
+
+/**
+ * Toast 类型定义
+ */
+type ToastInstance = ReturnType<typeof useToast>;
 
 /**
  * VocabularyList 属性
@@ -41,6 +47,8 @@ interface VocabularyListProps {
   onStartReview?: () => void;
   /** 打开设置页面的回调 - Story 4.1 */
   onOpenSettings?: () => void;
+  /** Toast 通知实例 */
+  toast?: ToastInstance;
 }
 
 /**
@@ -73,23 +81,9 @@ function ContextPreview({
 }
 
 /**
- * 词卡组件
- * Story 2.3: 添加跳转到原文功能
- * Story 4.5: 添加搜索高亮
- * Story 4.6: 添加标签管理
+ * WordCard 组件属性
  */
-function WordCard({
-  word,
-  onJumpToSource,
-  onDelete,
-  searchKeyword = '',
-  allTags = [],
-  onUpdateTags,
-  onManageTags,
-  isSelectionMode = false,
-  isSelected = false,
-  onSelectionToggle,
-}: {
+interface WordCardProps {
   word: WordRecord;
   onJumpToSource?: (word: WordRecord) => void;
   onDelete: (id: string) => void;
@@ -103,7 +97,28 @@ function WordCard({
   isSelected?: boolean;
   /** Story 4.6 - AC4: 选中状态切换回调 */
   onSelectionToggle?: () => void;
-}) {
+}
+
+/**
+ * 词卡组件
+ * Story 2.3: 添加跳转到原文功能
+ * Story 4.5: 添加搜索高亮
+ * Story 4.6: 添加标签管理
+ *
+ * 使用 React.memo 优化渲染性能
+ */
+const WordCard = React.memo(function WordCard({
+  word,
+  onJumpToSource,
+  onDelete,
+  searchKeyword = '',
+  allTags = [],
+  onUpdateTags,
+  onManageTags,
+  isSelectionMode = false,
+  isSelected = false,
+  onSelectionToggle,
+}: WordCardProps) {
   const { t } = useTranslation();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -404,7 +419,19 @@ function WordCard({
       </div>
     </div>
   );
-}
+}, (prevProps, nextProps) => {
+  // 自定义比较函数，优化渲染性能
+  // 只有当这些 props 变化时才重新渲染
+  return (
+    prevProps.word.id === nextProps.word.id &&
+    prevProps.word.updatedAt === nextProps.word.updatedAt &&
+    prevProps.word.tagIds?.join(',') === nextProps.word.tagIds?.join(',') &&
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.isSelectionMode === nextProps.isSelectionMode &&
+    prevProps.searchKeyword === nextProps.searchKeyword &&
+    prevProps.allTags?.length === nextProps.allTags?.length
+  );
+});
 
 /**
  * 空状态组件
@@ -437,6 +464,7 @@ export function VocabularyList({
   onJumpToSource,
   onStartReview,
   onOpenSettings,
+  toast,
 }: VocabularyListProps): React.ReactElement {
   const { t } = useTranslation();
 
@@ -533,14 +561,17 @@ export function VocabularyList({
         if (response.success) {
           // 刷新搜索结果
           setSearchQuery(searchQuery);
+          toast?.success(t('vocabulary.toast.deleteSuccess'));
         } else {
           console.error('[LingoRecall] Delete failed:', response.error);
+          toast?.error(t('vocabulary.toast.deleteFailed'));
         }
       } catch (err) {
         console.error('[LingoRecall] Delete error:', err);
+        toast?.error(t('vocabulary.toast.deleteFailed'));
       }
     },
-    [searchQuery, setSearchQuery]
+    [searchQuery, setSearchQuery, toast, t]
   );
 
   /**
@@ -579,14 +610,17 @@ export function VocabularyList({
         if (response.success) {
           // 刷新搜索结果以反映更新
           setSearchQuery(searchQuery);
+          toast?.success(t('vocabulary.toast.tagUpdated'));
         } else {
           console.error('[LingoRecall] Update word tags failed:', response.error);
+          toast?.error(t('vocabulary.toast.tagUpdateFailed'));
         }
       } catch (err) {
         console.error('[LingoRecall] Update word tags error:', err);
+        toast?.error(t('vocabulary.toast.tagUpdateFailed'));
       }
     },
-    [searchResults, searchQuery, setSearchQuery]
+    [searchResults, searchQuery, setSearchQuery, toast, t]
   );
 
   /**
@@ -663,13 +697,16 @@ export function VocabularyList({
         // 清除选中状态
         setSelectedWordIds(new Set());
         setIsSelectionMode(false);
+
+        toast?.success(t('vocabulary.toast.batchTagSuccess', { count: selectedWordIds.size }));
       } catch (err) {
         console.error('[LingoRecall] Batch add tags error:', err);
+        toast?.error(t('vocabulary.toast.batchTagFailed'));
       } finally {
         setIsBatchProcessing(false);
       }
     },
-    [selectedWordIds, searchResults, searchQuery, setSearchQuery]
+    [selectedWordIds, searchResults, searchQuery, setSearchQuery, toast, t]
   );
 
   /**

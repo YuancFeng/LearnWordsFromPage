@@ -13,6 +13,7 @@ import React, { useState, useCallback } from 'react';
 import { VocabularyList } from './components/VocabularyList';
 import { ReviewPage } from './components/ReviewPage';
 import { SettingsPanel } from './components/SettingsPanel';
+import { useToast } from './components/Toast';
 import { useTheme } from '../hooks/useTheme';
 
 /**
@@ -32,6 +33,9 @@ export function App() {
 
   // Story 4.2: 调用 useTheme hook 以应用主题 class 到 document.documentElement
   useTheme();
+
+  // Toast 通知
+  const toast = useToast();
 
   /**
    * 进入复习页面
@@ -62,17 +66,21 @@ export function App() {
           <VocabularyList
             onStartReview={handleStartReview}
             onOpenSettings={handleOpenSettings}
+            toast={toast}
           />
         </div>
       )}
 
       {currentPage === 'review' && (
-        <ReviewPage onBack={handleBackToVocabulary} />
+        <ReviewPage onBack={handleBackToVocabulary} toast={toast} />
       )}
 
       {currentPage === 'settings' && (
         <SettingsPanel onBack={handleBackToVocabulary} />
       )}
+
+      {/* Toast 容器 */}
+      <toast.ToastContainer />
     </div>
   );
 }

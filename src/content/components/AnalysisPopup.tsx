@@ -316,6 +316,7 @@ export function AnalysisPopup({
   const [opacity, setOpacity] = useState(0);
   const [isHoveringSave, setIsHoveringSave] = useState(false);
   const [isHoveringClose, setIsHoveringClose] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // 确定是否为翻译模式：优先使用 prop，其次从 result.mode 推断
   const isTranslateMode = isTranslateModeProp ?? result.mode === 'translate';
@@ -335,6 +336,19 @@ export function AnalysisPopup({
   const displayText = isTranslateMode && selectedText.length > 50
     ? selectedText.substring(0, 50) + '...'
     : selectedText;
+
+  /**
+   * 处理保存，防止重复点击
+   */
+  const handleSave = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      await onSave();
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <DraggablePopup
@@ -402,15 +416,36 @@ export function AnalysisPopup({
             <button
               style={{
                 ...styles.saveButton,
-                backgroundColor: isHoveringSave ? tokens.colors.successHover : tokens.colors.success,
+                backgroundColor: isSaving
+                  ? tokens.colors.textSecondary
+                  : isHoveringSave
+                    ? tokens.colors.successHover
+                    : tokens.colors.success,
+                opacity: isSaving ? 0.7 : 1,
+                cursor: isSaving ? 'not-allowed' : 'pointer',
               }}
-              onClick={onSave}
-              onMouseEnter={() => setIsHoveringSave(true)}
+              onClick={handleSave}
+              onMouseEnter={() => !isSaving && setIsHoveringSave(true)}
               onMouseLeave={() => setIsHoveringSave(false)}
-              title={t('analysis.saveWord')}
+              disabled={isSaving}
+              title={isSaving ? t('common.saving') : t('analysis.saveWord')}
             >
-              <SaveIcon />
-              {t('analysis.saveWord')}
+              {isSaving ? (
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  style={{ animation: 'spin 1s linear infinite' }}
+                >
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                </svg>
+              ) : (
+                <SaveIcon />
+              )}
+              {isSaving ? t('common.saving') : t('analysis.saveWord')}
             </button>
           </div>
         )}
