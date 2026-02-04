@@ -202,29 +202,59 @@ registerHandler(MessageTypes.ANALYZE_WORD, async (message): Promise<Response<AIA
       data: result,
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[LingoRecall] ANALYZE_WORD error:', errorMessage);
+    // 使用更健壮的错误消息提取
+    let errorMessage: string;
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'object' && error !== null) {
+      const errObj = error as Record<string, unknown>;
+      // 优先使用已知字段
+      if (typeof errObj.message === 'string' && errObj.message) {
+        errorMessage = errObj.message;
+      } else if (typeof errObj.error === 'string' && errObj.error) {
+        errorMessage = errObj.error;
+      } else if (typeof errObj.details === 'string' && errObj.details) {
+        errorMessage = errObj.details;
+      } else if (errObj.error && typeof errObj.error === 'object') {
+        // 处理嵌套的 error 对象
+        const nestedError = errObj.error as Record<string, unknown>;
+        errorMessage = typeof nestedError.message === 'string' ? nestedError.message : 'Unknown error';
+      } else {
+        // 最后尝试 JSON 序列化
+        try {
+          errorMessage = JSON.stringify(error);
+        } catch {
+          errorMessage = 'Unknown error';
+        }
+      }
+    } else {
+      errorMessage = String(error) || 'Unknown error';
+    }
 
-    // 解析错误类型
+    console.error('[LingoRecall] ANALYZE_WORD error:', errorMessage);
+    console.error('[LingoRecall] Full error:', error);
+
+    // 解析错误类型 - 使用规范化的大写消息进行匹配
+    const normalizedMessage = errorMessage.toUpperCase();
     let errorCode = ErrorCode.AI_API_ERROR;
     let userMessage = 'AI 分析失败，请重试';
 
-    if (errorMessage.includes('API_KEY')) {
+    if (normalizedMessage.includes('API_KEY') || normalizedMessage.includes('INVALID_API_KEY')) {
       errorCode = ErrorCode.AI_INVALID_KEY;
       userMessage = 'API Key 无效，请检查设置';
-    } else if (errorMessage.includes('RATE_LIMIT')) {
+    } else if (normalizedMessage.includes('RATE_LIMIT') || normalizedMessage.includes('429') || normalizedMessage.includes('RESOURCE_EXHAUSTED') || normalizedMessage.includes('QUOTA_EXCEEDED')) {
       errorCode = ErrorCode.AI_RATE_LIMIT;
       userMessage = '请求过于频繁，请稍后再试';
-    } else if (errorMessage.includes('TIMEOUT')) {
+    } else if (normalizedMessage.includes('TIMEOUT')) {
       errorCode = ErrorCode.TIMEOUT;
       userMessage = '请求超时，请检查网络连接';
-    } else if (errorMessage.includes('NETWORK')) {
+    } else if (normalizedMessage.includes('NETWORK') || normalizedMessage.includes('FETCH')) {
       errorCode = ErrorCode.NETWORK_ERROR;
       userMessage = '网络错误，请检查网络连接';
-    } else if (errorMessage.includes('ENDPOINT_NOT_FOUND')) {
+    } else if (normalizedMessage.includes('ENDPOINT_NOT_FOUND')) {
       errorCode = ErrorCode.AI_API_ERROR;
       userMessage = 'API 端点无效，请检查配置';
-    } else if (errorMessage.includes('INVALID_CONFIG')) {
+    } else if (normalizedMessage.includes('INVALID_CONFIG')) {
       errorCode = ErrorCode.INVALID_INPUT;
       userMessage = '配置无效，请检查设置';
     }
@@ -671,6 +701,7 @@ registerHandler(MessageTypes.TEST_API_CONNECTION, async (message): Promise<Respo
 
       try {
         // 使用 Gemini SDK 进行测试（原生 Google API Key）
+        // validateGeminiApiKey 现在包含超时和重试机制
         const isValid = await validateGeminiApiKey(apiKey);
         const latencyMs = Math.round(performance.now() - startTime);
 
@@ -694,9 +725,27 @@ registerHandler(MessageTypes.TEST_API_CONNECTION, async (message): Promise<Respo
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const normalizedMessage = errorMessage.toUpperCase();
         console.error('[LingoRecall] Gemini API test error:', errorMessage);
 
-        if (errorMessage.includes('RATE_LIMIT') || errorMessage.includes('429')) {
+        // 超时错误 - 提供友好的中文提示
+        if (normalizedMessage.includes('TIMEOUT')) {
+          return {
+            success: true,
+            data: {
+              success: false,
+              error: '连接超时，请检查网络或稍后重试',
+              errorCode: 'TIMEOUT',
+            },
+          };
+        }
+
+        // 速率限制错误
+        if (
+          normalizedMessage.includes('RATE_LIMIT') ||
+          normalizedMessage.includes('429') ||
+          normalizedMessage.includes('RESOURCE_EXHAUSTED')
+        ) {
           return {
             success: true,
             data: {
@@ -706,7 +755,9 @@ registerHandler(MessageTypes.TEST_API_CONNECTION, async (message): Promise<Respo
             },
           };
         }
-        if (errorMessage.includes('API_KEY') || errorMessage.includes('invalid')) {
+
+        // API Key 无效
+        if (normalizedMessage.includes('API_KEY') || normalizedMessage.includes('INVALID')) {
           return {
             success: true,
             data: {
@@ -716,13 +767,15 @@ registerHandler(MessageTypes.TEST_API_CONNECTION, async (message): Promise<Respo
             },
           };
         }
-        if (errorMessage.includes('TIMEOUT') || errorMessage.includes('timeout')) {
+
+        // 网络错误
+        if (normalizedMessage.includes('NETWORK') || normalizedMessage.includes('FETCH')) {
           return {
             success: true,
             data: {
               success: false,
-              error: '连接超时，请检查网络',
-              errorCode: 'TIMEOUT',
+              error: '网络连接失败，请检查网络',
+              errorCode: 'NETWORK_ERROR',
             },
           };
         }

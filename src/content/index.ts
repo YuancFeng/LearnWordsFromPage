@@ -742,7 +742,7 @@ async function handleAnalyze(): Promise<void> {
         showError(i18n.t('analysis.toast.extensionUpdated'));
       } else {
         // Handle other errors - show friendly message
-        console.error('[LingoRecall] Analysis failed:', response.error);
+        console.error('[LingoRecall] Analysis failed:', response.error?.code, response.error?.message);
         showError(response.error?.message || i18n.t('analysis.errors.generic'));
       }
     }
@@ -961,17 +961,38 @@ async function handleFullPageTranslation(): Promise<void> {
       );
     }
   } catch (error) {
-    // 更好地处理错误信息
+    // 更好地处理错误信息，避免显示 [object Object]
     let errorMessage: string;
     if (error instanceof Error) {
       errorMessage = error.message;
     } else if (typeof error === 'object' && error !== null) {
       const errObj = error as Record<string, unknown>;
-      errorMessage = errObj.message as string || errObj.error as string || JSON.stringify(error);
+      // 优先使用已知字段，避免 JSON.stringify 产生不友好输出
+      if (typeof errObj.message === 'string' && errObj.message) {
+        errorMessage = errObj.message;
+      } else if (typeof errObj.error === 'string' && errObj.error) {
+        errorMessage = errObj.error;
+      } else if (typeof errObj.details === 'string' && errObj.details) {
+        errorMessage = errObj.details;
+      } else if (errObj.error && typeof errObj.error === 'object') {
+        // 处理嵌套的 error 对象
+        const nestedError = errObj.error as Record<string, unknown>;
+        if (typeof nestedError.message === 'string') {
+          errorMessage = nestedError.message;
+        } else {
+          errorMessage = i18n.t('analysis.errors.generic');
+        }
+      } else {
+        // 使用本地化的通用错误消息，而不是 JSON.stringify
+        errorMessage = i18n.t('analysis.errors.generic');
+      }
+    } else if (typeof error === 'string' && error) {
+      errorMessage = error;
     } else {
-      errorMessage = String(error) || 'Unknown error';
+      errorMessage = i18n.t('analysis.errors.generic');
     }
     console.error('[LingoRecall] Full page translation error:', errorMessage);
+    console.error('[LingoRecall] Full error object:', error);
 
     // 清除翻译状态
     updatePageTranslation(null);

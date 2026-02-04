@@ -62,16 +62,25 @@ export interface AnalyzeWordRequest {
 const DEFAULT_MODEL = 'gemini-2.0-flash';
 
 /** 响应时间上限（毫秒）- Story 1.6 AC-3 */
-const RESPONSE_TIMEOUT_MS = 3000;
+const RESPONSE_TIMEOUT_MS = 8000;
 
-/** 最大重试次数 */
+/** 批量翻译最大重试次数 */
 const MAX_RETRIES = 3;
+
+/** 单词分析最大重试次数（需要快速响应，所以比批量翻译少） */
+const ANALYZE_MAX_RETRIES = 2;
 
 /** 初始重试延迟（毫秒）*/
 const INITIAL_RETRY_DELAY_MS = 1000;
 
 /** 最大重试延迟（毫秒）*/
 const MAX_RETRY_DELAY_MS = 8000;
+
+/** API Key 验证超时（毫秒）- 给予足够时间完成验证 */
+const VALIDATE_TIMEOUT_MS = 10000;
+
+/** API Key 验证最大重试次数 */
+const VALIDATE_MAX_RETRIES = 2;
 
 /**
  * 获取 Gemini 模型实例
@@ -173,17 +182,97 @@ function getRetryDelay(retryCount: number): number {
 }
 
 /**
- * 检查错误是否可重试（如速率限制）
+ * 错误信息接口
+ * 用于统一处理各种格式的错误对象
  */
-function isRetryableError(error: unknown): boolean {
+interface ErrorInfo {
+  message: string;
+  status?: number;
+  code?: string;
+  isRetryable: boolean;
+}
+
+/**
+ * 从各种错误格式中提取标准化的错误信息
+ * 支持 Error 实例、Google API 错误对象、以及其他对象格式
+ *
+ * @param error - 任意类型的错误
+ * @returns 标准化的错误信息
+ */
+function extractErrorInfo(error: unknown): ErrorInfo {
+  // 处理 Error 实例
   if (error instanceof Error) {
     const message = error.message.toUpperCase();
-    return message.includes('429') ||
-           message.includes('RATE_LIMIT') ||
-           message.includes('RESOURCE_EXHAUSTED') ||
-           message.includes('QUOTA_EXCEEDED');
+    const isRetryable =
+      message.includes('429') ||
+      message.includes('RATE_LIMIT') ||
+      message.includes('RESOURCE_EXHAUSTED') ||
+      message.includes('QUOTA_EXCEEDED');
+
+    return {
+      message: error.message,
+      isRetryable,
+    };
   }
-  return false;
+
+  // 处理对象形式的错误 (Google API 可能返回这种格式)
+  if (typeof error === 'object' && error !== null) {
+    const errObj = error as Record<string, unknown>;
+
+    // 提取 status code
+    const status = typeof errObj.status === 'number' ? errObj.status : undefined;
+    const code = typeof errObj.code === 'string' ? errObj.code : undefined;
+
+    // 提取消息 - 尝试多种可能的字段
+    let message = 'Unknown error';
+    if (typeof errObj.message === 'string' && errObj.message) {
+      message = errObj.message;
+    } else if (typeof errObj.error === 'string' && errObj.error) {
+      message = errObj.error;
+    } else if (typeof errObj.details === 'string' && errObj.details) {
+      message = errObj.details;
+    } else if (errObj.error && typeof errObj.error === 'object') {
+      // 处理嵌套的 error 对象 (如 { error: { message: '...' } })
+      const nestedError = errObj.error as Record<string, unknown>;
+      if (typeof nestedError.message === 'string') {
+        message = nestedError.message;
+      }
+    }
+
+    // 检查是否可重试
+    const normalizedMessage = message.toUpperCase();
+    const isRetryable =
+      status === 429 ||
+      code === 'RESOURCE_EXHAUSTED' ||
+      code === 'RATE_LIMIT_EXCEEDED' ||
+      normalizedMessage.includes('429') ||
+      normalizedMessage.includes('RATE_LIMIT') ||
+      normalizedMessage.includes('QUOTA_EXCEEDED') ||
+      normalizedMessage.includes('RESOURCE_EXHAUSTED');
+
+    return { message, status, code, isRetryable };
+  }
+
+  // 处理字符串错误
+  if (typeof error === 'string') {
+    const normalizedMessage = error.toUpperCase();
+    const isRetryable =
+      normalizedMessage.includes('429') ||
+      normalizedMessage.includes('RATE_LIMIT') ||
+      normalizedMessage.includes('QUOTA_EXCEEDED');
+    return { message: error, isRetryable };
+  }
+
+  return { message: String(error), isRetryable: false };
+}
+
+/**
+ * 检查错误是否可重试（如速率限制）
+ * 使用 extractErrorInfo 统一处理各种错误格式
+ */
+function isRetryableError(error: unknown): boolean {
+  const info = extractErrorInfo(error);
+  return info.isRetryable;
 }
 
 /**
@@ -246,65 +335,98 @@ export async function analyzeWord(
   const mode = request.mode || 'word';
   const targetLanguage = request.targetLanguage || DEFAULT_TARGET_LANGUAGE;
 
-  try {
-    const model = getModel(apiKey, modelName);
-    const prompt = buildAnalysisPrompt(request.text, request.context, mode, targetLanguage);
+  const model = getModel(apiKey, modelName);
+  const prompt = buildAnalysisPrompt(request.text, request.context, mode, targetLanguage);
 
-    // 翻译模式可能需要更长时间处理长文本
-    const timeout = mode === 'translate' ? RESPONSE_TIMEOUT_MS * 3 : RESPONSE_TIMEOUT_MS;
+  // 翻译模式可能需要更长时间处理长文本
+  const timeout = mode === 'translate' ? RESPONSE_TIMEOUT_MS * 3 : RESPONSE_TIMEOUT_MS;
 
-    const result = await withTimeout(
-      model.generateContent(prompt),
-      timeout,
-      `TIMEOUT: AI response exceeded ${timeout / 1000}s limit.`
-    );
+  let lastError: Error | null = null;
 
-    const response = result.response;
-    const text = response.text();
+  // 使用指数退避重试（处理速率限制 429 错误）
+  for (let retryCount = 0; retryCount <= ANALYZE_MAX_RETRIES; retryCount++) {
+    try {
+      const result = await withTimeout(
+        model.generateContent(prompt),
+        timeout,
+        `TIMEOUT: AI response exceeded ${timeout / 1000}s limit.`
+      );
 
-    // 追踪 token 使用量 (Gemini API 提供 usageMetadata)
-    const usageMetadata = response.usageMetadata;
-    if (usageMetadata) {
-      const inputTokens = usageMetadata.promptTokenCount || 0;
-      const outputTokens = usageMetadata.candidatesTokenCount || 0;
-      const actualModelName = modelName || DEFAULT_MODEL;
-      // 异步追踪，不阻塞主流程
-      trackUsage(inputTokens, outputTokens, actualModelName).catch((err) => {
-        console.warn('[LingoRecall Usage] Failed to track Gemini usage:', err);
-      });
+      const response = result.response;
+      const text = response.text();
+
+      // 追踪 token 使用量 (Gemini API 提供 usageMetadata)
+      const usageMetadata = response.usageMetadata;
+      if (usageMetadata) {
+        const inputTokens = usageMetadata.promptTokenCount || 0;
+        const outputTokens = usageMetadata.candidatesTokenCount || 0;
+        const actualModelName = modelName || DEFAULT_MODEL;
+        // 异步追踪，不阻塞主流程
+        trackUsage(inputTokens, outputTokens, actualModelName).catch((err) => {
+          console.warn('[LingoRecall Usage] Failed to track Gemini usage:', err);
+        });
+      }
+
+      const elapsed = Date.now() - startTime;
+      console.log(`[LingoRecall] AI response in ${elapsed}ms (mode: ${mode}, lang: ${targetLanguage})`);
+
+      // Story 1.6 AC-3: 响应时间监控（翻译模式允许更长时间）
+      const expectedTimeout = mode === 'translate' ? RESPONSE_TIMEOUT_MS * 3 : RESPONSE_TIMEOUT_MS;
+      if (elapsed > expectedTimeout) {
+        console.warn(`[LingoRecall] Slow AI response: ${elapsed}ms`);
+      }
+
+      return parseAIResponse(text, mode, targetLanguage);
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      // 检测是否为可重试的错误（速率限制）
+      if (isRetryableError(error) && retryCount < ANALYZE_MAX_RETRIES) {
+        const delay = getRetryDelay(retryCount);
+        console.warn(
+          `[LingoRecall] Rate limit hit in analyzeWord, retrying in ${delay}ms (attempt ${retryCount + 1}/${ANALYZE_MAX_RETRIES})`
+        );
+        await sleep(delay);
+        continue;
+      }
+
+      // 不可重试的错误或已达最大重试次数
+      const errorInfo = extractErrorInfo(error);
+      console.error('[LingoRecall] Gemini API error:', errorInfo.message);
+      console.error('[LingoRecall] Full error details:', error);
+
+      const normalizedMessage = errorInfo.message.toUpperCase();
+
+      // 检测特定错误类型并抛出标准 Error
+      if (normalizedMessage.includes('API_KEY') || normalizedMessage.includes('INVALID_API_KEY')) {
+        throw new Error('API_KEY_INVALID: Please check your API key configuration.');
+      }
+      if (errorInfo.isRetryable || normalizedMessage.includes('RATE_LIMIT') || normalizedMessage.includes('429') || errorInfo.status === 429) {
+        throw new Error('RATE_LIMIT: Too many requests. Please try again later.');
+      }
+      if (normalizedMessage.includes('TIMEOUT')) {
+        throw new Error('TIMEOUT: Request timed out. Please try again.');
+      }
+      if (normalizedMessage.includes('FETCH') || normalizedMessage.includes('NETWORK')) {
+        throw new Error('NETWORK_ERROR: Please check your internet connection.');
+      }
+
+      // 确保抛出 Error 实例，包含提取的消息
+      throw new Error(errorInfo.message);
     }
+  }
 
-    const elapsed = Date.now() - startTime;
-    console.log(`[LingoRecall] AI response in ${elapsed}ms (mode: ${mode}, lang: ${targetLanguage})`);
-
-    // Story 1.6 AC-3: 响应时间应 < 3 秒（翻译模式允许更长时间）
-    const expectedTimeout = mode === 'translate' ? RESPONSE_TIMEOUT_MS * 3 : RESPONSE_TIMEOUT_MS;
-    if (elapsed > expectedTimeout) {
-      console.warn(`[LingoRecall] Slow AI response: ${elapsed}ms`);
-    }
-
-    return parseAIResponse(text, mode, targetLanguage);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    const normalizedMessage = errorMessage.toUpperCase();
-    console.error('[LingoRecall] Gemini API error:', errorMessage);
-
-    // 检测特定错误类型
-    if (normalizedMessage.includes('API_KEY')) {
-      throw new Error('API_KEY_INVALID: Please check your API key configuration.');
-    }
-    if (normalizedMessage.includes('RATE_LIMIT') || normalizedMessage.includes('429')) {
+  // 重试耗尽，抛出最后的错误
+  if (lastError) {
+    const errorInfo = extractErrorInfo(lastError);
+    if (errorInfo.isRetryable) {
       throw new Error('RATE_LIMIT: Too many requests. Please try again later.');
     }
-    if (normalizedMessage.includes('TIMEOUT')) {
-      throw new Error('TIMEOUT: Request timed out. Please try again.');
-    }
-    if (normalizedMessage.includes('FETCH') || normalizedMessage.includes('NETWORK')) {
-      throw new Error('NETWORK_ERROR: Please check your internet connection.');
-    }
-
-    throw error;
+    throw lastError;
   }
+
+  // 理论上不会到达这里，但 TypeScript 需要返回值
+  throw new Error('Unexpected error in analyzeWord');
 }
 
 /**
@@ -401,24 +523,77 @@ export async function translateBatchGemini(
 /**
  * 验证 API Key 是否有效
  * 通过发送简单请求测试
+ * 包含超时控制和重试机制，避免无限等待
  *
  * @param apiKey - 要验证的 API Key
  * @returns 是否有效
+ * @throws Error 如果发生超时或其他可识别的错误
  */
 export async function validateApiKey(apiKey: string): Promise<boolean> {
   if (!apiKey || apiKey.trim() === '') {
     return false;
   }
 
-  try {
-    const model = getModel(apiKey);
-    // 发送简单测试请求
-    const result = await model.generateContent('Say "OK" if you can hear me.');
-    const text = result.response.text();
-    return text.toLowerCase().includes('ok');
-  } catch {
-    return false;
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= VALIDATE_MAX_RETRIES; attempt++) {
+    try {
+      const model = getModel(apiKey);
+
+      // 使用超时控制，避免无限等待
+      const result = await withTimeout(
+        model.generateContent('Say "OK" if you can hear me.'),
+        VALIDATE_TIMEOUT_MS,
+        'TIMEOUT: API validation timed out after 10 seconds.'
+      );
+
+      const text = result.response.text();
+      return text.toLowerCase().includes('ok');
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      const errorMessage = lastError.message.toUpperCase();
+
+      // 检查是否为可重试错误（速率限制、网络波动等）
+      if (isRetryableError(error) && attempt < VALIDATE_MAX_RETRIES) {
+        const delay = getRetryDelay(attempt);
+        console.log(
+          `[LingoRecall] API validation retry ${attempt + 1}/${VALIDATE_MAX_RETRIES} in ${delay}ms`
+        );
+        await sleep(delay);
+        continue;
+      }
+
+      // 超时错误 - 抛出以便上层处理
+      if (errorMessage.includes('TIMEOUT')) {
+        console.error('[LingoRecall] API validation timed out:', lastError.message);
+        throw lastError;
+      }
+
+      // 速率限制错误 - 抛出以便上层显示友好消息
+      if (
+        errorMessage.includes('429') ||
+        errorMessage.includes('RATE_LIMIT') ||
+        errorMessage.includes('RESOURCE_EXHAUSTED')
+      ) {
+        console.error('[LingoRecall] API validation rate limited:', lastError.message);
+        throw new Error('RATE_LIMIT: Too many requests. Please try again later.');
+      }
+
+      // API Key 无效 - 返回 false
+      if (errorMessage.includes('API_KEY') || errorMessage.includes('INVALID')) {
+        console.error('[LingoRecall] API validation failed - invalid key:', lastError.message);
+        return false;
+      }
+
+      // 其他错误 - 记录并返回 false
+      console.error('[LingoRecall] API validation failed:', lastError.message);
+      return false;
+    }
   }
+
+  // 重试耗尽
+  console.error('[LingoRecall] API validation failed after retries:', lastError?.message);
+  return false;
 }
 
 /**
