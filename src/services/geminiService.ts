@@ -61,14 +61,18 @@ export interface AnalyzeWordRequest {
 /** 默认模型 - 使用配额更高的稳定版 */
 const DEFAULT_MODEL = 'gemini-2.0-flash';
 
-/** 响应时间上限（毫秒）- Story 1.6 AC-3 */
-const RESPONSE_TIMEOUT_MS = 8000;
+/** 响应时间上限（毫秒）- Story 1.6 AC-3
+ * 从 8s 提升至 15s：解决 Service Worker 冷启动后首次请求超时问题。
+ * 冷启动耗时包括：SW 初始化 + DNS 解析 + TLS 握手 + Gemini 服务端冷启动 + AI 生成，
+ * 实测合计 ~3.5-9.5s，8s 限制在冷启动场景下经常不够用。
+ */
+const RESPONSE_TIMEOUT_MS = 15000;
 
 /** 批量翻译最大重试次数 */
 const MAX_RETRIES = 3;
 
-/** 单词分析最大重试次数（需要快速响应，所以比批量翻译少） */
-const ANALYZE_MAX_RETRIES = 2;
+/** 单词分析最大重试次数 - 包含超时重试，需要适当增加 */
+const ANALYZE_MAX_RETRIES = 3;
 
 /** 初始重试延迟（毫秒）*/
 const INITIAL_RETRY_DELAY_MS = 1000;
@@ -77,21 +81,37 @@ const INITIAL_RETRY_DELAY_MS = 1000;
 const MAX_RETRY_DELAY_MS = 8000;
 
 /** API Key 验证超时（毫秒）- 给予足够时间完成验证 */
-const VALIDATE_TIMEOUT_MS = 10000;
+const VALIDATE_TIMEOUT_MS = 15000;
 
 /** API Key 验证最大重试次数 */
 const VALIDATE_MAX_RETRIES = 2;
 
 /**
- * 获取 Gemini 模型实例
+ * 模型实例缓存
+ * 复用 GoogleGenerativeAI 和 GenerativeModel 实例，
+ * 避免每次请求都创建新实例，减少连接建立开销。
+ * Service Worker 重启后缓存自然清空。
+ */
+const modelCache = new Map<string, { genAI: GoogleGenerativeAI; model: GenerativeModel }>();
+
+/**
+ * 获取 Gemini 模型实例（带缓存）
  *
  * @param apiKey - Google AI API Key
- * @param modelName - 模型名称，默认 gemini-2.0-flash-exp
+ * @param modelName - 模型名称，默认 gemini-2.0-flash
  * @returns GenerativeModel 实例
  */
 function getModel(apiKey: string, modelName: string = DEFAULT_MODEL): GenerativeModel {
+  const cacheKey = `${apiKey}:${modelName}`;
+  const cached = modelCache.get(cacheKey);
+  if (cached) {
+    return cached.model;
+  }
+
   const genAI = new GoogleGenerativeAI(apiKey);
-  return genAI.getGenerativeModel({ model: modelName });
+  const model = genAI.getGenerativeModel({ model: modelName });
+  modelCache.set(cacheKey, { genAI, model });
+  return model;
 }
 
 /** 默认目标语言 */
@@ -196,6 +216,11 @@ interface ErrorInfo {
  * 从各种错误格式中提取标准化的错误信息
  * 支持 Error 实例、Google API 错误对象、以及其他对象格式
  *
+ * 可重试的错误类型：
+ * - 速率限制 (429 / RATE_LIMIT / RESOURCE_EXHAUSTED / QUOTA_EXCEEDED)
+ * - 超时 (TIMEOUT) - 冷启动场景下首次请求超时，重试通常能成功
+ * - 网络错误 (FETCH / NETWORK / ECONNRESET) - 瞬时网络波动
+ *
  * @param error - 任意类型的错误
  * @returns 标准化的错误信息
  */
@@ -207,7 +232,11 @@ function extractErrorInfo(error: unknown): ErrorInfo {
       message.includes('429') ||
       message.includes('RATE_LIMIT') ||
       message.includes('RESOURCE_EXHAUSTED') ||
-      message.includes('QUOTA_EXCEEDED');
+      message.includes('QUOTA_EXCEEDED') ||
+      message.includes('TIMEOUT') ||
+      message.includes('FAILED TO FETCH') ||
+      message.includes('NETWORK') ||
+      message.includes('ECONNRESET');
 
     return {
       message: error.message,
@@ -239,16 +268,21 @@ function extractErrorInfo(error: unknown): ErrorInfo {
       }
     }
 
-    // 检查是否可重试
+    // 检查是否可重试（包含超时和网络错误）
     const normalizedMessage = message.toUpperCase();
     const isRetryable =
       status === 429 ||
+      status === 503 ||
       code === 'RESOURCE_EXHAUSTED' ||
       code === 'RATE_LIMIT_EXCEEDED' ||
       normalizedMessage.includes('429') ||
       normalizedMessage.includes('RATE_LIMIT') ||
       normalizedMessage.includes('QUOTA_EXCEEDED') ||
-      normalizedMessage.includes('RESOURCE_EXHAUSTED');
+      normalizedMessage.includes('RESOURCE_EXHAUSTED') ||
+      normalizedMessage.includes('TIMEOUT') ||
+      normalizedMessage.includes('FAILED TO FETCH') ||
+      normalizedMessage.includes('NETWORK') ||
+      normalizedMessage.includes('ECONNRESET');
 
     return { message, status, code, isRetryable };
   }
@@ -259,7 +293,9 @@ function extractErrorInfo(error: unknown): ErrorInfo {
     const isRetryable =
       normalizedMessage.includes('429') ||
       normalizedMessage.includes('RATE_LIMIT') ||
-      normalizedMessage.includes('QUOTA_EXCEEDED');
+      normalizedMessage.includes('QUOTA_EXCEEDED') ||
+      normalizedMessage.includes('TIMEOUT') ||
+      normalizedMessage.includes('NETWORK');
     return { message: error, isRetryable };
   }
 
@@ -380,11 +416,14 @@ export async function analyzeWord(
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
 
-      // 检测是否为可重试的错误（速率限制）
+      // 检测是否为可重试的错误（超时、速率限制、网络波动）
       if (isRetryableError(error) && retryCount < ANALYZE_MAX_RETRIES) {
         const delay = getRetryDelay(retryCount);
+        const errorInfo = extractErrorInfo(error);
+        const reason = errorInfo.message.toUpperCase().includes('TIMEOUT') ? 'timeout' :
+                       errorInfo.message.toUpperCase().includes('429') ? 'rate_limit' : 'network';
         console.warn(
-          `[LingoRecall] Rate limit hit in analyzeWord, retrying in ${delay}ms (attempt ${retryCount + 1}/${ANALYZE_MAX_RETRIES})`
+          `[LingoRecall] Retryable error (${reason}) in analyzeWord, retrying in ${delay}ms (attempt ${retryCount + 1}/${ANALYZE_MAX_RETRIES})`
         );
         await sleep(delay);
         continue;
@@ -452,7 +491,7 @@ export async function translateBatchGemini(
 
   const model = getModel(apiKey, modelName);
   const prompt = buildBatchTranslationPrompt(texts, targetLanguage);
-  const timeout = RESPONSE_TIMEOUT_MS * 10; // 批量翻译允许更长时间（30秒）
+  const timeout = RESPONSE_TIMEOUT_MS * 6; // 批量翻译允许更长时间（90秒）
 
   let lastError: Error | null = null;
 
@@ -484,11 +523,13 @@ export async function translateBatchGemini(
       lastError = error instanceof Error ? error : new Error(String(error));
       const errorMessage = lastError.message;
 
-      // 检测是否为可重试的错误（速率限制）
+      // 检测是否为可重试的错误（超时、速率限制、网络波动）
       if (isRetryableError(error) && retryCount < MAX_RETRIES) {
         const delay = getRetryDelay(retryCount);
+        const reason = lastError.message.toUpperCase().includes('TIMEOUT') ? 'timeout' :
+                       lastError.message.toUpperCase().includes('429') ? 'rate_limit' : 'network';
         console.warn(
-          `[LingoRecall] Rate limit hit, retrying in ${delay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`
+          `[LingoRecall] Retryable error (${reason}) in batch translation, retrying in ${delay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`
         );
         await sleep(delay);
         continue;
@@ -553,19 +594,21 @@ export async function validateApiKey(apiKey: string): Promise<boolean> {
       lastError = error instanceof Error ? error : new Error(String(error));
       const errorMessage = lastError.message.toUpperCase();
 
-      // 检查是否为可重试错误（速率限制、网络波动等）
+      // 检查是否为可重试错误（超时、速率限制、网络波动等）
       if (isRetryableError(error) && attempt < VALIDATE_MAX_RETRIES) {
         const delay = getRetryDelay(attempt);
+        const reason = errorMessage.includes('TIMEOUT') ? 'timeout' :
+                       errorMessage.includes('429') ? 'rate_limit' : 'network';
         console.log(
-          `[LingoRecall] API validation retry ${attempt + 1}/${VALIDATE_MAX_RETRIES} in ${delay}ms`
+          `[LingoRecall] API validation retry (${reason}) ${attempt + 1}/${VALIDATE_MAX_RETRIES} in ${delay}ms`
         );
         await sleep(delay);
         continue;
       }
 
-      // 超时错误 - 抛出以便上层处理
+      // 超时错误（已耗尽重试）- 抛出以便上层处理
       if (errorMessage.includes('TIMEOUT')) {
-        console.error('[LingoRecall] API validation timed out:', lastError.message);
+        console.error('[LingoRecall] API validation timed out after retries:', lastError.message);
         throw lastError;
       }
 
