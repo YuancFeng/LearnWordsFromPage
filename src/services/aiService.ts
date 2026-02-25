@@ -14,6 +14,7 @@ import { analyzeWord as analyzeWordGemini, type AIAnalysisResult, type AnalyzeWo
 import { analyzeWordOpenAI, translateBatchOpenAI } from './openaiCompatibleService';
 import { getCachedAnalysis, setCachedAnalysis, getCacheStats } from './analysisCache';
 import { translateBatchGemini } from './geminiService';
+import { checkRateLimit } from './rateLimiter';
 
 export type { AIAnalysisResult, AnalyzeWordRequest, AnalysisMode };
 
@@ -69,7 +70,16 @@ export async function analyzeWordUnified(
     return cached;
   }
 
-  // 2. 调用 AI API
+  // 2. 快速失败门控：对 Gemini provider 检查速率限制器
+  if (config.provider === 'gemini') {
+    const rateLimitCheck = checkRateLimit();
+    if (!rateLimitCheck.allowed) {
+      console.warn(`[LingoRecall AI] analyzeWordUnified blocked by rate limiter: ${rateLimitCheck.reason}`);
+      throw new Error(`${rateLimitCheck.reason}: Too many requests. Please try again later.`);
+    }
+  }
+
+  // 3. 调用 AI API
   let result: AIAnalysisResult;
 
   switch (config.provider) {
@@ -106,7 +116,7 @@ export async function analyzeWordUnified(
       throw new Error(`INVALID_PROVIDER: Unknown AI provider: ${config.provider}`);
   }
 
-  // 3. 缓存结果
+  // 4. 缓存结果
   setCachedAnalysis(request.text, result, mode);
 
   const elapsed = performance.now() - startTime;
@@ -134,6 +144,15 @@ export async function translateBatchUnified(
 
   if (texts.length === 0) {
     return [];
+  }
+
+  // 快速失败门控：对 Gemini provider 检查速率限制器
+  if (config.provider === 'gemini') {
+    const rateLimitCheck = checkRateLimit();
+    if (!rateLimitCheck.allowed) {
+      console.warn(`[LingoRecall AI] translateBatchUnified blocked by rate limiter: ${rateLimitCheck.reason}`);
+      throw new Error(`${rateLimitCheck.reason}: Too many requests. Please try again later.`);
+    }
   }
 
   let translations: string[];

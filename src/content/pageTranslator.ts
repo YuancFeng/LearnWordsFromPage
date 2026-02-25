@@ -31,7 +31,7 @@ const BATCH_SIZE = 10;
 const CONCURRENT_BATCHES = 1;
 
 /** 批次间延迟（毫秒），避免触发速率限制 */
-const BATCH_DELAY_MS = 500;
+const BATCH_DELAY_MS = 1500;
 
 /** 单个文本的最大字符数（超过则截断） */
 const MAX_TEXT_LENGTH = 2000;
@@ -624,9 +624,14 @@ async function translateBatch(
     const errorMessage = errorInfo?.message || errorInfo?.code || JSON.stringify(errorInfo);
     console.error('[LingoRecall PageTranslator] Translation failed:', errorMessage);
 
-    // 如果是配置错误，抛出异常让上层处理
-    if (errorInfo?.code === 'AI_INVALID_KEY' || errorInfo?.code === 'AI_API_ERROR') {
-      throw new Error(errorMessage);
+    // 速率限制 / 熔断器 / 配置错误 → 重新抛出，让循环决定是否终止
+    if (
+      errorInfo?.code === 'AI_RATE_LIMIT' ||
+      errorInfo?.code === 'AI_INVALID_KEY' ||
+      errorInfo?.code === 'AI_API_ERROR'
+    ) {
+      const errMsg = errorInfo?.code === 'AI_RATE_LIMIT' ? 'RATE_LIMIT' : errorMessage;
+      throw new Error(errMsg);
     }
 
     return texts; // 其他失败时返回原文
@@ -642,7 +647,21 @@ async function translateBatch(
       errorMessage = String(error) || 'Unknown error';
     }
     console.error('[LingoRecall PageTranslator] Translation error:', errorMessage);
-    throw new Error(errorMessage); // 重新抛出让上层处理
+
+    // 速率限制 / 熔断器 / 超时 / 网络错误 → 重新抛出让上层循环捕获并决定终止
+    const normalized = errorMessage.toUpperCase();
+    if (
+      normalized.includes('RATE_LIMIT') ||
+      normalized.includes('CIRCUIT_OPEN') ||
+      normalized.includes('429') ||
+      normalized.includes('TIMEOUT') ||
+      normalized.includes('NETWORK')
+    ) {
+      throw new Error(errorMessage);
+    }
+
+    // 其他错误 → 返回原文（静默降级）
+    return texts;
   }
 }
 
@@ -802,53 +821,103 @@ export async function translatePage(
 
     console.log(`[LingoRecall PageTranslator] Split into ${batches.length} batches, processing ${CONCURRENT_BATCHES} at a time`);
 
+    // 连续失败计数器（用于自适应中止）
+    let consecutiveFailures = 0;
+    // 自适应批次延迟（失败后翻倍）
+    let adaptiveBatchDelay = BATCH_DELAY_MS;
+
     // 顺序处理批次（避免速率限制）
     for (let i = 0; i < batches.length; i += CONCURRENT_BATCHES) {
       const concurrentBatches = batches.slice(i, i + CONCURRENT_BATCHES);
 
-      // 发送翻译请求（CONCURRENT_BATCHES=1 时为顺序执行）
-      const translationPromises = concurrentBatches.map(({ texts }) =>
-        translateBatch(texts, targetLanguage)
-      );
+      try {
+        // 发送翻译请求（CONCURRENT_BATCHES=1 时为顺序执行）
+        const translationPromises = concurrentBatches.map(({ texts }) =>
+          translateBatch(texts, targetLanguage)
+        );
 
-      // 等待请求完成
-      const translationResults = await Promise.all(translationPromises);
+        // 等待请求完成
+        const translationResults = await Promise.all(translationPromises);
 
-      // 应用翻译结果
-      concurrentBatches.forEach(({ batch }, batchIndex) => {
-        const translations = translationResults[batchIndex];
-        batch.forEach((nodeInfo, index) => {
-          const translated = translations[index];
-          if (translated && translated !== nodeInfo.originalText) {
-            applyTranslation(nodeInfo, translated);
-            translatedCount++;
-          }
+        // 成功：重置连续失败计数和自适应延迟
+        consecutiveFailures = 0;
+        adaptiveBatchDelay = BATCH_DELAY_MS;
+
+        // 应用翻译结果
+        concurrentBatches.forEach(({ batch }, batchIndex) => {
+          const translations = translationResults[batchIndex];
+          batch.forEach((nodeInfo, index) => {
+            const translated = translations[index];
+            if (translated && translated !== nodeInfo.originalText) {
+              applyTranslation(nodeInfo, translated);
+              translatedCount++;
+            }
+          });
         });
-      });
+      } catch (batchError) {
+        // 批次翻译失败
+        const batchErrorMessage = batchError instanceof Error ? batchError.message : String(batchError);
+        const normalizedError = batchErrorMessage.toUpperCase();
+        console.error(`[LingoRecall PageTranslator] Batch ${i / CONCURRENT_BATCHES + 1} failed:`, batchErrorMessage);
+
+        // 速率限制 / 熔断器错误 → 立即中止后续批次
+        if (
+          normalizedError.includes('RATE_LIMIT') ||
+          normalizedError.includes('CIRCUIT_OPEN') ||
+          normalizedError.includes('429')
+        ) {
+          console.warn('[LingoRecall PageTranslator] Rate limit / circuit open detected, aborting remaining batches');
+          break;
+        }
+
+        // 其他错误：递增连续失败计数
+        consecutiveFailures++;
+        adaptiveBatchDelay = Math.min(adaptiveBatchDelay * 2, 12000); // 上限 12s
+
+        // 连续 2 个批次失败 → 中止
+        if (consecutiveFailures >= 2) {
+          console.warn(`[LingoRecall PageTranslator] ${consecutiveFailures} consecutive batch failures, aborting remaining batches`);
+          break;
+        }
+      }
 
       // 更新进度
       const progress = Math.min((i + CONCURRENT_BATCHES) * BATCH_SIZE, totalCount);
       progressCallback?.(progress, totalCount, 'translating');
 
-      // 批次间延迟，避免触发 API 速率限制
+      // 批次间延迟（使用自适应延迟），避免触发 API 速率限制
       if (i + CONCURRENT_BATCHES < batches.length) {
-        await new Promise((resolve) => setTimeout(resolve, BATCH_DELAY_MS));
+        await new Promise((resolve) => setTimeout(resolve, adaptiveBatchDelay));
       }
     }
 
-    currentState = 'translated';
-    showingTranslation = true;
-    progressCallback?.(totalCount, totalCount, 'translated');
+    // 判断翻译是否有实际成果
+    if (translatedCount > 0) {
+      currentState = 'translated';
+      showingTranslation = true;
+      progressCallback?.(totalCount, totalCount, 'translated');
 
-    // 启动 MutationObserver 监听 DOM 变化，以便在 SPA 重新渲染时重新应用翻译
-    startMutationObserver();
+      // 启动 MutationObserver 监听 DOM 变化，以便在 SPA 重新渲染时重新应用翻译
+      startMutationObserver();
+    } else if (consecutiveFailures > 0) {
+      // 所有批次都失败了，没有任何翻译成功
+      currentState = 'error';
+      progressCallback?.(0, totalCount, 'error');
+    } else {
+      // 没有需要翻译的内容（全部相同或为空）
+      currentState = 'translated';
+      showingTranslation = true;
+      progressCallback?.(totalCount, totalCount, 'translated');
+    }
 
     console.log(`[LingoRecall PageTranslator] Translated ${translatedCount}/${totalCount} nodes, registry size: ${translationRegistry.size}`);
 
     return {
-      success: true,
+      success: translatedCount > 0 || consecutiveFailures === 0,
       translatedCount,
       totalCount,
+      error: consecutiveFailures > 0 && translatedCount === 0
+        ? '翻译部分失败，请稍后重试' : undefined,
     };
   } catch (error) {
     currentState = 'error';

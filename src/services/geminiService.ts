@@ -15,6 +15,14 @@ import {
   parseBatchTranslationResponse,
 } from './promptTemplates';
 import { trackUsage } from './usageService';
+import {
+  checkRateLimit,
+  onRequestStart,
+  onRequestSuccess,
+  onRateLimitError,
+  onRequestError,
+  is429Error,
+} from './rateLimiter';
 
 /**
  * 分析模式类型
@@ -68,23 +76,26 @@ const DEFAULT_MODEL = 'gemini-2.0-flash';
  */
 const RESPONSE_TIMEOUT_MS = 15000;
 
-/** 批量翻译最大重试次数 */
-const MAX_RETRIES = 3;
+/** 批量翻译最大重试次数（从 3 降至 2，减少用户等待） */
+const MAX_RETRIES = 2;
 
-/** 单词分析最大重试次数 - 包含超时重试，需要适当增加 */
-const ANALYZE_MAX_RETRIES = 3;
+/** 单词分析最大重试次数（从 3 降至 2，减少用户等待） */
+const ANALYZE_MAX_RETRIES = 2;
 
-/** 初始重试延迟（毫秒）*/
-const INITIAL_RETRY_DELAY_MS = 1000;
+/** 初始重试延迟（毫秒）— 从 1000 增至 2000，更温和的重试 */
+const INITIAL_RETRY_DELAY_MS = 2000;
 
-/** 最大重试延迟（毫秒）*/
-const MAX_RETRY_DELAY_MS = 8000;
+/** 最大重试延迟（毫秒）— 从 8000 增至 15000，给限流窗口更多恢复时间 */
+const MAX_RETRY_DELAY_MS = 15000;
 
-/** API Key 验证超时（毫秒）- 给予足够时间完成验证 */
-const VALIDATE_TIMEOUT_MS = 15000;
+/** API Key 验证超时（毫秒）— 使用轻量级 REST 端点，不需要太长 */
+const VALIDATE_TIMEOUT_MS = 8000;
 
 /** API Key 验证最大重试次数 */
-const VALIDATE_MAX_RETRIES = 2;
+const VALIDATE_MAX_RETRIES = 1;
+
+/** Google AI REST API 基础 URL（用于轻量级验证） */
+const GOOGLE_AI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 
 /**
  * 模型实例缓存
@@ -377,11 +388,30 @@ export async function analyzeWord(
   // 翻译模式可能需要更长时间处理长文本
   const timeout = mode === 'translate' ? RESPONSE_TIMEOUT_MS * 3 : RESPONSE_TIMEOUT_MS;
 
+  // 速率限制器预检查：熔断器打开时立即拒绝
+  const rateLimitCheck = checkRateLimit();
+  if (!rateLimitCheck.allowed) {
+    console.warn(`[LingoRecall] analyzeWord blocked by rate limiter: ${rateLimitCheck.reason}`);
+    throw new Error(`${rateLimitCheck.reason}: Too many requests. Please try again later.`);
+  }
+
   let lastError: Error | null = null;
 
   // 使用指数退避重试（处理速率限制 429 错误）
   for (let retryCount = 0; retryCount <= ANALYZE_MAX_RETRIES; retryCount++) {
     try {
+      // 每次 API 调用前检查速率限制间隔
+      const preCheck = checkRateLimit();
+      if (!preCheck.allowed) {
+        throw new Error(`${preCheck.reason}: Too many requests. Please try again later.`);
+      }
+      if (preCheck.waitMs > 0) {
+        console.log(`[LingoRecall] Waiting ${preCheck.waitMs}ms before API call (rate limit spacing)`);
+        await sleep(preCheck.waitMs);
+      }
+
+      onRequestStart();
+
       const result = await withTimeout(
         model.generateContent(prompt),
         timeout,
@@ -390,6 +420,9 @@ export async function analyzeWord(
 
       const response = result.response;
       const text = response.text();
+
+      // 标记请求成功
+      onRequestSuccess();
 
       // 追踪 token 使用量 (Gemini API 提供 usageMetadata)
       const usageMetadata = response.usageMetadata;
@@ -416,8 +449,21 @@ export async function analyzeWord(
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
 
+      // 通知速率限制器
+      if (is429Error(error)) {
+        onRateLimitError();
+      } else {
+        onRequestError();
+      }
+
       // 检测是否为可重试的错误（超时、速率限制、网络波动）
       if (isRetryableError(error) && retryCount < ANALYZE_MAX_RETRIES) {
+        // 429 错误且熔断器已打开，不再重试
+        const circuitCheck = checkRateLimit();
+        if (!circuitCheck.allowed) {
+          throw new Error(`${circuitCheck.reason}: Too many requests. Please try again later.`);
+        }
+
         const delay = getRetryDelay(retryCount);
         const errorInfo = extractErrorInfo(error);
         const reason = errorInfo.message.toUpperCase().includes('TIMEOUT') ? 'timeout' :
@@ -440,14 +486,19 @@ export async function analyzeWord(
       if (normalizedMessage.includes('API_KEY') || normalizedMessage.includes('INVALID_API_KEY')) {
         throw new Error('API_KEY_INVALID: Please check your API key configuration.');
       }
-      if (errorInfo.isRetryable || normalizedMessage.includes('RATE_LIMIT') || normalizedMessage.includes('429') || errorInfo.status === 429) {
-        throw new Error('RATE_LIMIT: Too many requests. Please try again later.');
+      if (normalizedMessage.includes('CIRCUIT_OPEN')) {
+        throw new Error('CIRCUIT_OPEN: Too many requests. Please try again later.');
       }
+      // 注意：TIMEOUT 和 NETWORK 必须先于 isRetryable 检查，
+      // 因为 isRetryable 包含这些类型，但它们有不同的错误码
       if (normalizedMessage.includes('TIMEOUT')) {
         throw new Error('TIMEOUT: Request timed out. Please try again.');
       }
       if (normalizedMessage.includes('FETCH') || normalizedMessage.includes('NETWORK')) {
         throw new Error('NETWORK_ERROR: Please check your internet connection.');
+      }
+      if (errorInfo.isRetryable || normalizedMessage.includes('RATE_LIMIT') || normalizedMessage.includes('429') || errorInfo.status === 429) {
+        throw new Error('RATE_LIMIT: Too many requests. Please try again later.');
       }
 
       // 确保抛出 Error 实例，包含提取的消息
@@ -493,11 +544,30 @@ export async function translateBatchGemini(
   const prompt = buildBatchTranslationPrompt(texts, targetLanguage);
   const timeout = RESPONSE_TIMEOUT_MS * 6; // 批量翻译允许更长时间（90秒）
 
+  // 速率限制器预检查
+  const rateLimitCheck = checkRateLimit();
+  if (!rateLimitCheck.allowed) {
+    console.warn(`[LingoRecall] translateBatchGemini blocked by rate limiter: ${rateLimitCheck.reason}`);
+    throw new Error(`${rateLimitCheck.reason}: Too many requests. Please try again later.`);
+  }
+
   let lastError: Error | null = null;
 
   // 使用指数退避重试
   for (let retryCount = 0; retryCount <= MAX_RETRIES; retryCount++) {
     try {
+      // 每次 API 调用前检查速率限制间隔
+      const preCheck = checkRateLimit();
+      if (!preCheck.allowed) {
+        throw new Error(`${preCheck.reason}: Too many requests. Please try again later.`);
+      }
+      if (preCheck.waitMs > 0) {
+        console.log(`[LingoRecall] Waiting ${preCheck.waitMs}ms before batch API call (rate limit spacing)`);
+        await sleep(preCheck.waitMs);
+      }
+
+      onRequestStart();
+
       const result = await withTimeout(
         model.generateContent(prompt),
         timeout,
@@ -506,6 +576,9 @@ export async function translateBatchGemini(
 
       const response = result.response;
       const text = response.text();
+
+      // 标记请求成功
+      onRequestSuccess();
 
       // 追踪 token 使用量
       const usageMetadata = response.usageMetadata;
@@ -523,8 +596,21 @@ export async function translateBatchGemini(
       lastError = error instanceof Error ? error : new Error(String(error));
       const errorMessage = lastError.message;
 
+      // 通知速率限制器
+      if (is429Error(error)) {
+        onRateLimitError();
+      } else {
+        onRequestError();
+      }
+
       // 检测是否为可重试的错误（超时、速率限制、网络波动）
       if (isRetryableError(error) && retryCount < MAX_RETRIES) {
+        // 429 错误且熔断器已打开，不再重试
+        const circuitCheck = checkRateLimit();
+        if (!circuitCheck.allowed) {
+          throw new Error(`${circuitCheck.reason}: Too many requests. Please try again later.`);
+        }
+
         const delay = getRetryDelay(retryCount);
         const reason = lastError.message.toUpperCase().includes('TIMEOUT') ? 'timeout' :
                        lastError.message.toUpperCase().includes('429') ? 'rate_limit' : 'network';
@@ -541,6 +627,9 @@ export async function translateBatchGemini(
       // 检测特定错误类型
       if (errorMessage.toUpperCase().includes('API_KEY')) {
         throw new Error('API_KEY_INVALID: Please check your API key configuration.');
+      }
+      if (errorMessage.toUpperCase().includes('CIRCUIT_OPEN')) {
+        throw new Error('CIRCUIT_OPEN: Too many requests. Please try again later.');
       }
       if (errorMessage.toUpperCase().includes('RATE_LIMIT') || errorMessage.includes('429')) {
         throw new Error('RATE_LIMIT: Too many requests. Please try again later.');
@@ -579,17 +668,32 @@ export async function validateApiKey(apiKey: string): Promise<boolean> {
 
   for (let attempt = 0; attempt <= VALIDATE_MAX_RETRIES; attempt++) {
     try {
-      const model = getModel(apiKey);
-
-      // 使用超时控制，避免无限等待
-      const result = await withTimeout(
-        model.generateContent('Say "OK" if you can hear me.'),
+      // 使用轻量级 REST API（列出模型）验证 Key，避免完整的 AI 生成
+      // models.list 只检查 Key 有效性，不消耗 token，延迟 ~300-800ms
+      const response = await withTimeout(
+        fetch(`${GOOGLE_AI_API_BASE}/models?key=${apiKey}&pageSize=1`),
         VALIDATE_TIMEOUT_MS,
-        'TIMEOUT: API validation timed out after 10 seconds.'
+        'TIMEOUT: API validation timed out.'
       );
 
-      const text = result.response.text();
-      return text.toLowerCase().includes('ok');
+      if (response.ok) {
+        return true;
+      }
+
+      // HTTP 错误处理
+      const status = response.status;
+      if (status === 400 || status === 401 || status === 403) {
+        // Key 无效或无权限
+        console.error(`[LingoRecall] API validation failed: HTTP ${status}`);
+        return false;
+      }
+      if (status === 429) {
+        throw new Error('RATE_LIMIT: Too many requests. Please try again later.');
+      }
+
+      // 其他 HTTP 错误
+      console.error(`[LingoRecall] API validation unexpected status: ${status}`);
+      return false;
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
       const errorMessage = lastError.message.toUpperCase();

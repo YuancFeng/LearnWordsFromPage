@@ -531,13 +531,37 @@ registerHandler(MessageTypes.TRANSLATE_PAGE_SEGMENT, async (message): Promise<Re
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const normalizedMessage = errorMessage.toUpperCase();
     console.error('[LingoRecall] TRANSLATE_PAGE_SEGMENT error:', errorMessage);
+
+    // 根据错误类型返回精确的错误码
+    let errorCode = ErrorCode.AI_API_ERROR;
+    let userMessage = '批量翻译失败，请重试';
+
+    if (
+      normalizedMessage.includes('RATE_LIMIT') ||
+      normalizedMessage.includes('CIRCUIT_OPEN') ||
+      normalizedMessage.includes('429') ||
+      normalizedMessage.includes('RESOURCE_EXHAUSTED')
+    ) {
+      errorCode = ErrorCode.AI_RATE_LIMIT;
+      userMessage = '请求过于频繁，请稍后再试';
+    } else if (normalizedMessage.includes('TIMEOUT')) {
+      errorCode = ErrorCode.TIMEOUT;
+      userMessage = '请求超时，请检查网络连接';
+    } else if (normalizedMessage.includes('NETWORK') || normalizedMessage.includes('FETCH')) {
+      errorCode = ErrorCode.NETWORK_ERROR;
+      userMessage = '网络错误，请检查网络连接';
+    } else if (normalizedMessage.includes('API_KEY') || normalizedMessage.includes('INVALID_API_KEY')) {
+      errorCode = ErrorCode.AI_INVALID_KEY;
+      userMessage = 'API Key 无效，请检查设置';
+    }
 
     return {
       success: false,
       error: {
-        code: ErrorCode.AI_API_ERROR,
-        message: '批量翻译失败，请重试',
+        code: errorCode,
+        message: userMessage,
       },
     };
   }
