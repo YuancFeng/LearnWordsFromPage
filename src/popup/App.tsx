@@ -60,7 +60,7 @@ export function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg transition-colors duration-200">
       {currentPage === 'vocabulary' && (
         <div className="p-4">
           <VocabularyList

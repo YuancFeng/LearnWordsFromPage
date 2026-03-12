@@ -10,6 +10,15 @@ vi.mock('../../hooks/useSearch', () => ({
   useSearch: () => mockUseSearch(),
 }));
 
+vi.mock('../../hooks/useTheme', () => ({
+  useTheme: () => ({
+    theme: 'light',
+    resolvedTheme: 'light',
+    setTheme: vi.fn(),
+    isLoading: false,
+  }),
+}));
+
 const baseWord: WordRecord = {
   id: 'word-1',
   text: 'context',

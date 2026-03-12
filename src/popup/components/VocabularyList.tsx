@@ -11,11 +11,12 @@
  */
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { BookOpen, Trash2, ExternalLink, Clock, AlertCircle, Loader2, ChevronDown, ChevronUp, GraduationCap, Settings, CheckSquare, Maximize2 } from 'lucide-react';
+import { BookOpen, Trash2, ExternalLink, Clock, AlertCircle, Loader2, ChevronDown, ChevronUp, GraduationCap, Settings, CheckSquare, Maximize2, Download, Moon, Sun } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSearch } from '../../hooks/useSearch';
 import { useDueCount } from '../../hooks/useDueCount';
 import { useTags } from '../../hooks/useTags';
+import { useTheme } from '../../hooks/useTheme';
 import { useVocabularyFilter, matchesTags } from '../../hooks/useVocabularyFilter';
 import { SearchBar } from './SearchBar';
 import { SortDropdown, type SortOption, SORT_CONFIG } from './SortDropdown';
@@ -434,6 +435,48 @@ const WordCard = React.memo(function WordCard({
 });
 
 /**
+ * Escape a value for CSV: wrap in quotes and double any existing quotes
+ */
+function escapeCSV(value: string): string {
+  if (!value) return '""';
+  const escaped = value.replace(/"/g, '""').replace(/\n/g, ' ');
+  return `"${escaped}"`;
+}
+
+/**
+ * Generate CSV content from word records
+ */
+function generateCSV(words: WordRecord[]): string {
+  const header = 'Word,Context Sentence,Page URL,Date Saved';
+  const rows = words.map((w) => {
+    const date = new Date(w.createdAt).toISOString().split('T')[0];
+    return [
+      escapeCSV(w.text),
+      escapeCSV(w.exampleSentence || w.contextBefore + w.text + w.contextAfter),
+      escapeCSV(w.sourceUrl),
+      escapeCSV(date),
+    ].join(',');
+  });
+  return [header, ...rows].join('\n');
+}
+
+/**
+ * Trigger a CSV file download in the browser
+ */
+function downloadCSV(csv: string, filename: string): void {
+  const BOM = '\uFEFF';
+  const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/**
  * 空状态组件
  */
 function EmptyState(): React.ReactElement {
@@ -467,6 +510,7 @@ export function VocabularyList({
   toast,
 }: VocabularyListProps): React.ReactElement {
   const { t } = useTranslation();
+  const { resolvedTheme, setTheme } = useTheme();
 
   // 使用搜索 Hook - Story 2.5
   const {
@@ -495,6 +539,8 @@ export function VocabularyList({
   const [selectedWordIds, setSelectedWordIds] = useState<Set<string>>(new Set());
   const [showBatchTagSelector, setShowBatchTagSelector] = useState(false);
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
+
+  const [isExporting, setIsExporting] = useState(false);
 
   // 排序状态 - Story 2.5 AC2
   const [sortOption, setSortOption] = useState<SortOption>('recent');
@@ -546,6 +592,42 @@ export function VocabularyList({
     setSortOption(option);
     chrome.storage.local.set({ sortOption: option });
   }, []);
+
+  /**
+   * Export all words as CSV
+   */
+  const handleExport = useCallback(async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      const response = await chrome.runtime.sendMessage({
+        type: MessageTypes.GET_WORDS,
+        payload: {},
+      });
+      if (response.success && response.data && response.data.length > 0) {
+        const csv = generateCSV(response.data);
+        const date = new Date().toISOString().split('T')[0];
+        downloadCSV(csv, `lingorecall-vocabulary-${date}.csv`);
+        toast?.success(t('vocabulary.export.success', { count: response.data.length }));
+      } else if (response.success && (!response.data || response.data.length === 0)) {
+        toast?.info(t('vocabulary.export.empty'));
+      } else {
+        toast?.error(t('vocabulary.export.failed'));
+      }
+    } catch (err) {
+      console.error('[LingoRecall] Export error:', err);
+      toast?.error(t('vocabulary.export.failed'));
+    } finally {
+      setIsExporting(false);
+    }
+  }, [isExporting, toast, t]);
+
+  /**
+   * Toggle dark mode
+   */
+  const handleToggleDarkMode = useCallback(() => {
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+  }, [resolvedTheme, setTheme]);
 
   /**
    * 处理删除词汇
@@ -832,6 +914,33 @@ export function VocabularyList({
 
         {/* 按钮组 */}
         <div className="flex items-center gap-2">
+          {/* Dark mode toggle */}
+          <button
+            onClick={handleToggleDarkMode}
+            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
+            type="button"
+            aria-label={t('vocabulary.actions.darkMode')}
+            title={t('vocabulary.actions.darkMode')}
+            data-testid="dark-mode-toggle"
+          >
+            {resolvedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+
+          {/* Export CSV button */}
+          {totalCount > 0 && (
+            <button
+              onClick={handleExport}
+              disabled={isExporting}
+              className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              type="button"
+              aria-label={t('vocabulary.actions.export')}
+              title={t('vocabulary.actions.export')}
+              data-testid="export-csv-btn"
+            >
+              {isExporting ? <Loader2 size={20} className="animate-spin" /> : <Download size={20} />}
+            </button>
+          )}
+
           {/* 全屏模式按钮 - 打开 Options Page */}
           <button
             onClick={() => chrome.runtime.openOptionsPage()}
