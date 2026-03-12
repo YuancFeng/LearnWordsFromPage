@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { createRoot, Root } from 'react-dom/client';
+import type { Root } from 'react-dom/client';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../i18n';
 import { ShadowApp, type UIState, type UICallbacks, type AnalysisResult, type ToastState, type PageTranslationState } from './components/ShadowApp';
@@ -36,6 +36,15 @@ let shadowRoot: ShadowRoot | null = null;
 
 /** React root for rendering */
 let reactRoot: Root | null = null;
+
+/** Lazily loaded react-dom/client createRoot implementation */
+let createRootFn: ((container: Element | DocumentFragment) => Root) | null = null;
+
+/** Pending async initialization for React DOM client */
+let reactDomClientPromise: Promise<void> | null = null;
+
+/** Pending shadow host creation promise */
+let hostCreationPromise: Promise<void> | null = null;
 
 /** Host element in the document */
 let hostElement: HTMLElement | null = null;
@@ -95,15 +104,77 @@ function getHostStyles(): string {
 }
 
 /**
+ * Some pages expose a broken DOM environment where `document.createElement('div').style`
+ * is unexpectedly undefined. React 19 checks animation event support during module init
+ * and crashes on those pages. This wrapper guarantees a div-like element with a `style`
+ * object while react-dom/client is loading.
+ */
+function createSafeCreateElement(
+  documentRef: Document,
+  originalCreateElement: Document['createElement']
+): Document['createElement'] {
+  return function safeCreateElement(
+    this: Document,
+    tagName: string,
+    options?: ElementCreationOptions
+  ): HTMLElement {
+    const element = originalCreateElement.call(this, tagName, options) as HTMLElement;
+
+    if (tagName.toLowerCase() !== 'div' || typeof element.style !== 'undefined') {
+      return element;
+    }
+
+    const fallbackDocument = documentRef.implementation?.createHTMLDocument?.('lingorecall-react-dom');
+    const fallbackElement = fallbackDocument?.createElement('div') as HTMLElement | undefined;
+
+    return fallbackElement ?? element;
+  };
+}
+
+/**
+ * Load react-dom/client only when the UI is actually needed.
+ * This lets us patch `createElement` before React performs animation-event detection.
+ */
+async function ensureReactDomClient(): Promise<void> {
+  if (createRootFn) {
+    return;
+  }
+
+  if (!reactDomClientPromise) {
+    reactDomClientPromise = (async () => {
+      const originalCreateElement = document.createElement.bind(document);
+      const safeCreateElement = createSafeCreateElement(document, originalCreateElement);
+
+      const originalPrototypeCreateElement = Document.prototype.createElement;
+
+      document.createElement = safeCreateElement;
+      Document.prototype.createElement = safeCreateElement;
+
+      try {
+        const reactDomClient = await import('react-dom/client');
+        createRootFn = reactDomClient.createRoot;
+      } finally {
+        document.createElement = originalCreateElement;
+        Document.prototype.createElement = originalPrototypeCreateElement;
+      }
+    })();
+  }
+
+  await reactDomClientPromise;
+}
+
+/**
  * Creates and injects the Shadow DOM host element
  * Uses closed mode to prevent external JavaScript access
  */
-function createShadowHost(): void {
+async function createShadowHost(): Promise<void> {
   // Prevent duplicate creation
   if (hostElement) {
     console.warn('[LingoRecall] Shadow host already exists');
     return;
   }
+
+  await ensureReactDomClient();
 
   // Check for existing element (edge case: page manipulation)
   const existingElement = document.querySelector(CUSTOM_ELEMENT_NAME);
@@ -131,7 +202,10 @@ function createShadowHost(): void {
   shadowRoot.appendChild(mountPoint);
 
   // Initialize React root
-  reactRoot = createRoot(mountPoint);
+  if (!createRootFn) {
+    throw new Error('react-dom/client failed to initialize');
+  }
+  reactRoot = createRootFn(mountPoint);
 
   // Add to document body
   document.body.appendChild(hostElement);
@@ -140,12 +214,35 @@ function createShadowHost(): void {
 }
 
 /**
+ * Ensure the shadow host exists. If initialization is still in progress,
+ * reuse the same promise to avoid duplicate roots.
+ */
+function ensureShadowHost(): void {
+  if (reactRoot) {
+    return;
+  }
+
+  if (!hostCreationPromise) {
+    hostCreationPromise = createShadowHost()
+      .catch((error) => {
+        console.error('[LingoRecall] Failed to create shadow host:', error);
+      })
+      .finally(() => {
+        hostCreationPromise = null;
+        if (reactRoot) {
+          renderUI();
+        }
+      });
+  }
+}
+
+/**
  * Internal render function
  * Updates React tree with current state
  */
 function renderUI(): void {
   if (!reactRoot) {
-    console.warn('[LingoRecall] Cannot render: React root not initialized');
+    ensureShadowHost();
     return;
   }
 
@@ -195,9 +292,7 @@ function clearHideTimeout(): void {
  */
 export function injectUI(state: UIState, callbacks?: UICallbacks): void {
   // Create shadow host if needed
-  if (!shadowRoot) {
-    createShadowHost();
-  }
+  ensureShadowHost();
 
   // Update state and callbacks
   currentState = { ...state };
@@ -223,9 +318,7 @@ export function updateUI(state: Partial<UIState>): void {
   };
 
   // Create shadow host if needed
-  if (!reactRoot) {
-    createShadowHost();
-  }
+  ensureShadowHost();
 
   // Render with updated state
   renderUI();
@@ -251,6 +344,9 @@ export function setCallbacks(callbacks: UICallbacks): void {
  */
 export function removeUI(): void {
   clearHideTimeout();
+  hostCreationPromise = null;
+  reactDomClientPromise = null;
+  createRootFn = null;
   // Unmount React
   if (reactRoot) {
     reactRoot.unmount();
