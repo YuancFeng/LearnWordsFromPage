@@ -190,7 +190,14 @@
       "deselect": "Deselect",
       "settings": "Settings",
       "startReview": "Start Review",
-      "fullscreen": "Open Full Page"
+      "fullscreen": "Open Full Page",
+      "export": "Export CSV",
+      "darkMode": "Toggle Dark Mode"
+    },
+    "export": {
+      "success": "Exported {{count}} words to CSV",
+      "empty": "No words to export",
+      "failed": "Export failed"
     },
     "toast": {
       "deleteSuccess": "Word deleted",

@@ -70,9 +70,9 @@ export function SettingsPanel({ onBack }: SettingsPanelProps): React.ReactElemen
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 transition-colors">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-dark-bg transition-colors">
       {/* 顶部标题栏 */}
-      <header className="flex items-center gap-2 px-4 py-3 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+      <header className="flex items-center gap-2 px-4 py-3 bg-white dark:bg-dark-bg border-b border-gray-200 dark:border-gray-700">
         {onBack && (
           <button
             onClick={onBack}
@@ -88,7 +88,7 @@ export function SettingsPanel({ onBack }: SettingsPanelProps): React.ReactElemen
       </header>
 
       {/* Tab 导航 */}
-      <nav className="flex bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700" role="tablist">
+      <nav className="flex bg-white dark:bg-dark-bg border-b border-gray-200 dark:border-gray-700" role="tablist">
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;

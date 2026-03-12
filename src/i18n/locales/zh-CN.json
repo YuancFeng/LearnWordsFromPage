@@ -190,7 +190,14 @@
       "deselect": "取消选中",
       "settings": "设置",
       "startReview": "开始复习",
-      "fullscreen": "全屏模式"
+      "fullscreen": "全屏模式",
+      "export": "导出 CSV",
+      "darkMode": "切换深色模式"
+    },
+    "export": {
+      "success": "已导出 {{count}} 个词汇到 CSV",
+      "empty": "没有可导出的词汇",
+      "failed": "导出失败"
     },
     "toast": {
       "deleteSuccess": "词汇已删除",

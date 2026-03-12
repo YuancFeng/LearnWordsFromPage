@@ -13,6 +13,12 @@
     overflow-y: auto;
   }
 
+  .dark body,
+  body.dark {
+    background-color: #1a1a2e;
+    color: #e2e8f0;
+  }
+
   #root {
     min-height: 100%;
   }

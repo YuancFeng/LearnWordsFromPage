@@ -132,6 +132,10 @@ const chromeMock = {
       get: vi.fn().mockResolvedValue({}),
       set: vi.fn().mockResolvedValue(undefined),
     },
+    onChanged: {
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+    },
   },
   tabs: {
     query: vi.fn().mockResolvedValue([]),
