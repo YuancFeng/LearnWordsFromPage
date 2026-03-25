@@ -52,23 +52,25 @@ export const TranslationBar: React.FC<TranslationBarProps> = ({
 
   // 计算进度百分比
   const percentage = total > 0 ? Math.round((progress / total) * 100) : 0;
+  const isFullyTranslated = state === 'translated' && (total === 0 || progress >= total);
+  const isPartiallyTranslated = state === 'translated' && total > 0 && progress < total;
 
   // 翻译完成后自动最小化
   useEffect(() => {
-    if (state === 'translated') {
+    if (isFullyTranslated) {
       const timer = setTimeout(() => {
         setIsMinimized(true);
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [state]);
+  }, [isFullyTranslated]);
 
   if (!isVisible) {
     return null;
   }
 
   // 最小化状态 - 只显示一个小图标
-  if (isMinimized && state === 'translated') {
+  if (isMinimized && isFullyTranslated) {
     return (
       <div style={styles.minimizedContainer}>
         <button
@@ -104,7 +106,9 @@ export const TranslationBar: React.FC<TranslationBarProps> = ({
           )}
           {state === 'translated' && (
             <span style={styles.statusText}>
-              {t('pageTranslation.completed', 'Translation complete')} ({progress}/{total})
+              {isPartiallyTranslated
+                ? `${t('pageTranslation.partialCompleted', 'Partially translated')} (${progress}/{total})`
+                : `${t('pageTranslation.completed', 'Translation complete')} (${progress}/${total})`}
             </span>
           )}
           {state === 'error' && (

@@ -355,6 +355,7 @@
     "translating": "Translating",
     "applying": "Applying translations...",
     "completed": "Translation complete",
+    "partialCompleted": "Partially translated",
     "error": "Translation failed",
     "showOriginal": "Show original",
     "showTranslation": "Show translation",
@@ -364,6 +365,7 @@
     "showControls": "Show translation controls",
     "clickToToggle": "Click to toggle original/translation",
     "success": "Translated {{count}} text segments",
+    "partialSuccess": "Translated {{translated}} / {{total}} text segments. {{reason}}",
     "noContent": "No translatable content found",
     "failed": "Translation failed",
     "restored": "Original text restored"

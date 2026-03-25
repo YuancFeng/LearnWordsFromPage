@@ -350,6 +350,7 @@
     "translating": "正在翻译",
     "applying": "正在应用翻译...",
     "completed": "翻译完成",
+    "partialCompleted": "部分翻译完成",
     "error": "翻译失败",
     "showOriginal": "显示原文",
     "showTranslation": "显示译文",
@@ -359,6 +360,7 @@
     "showControls": "显示翻译控制",
     "clickToToggle": "点击切换原文/译文",
     "success": "已翻译 {{count}} 个文本段落",
+    "partialSuccess": "已翻译 {{translated}} / {{total}} 个文本段落。{{reason}}",
     "noContent": "未找到可翻译的内容",
     "failed": "翻译失败",
     "restored": "已恢复原文"

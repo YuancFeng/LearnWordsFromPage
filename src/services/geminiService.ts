@@ -638,8 +638,16 @@ export async function translateBatchGemini(
         throw new Error('TIMEOUT: Request timed out. Please try again.');
       }
 
-      // 其他错误，返回原文
-      return texts;
+      // 这里不能静默返回原文，否则上层会把“失败”误判成“翻译成功但内容没变化”。
+      // 这正是整页翻译提前显示完成、但实际只翻了一部分的根源之一。
+      if (
+        errorMessage.toUpperCase().includes('NETWORK') ||
+        errorMessage.toUpperCase().includes('FETCH')
+      ) {
+        throw new Error('NETWORK_ERROR: Please check your internet connection.');
+      }
+
+      throw lastError;
     }
   }
 
@@ -647,7 +655,8 @@ export async function translateBatchGemini(
   if (lastError) {
     throw lastError;
   }
-  return texts;
+
+  throw new Error('UNKNOWN: Batch translation failed unexpectedly.');
 }
 
 /**

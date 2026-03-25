@@ -271,6 +271,14 @@ registerHandler(MessageTypes.UPDATE_BADGE, async (message) => {
 let currentSettings: Settings = { ...DEFAULT_SETTINGS, blacklistUrls: [...DEFAULT_SETTINGS.blacklistUrls] };
 
 /**
+ * 记录最近一次整页翻译的进度，避免切换原文/译文时把顶部状态条重置成 0/0。
+ */
+let lastPageTranslationProgress: { progress: number; total: number } = {
+  progress: 0,
+  total: 0,
+};
+
+/**
  * 应用设置变更
  * Story 4.2 - AC1, AC2: 设置立即生效
  * Story 4.3 - 黑名单变更时重新检查
@@ -954,6 +962,16 @@ async function handleFullPageTranslation(): Promise<void> {
           'info'
         );
       }
+    } else if (result.translatedCount > 0) {
+      showToast(
+        i18n.t('pageTranslation.partialSuccess', {
+          translated: result.translatedCount,
+          total: result.totalCount,
+          reason: result.error || '',
+          defaultValue: `Translated ${result.translatedCount}/${result.totalCount} text blocks. ${result.error || ''}`,
+        }),
+        'warning'
+      );
     } else {
       showToast(
         result.error || i18n.t('pageTranslation.failed', 'Translation failed'),
@@ -1013,8 +1031,8 @@ function handleToggleTranslation(): void {
   // Update UI state
   updatePageTranslation({
     state: 'translated',
-    progress: 0,
-    total: 0,
+    progress: lastPageTranslationProgress.progress,
+    total: lastPageTranslationProgress.total,
     showingTranslation: isShowingTranslation(),
   });
 }
@@ -1285,6 +1303,7 @@ async function init(): Promise<void> {
 
   // Set up page translation progress callback
   setProgressCallback((progress, total, state) => {
+    lastPageTranslationProgress = { progress, total };
     updatePageTranslation({
       state,
       progress,

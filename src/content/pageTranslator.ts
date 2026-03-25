@@ -17,6 +17,7 @@ import {
   type TranslatePageSegmentPayload,
   type TranslatePageSegmentResult,
 } from '../shared/messaging';
+import { ErrorCode } from '../shared/types/errors';
 import type { TargetLanguage } from '../shared/types/settings';
 import i18n from '../i18n';
 
@@ -35,6 +36,15 @@ const BATCH_DELAY_MS = 1500;
 
 /** 单个文本的最大字符数（超过则截断） */
 const MAX_TEXT_LENGTH = 2000;
+
+/** 单个批次的最大重试次数 */
+const MAX_BATCH_RETRIES = 2;
+
+/** 速率限制后等待一个完整冷却窗口，再继续当前批次 */
+const RATE_LIMIT_RETRY_DELAY_MS = 65000;
+
+/** 网络抖动 / 超时等瞬时问题的最小重试延迟 */
+const TRANSIENT_ERROR_RETRY_DELAY_MS = 5000;
 
 /** 最小文本长度（低于此长度的纯数字/符号不翻译） */
 const MIN_TEXT_LENGTH = 2;
@@ -97,7 +107,29 @@ export interface TranslationResult {
   success: boolean;
   translatedCount: number;
   totalCount: number;
+  partial?: boolean;
+  completedAll?: boolean;
   error?: string;
+}
+
+/** 一个页面文本节点的完整翻译计划 */
+interface TranslationPlan {
+  /** 原始 DOM 节点信息 */
+  nodeInfo: TextNodeInfo;
+  /** 送给 AI 的分片 */
+  segments: string[];
+  /** 各分片的译文，索引与 segments 一一对应 */
+  translatedSegments: string[];
+}
+
+/** 一个可独立发送给 AI 的翻译单元 */
+interface TranslationUnit {
+  /** 归属哪个文本节点计划 */
+  planIndex: number;
+  /** 该计划下的第几个分片 */
+  segmentIndex: number;
+  /** 实际要翻译的文本 */
+  text: string;
 }
 
 // ============================================================
@@ -539,6 +571,111 @@ function shouldTranslateText(text: string): boolean {
 }
 
 /**
+ * 为长文本寻找一个“尽量自然”的切分点。
+ * 优先按段落、换行、句号等边界切，只有实在找不到才硬切。
+ */
+function findSplitPoint(text: string, maxLength: number): number {
+  const minSplitPoint = Math.floor(maxLength * 0.6);
+  const searchWindow = text.slice(0, maxLength + 1);
+  const separators = [
+    '\n\n',
+    '\n',
+    '. ',
+    '! ',
+    '? ',
+    '。', '！', '？',
+    '; ',
+    '；',
+    ', ',
+    '，',
+    '、',
+    ' ',
+  ];
+
+  for (const separator of separators) {
+    const index = searchWindow.lastIndexOf(separator);
+    if (index >= minSplitPoint) {
+      return index + separator.length;
+    }
+  }
+
+  return maxLength;
+}
+
+/**
+ * 将超长文本拆成多个可独立翻译的片段。
+ * 关键点：这里只分块，不截断，保证整段正文最终都能翻译到。
+ */
+function splitLongTextForTranslation(text: string): string[] {
+  const normalizedText = text.trim();
+  if (normalizedText.length <= MAX_TEXT_LENGTH) {
+    return [normalizedText];
+  }
+
+  const segments: string[] = [];
+  let remaining = normalizedText;
+
+  while (remaining.length > MAX_TEXT_LENGTH) {
+    const splitPoint = findSplitPoint(remaining, MAX_TEXT_LENGTH);
+    const chunk = remaining.slice(0, splitPoint).trim();
+    if (chunk) {
+      segments.push(chunk);
+    }
+    remaining = remaining.slice(splitPoint).trim();
+  }
+
+  if (remaining) {
+    segments.push(remaining);
+  }
+
+  return segments.length > 0 ? segments : [normalizedText];
+}
+
+/**
+ * 把页面文本节点转换成翻译计划和翻译单元。
+ * 一个超长文本节点会被拆成多个 unit，但最终仍会合并回同一个 DOM 节点。
+ */
+function buildTranslationUnits(textNodes: TextNodeInfo[]): {
+  plans: TranslationPlan[];
+  units: TranslationUnit[];
+} {
+  const plans = textNodes.map<TranslationPlan>((nodeInfo) => ({
+    nodeInfo,
+    segments: splitLongTextForTranslation(nodeInfo.originalText),
+    translatedSegments: [],
+  }));
+
+  const units = plans.flatMap((plan, planIndex) =>
+    plan.segments.map((text, segmentIndex) => ({
+      planIndex,
+      segmentIndex,
+      text,
+    }))
+  );
+
+  return { plans, units };
+}
+
+/**
+ * 将长文本的多个译文片段重新拼成一个完整译文。
+ * 中日韩目标语言默认不额外插入空格，避免译文出现奇怪空格。
+ */
+function joinTranslatedSegments(
+  translatedSegments: string[],
+  targetLanguage?: TargetLanguage
+): string {
+  const joiner = targetLanguage && ['zh-CN', 'zh-TW', 'ja', 'ko'].includes(targetLanguage)
+    ? ''
+    : ' ';
+
+  return translatedSegments
+    .map((segment) => segment.trim())
+    .filter(Boolean)
+    .join(joiner)
+    .trim();
+}
+
+/**
  * 提取页面中所有可翻译的文本节点
  */
 function extractTextNodes(root: Element = document.body): TextNodeInfo[] {
@@ -624,13 +761,20 @@ async function translateBatch(
     const errorMessage = errorInfo?.message || errorInfo?.code || JSON.stringify(errorInfo);
     console.error('[LingoRecall PageTranslator] Translation failed:', errorMessage);
 
-    // 速率限制 / 熔断器 / 配置错误 → 重新抛出，让循环决定是否终止
+    // 这些错误都不能静默降级为“原文就是结果”，否则上层会误判为已完成。
     if (
-      errorInfo?.code === 'AI_RATE_LIMIT' ||
-      errorInfo?.code === 'AI_INVALID_KEY' ||
-      errorInfo?.code === 'AI_API_ERROR'
+      errorInfo?.code === ErrorCode.AI_RATE_LIMIT ||
+      errorInfo?.code === ErrorCode.AI_INVALID_KEY ||
+      errorInfo?.code === ErrorCode.AI_API_ERROR ||
+      errorInfo?.code === ErrorCode.EXTENSION_CONTEXT_INVALIDATED ||
+      errorInfo?.code === ErrorCode.NETWORK_ERROR ||
+      errorInfo?.code === ErrorCode.TIMEOUT
     ) {
-      const errMsg = errorInfo?.code === 'AI_RATE_LIMIT' ? 'RATE_LIMIT' : errorMessage;
+      const errMsg = errorInfo?.code === ErrorCode.AI_RATE_LIMIT
+        ? 'RATE_LIMIT'
+        : errorInfo?.code === ErrorCode.EXTENSION_CONTEXT_INVALIDATED
+          ? 'EXTENSION_CONTEXT_INVALIDATED'
+          : errorMessage;
       throw new Error(errMsg);
     }
 
@@ -787,9 +931,9 @@ export async function translatePage(
   try {
     // 提取文本节点
     const textNodes = extractTextNodes();
-    const totalCount = textNodes.length;
+    const totalNodeCount = textNodes.length;
 
-    if (totalCount === 0) {
+    if (totalNodeCount === 0) {
       currentState = 'idle';
       progressCallback?.(0, 0, 'idle');
       return {
@@ -799,91 +943,130 @@ export async function translatePage(
       };
     }
 
-    console.log(`[LingoRecall PageTranslator] Found ${totalCount} text nodes to translate`);
+    const { plans, units } = buildTranslationUnits(textNodes);
+    const totalUnitCount = units.length;
 
-    // 立即更新进度，显示找到的节点数量（从"分析页面"切换到"翻译中"）
-    progressCallback?.(0, totalCount, 'translating');
+    console.log(
+      `[LingoRecall PageTranslator] Found ${totalNodeCount} text nodes to translate ` +
+      `(${totalUnitCount} translation units after long-text splitting)`
+    );
 
-    let translatedCount = 0;
+    // 进度条展示 AI 实际要处理的单元数，比“节点数”更真实。
+    progressCallback?.(0, totalUnitCount, 'translating');
 
-    // 将所有文本节点分成批次
-    const batches: { batch: TextNodeInfo[]; texts: string[]; startIndex: number }[] = [];
-    for (let i = 0; i < textNodes.length; i += BATCH_SIZE) {
-      const batch = textNodes.slice(i, i + BATCH_SIZE);
-      const texts = batch.map((info) => {
-        const text = info.originalText;
-        return text.length > MAX_TEXT_LENGTH
-          ? text.substring(0, MAX_TEXT_LENGTH) + '...'
-          : text;
-      });
+    // 将所有翻译单元分成批次
+    const batches: { batch: TranslationUnit[]; texts: string[]; startIndex: number }[] = [];
+    for (let i = 0; i < units.length; i += BATCH_SIZE) {
+      const batch = units.slice(i, i + BATCH_SIZE);
+      const texts = batch.map((unit) => unit.text);
       batches.push({ batch, texts, startIndex: i });
     }
 
     console.log(`[LingoRecall PageTranslator] Split into ${batches.length} batches, processing ${CONCURRENT_BATCHES} at a time`);
 
+    let processedUnitCount = 0;
     // 连续失败计数器（用于自适应中止）
     let consecutiveFailures = 0;
     // 自适应批次延迟（失败后翻倍）
     let adaptiveBatchDelay = BATCH_DELAY_MS;
+    let abortedError: string | undefined;
 
     // 顺序处理批次（避免速率限制）
     for (let i = 0; i < batches.length; i += CONCURRENT_BATCHES) {
       const concurrentBatches = batches.slice(i, i + CONCURRENT_BATCHES);
+      let batchHandled = false;
+      let batchRetryCount = 0;
 
-      try {
-        // 发送翻译请求（CONCURRENT_BATCHES=1 时为顺序执行）
-        const translationPromises = concurrentBatches.map(({ texts }) =>
-          translateBatch(texts, targetLanguage)
-        );
+      while (!batchHandled) {
+        try {
+          // 发送翻译请求（CONCURRENT_BATCHES=1 时为顺序执行）
+          const translationPromises = concurrentBatches.map(({ texts }) =>
+            translateBatch(texts, targetLanguage)
+          );
 
-        // 等待请求完成
-        const translationResults = await Promise.all(translationPromises);
+          // 等待请求完成
+          const translationResults = await Promise.all(translationPromises);
 
-        // 成功：重置连续失败计数和自适应延迟
-        consecutiveFailures = 0;
-        adaptiveBatchDelay = BATCH_DELAY_MS;
+          // 成功：重置连续失败计数和自适应延迟
+          consecutiveFailures = 0;
+          adaptiveBatchDelay = BATCH_DELAY_MS;
 
-        // 应用翻译结果
-        concurrentBatches.forEach(({ batch }, batchIndex) => {
-          const translations = translationResults[batchIndex];
-          batch.forEach((nodeInfo, index) => {
-            const translated = translations[index];
-            if (translated && translated !== nodeInfo.originalText) {
-              applyTranslation(nodeInfo, translated);
-              translatedCount++;
-            }
+          // 只先缓存译文，等整个节点所有分片都齐了再一次性回写 DOM。
+          concurrentBatches.forEach(({ batch }, batchIndex) => {
+            const translations = translationResults[batchIndex];
+            batch.forEach((unit, index) => {
+              plans[unit.planIndex].translatedSegments[unit.segmentIndex] = translations[index];
+            });
+            processedUnitCount += batch.length;
           });
-        });
-      } catch (batchError) {
-        // 批次翻译失败
-        const batchErrorMessage = batchError instanceof Error ? batchError.message : String(batchError);
-        const normalizedError = batchErrorMessage.toUpperCase();
-        console.error(`[LingoRecall PageTranslator] Batch ${i / CONCURRENT_BATCHES + 1} failed:`, batchErrorMessage);
 
-        // 速率限制 / 熔断器错误 → 立即中止后续批次
-        if (
-          normalizedError.includes('RATE_LIMIT') ||
-          normalizedError.includes('CIRCUIT_OPEN') ||
-          normalizedError.includes('429')
-        ) {
-          console.warn('[LingoRecall PageTranslator] Rate limit / circuit open detected, aborting remaining batches');
-          break;
-        }
+          batchHandled = true;
+        } catch (batchError) {
+          const batchErrorMessage = batchError instanceof Error ? batchError.message : String(batchError);
+          const normalizedError = batchErrorMessage.toUpperCase();
+          console.error(`[LingoRecall PageTranslator] Batch ${i / CONCURRENT_BATCHES + 1} failed:`, batchErrorMessage);
 
-        // 其他错误：递增连续失败计数
-        consecutiveFailures++;
-        adaptiveBatchDelay = Math.min(adaptiveBatchDelay * 2, 12000); // 上限 12s
+          if (normalizedError.includes('EXTENSION_CONTEXT_INVALIDATED')) {
+            abortedError = '扩展已更新，请刷新页面后重试';
+            break;
+          }
 
-        // 连续 2 个批次失败 → 中止
-        if (consecutiveFailures >= 2) {
-          console.warn(`[LingoRecall PageTranslator] ${consecutiveFailures} consecutive batch failures, aborting remaining batches`);
-          break;
+          if (normalizedError.includes('API_KEY')) {
+            abortedError = 'API Key 无效，请检查设置';
+            break;
+          }
+
+          const isRateLimitError =
+            normalizedError.includes('RATE_LIMIT') ||
+            normalizedError.includes('CIRCUIT_OPEN') ||
+            normalizedError.includes('429') ||
+            normalizedError.includes('RESOURCE_EXHAUSTED');
+
+          const isTransientError =
+            isRateLimitError ||
+            normalizedError.includes('TIMEOUT') ||
+            normalizedError.includes('NETWORK') ||
+            normalizedError.includes('FETCH');
+
+          if (isTransientError && batchRetryCount < MAX_BATCH_RETRIES) {
+            batchRetryCount++;
+            const retryDelay = isRateLimitError
+              ? RATE_LIMIT_RETRY_DELAY_MS
+              : Math.max(adaptiveBatchDelay, TRANSIENT_ERROR_RETRY_DELAY_MS);
+            console.warn(
+              `[LingoRecall PageTranslator] Retrying batch ${i / CONCURRENT_BATCHES + 1} ` +
+              `in ${retryDelay}ms (${batchRetryCount}/${MAX_BATCH_RETRIES})`
+            );
+            await new Promise((resolve) => setTimeout(resolve, retryDelay));
+            continue;
+          }
+
+          // 非致命失败会被统计为 partial；同一时间保持少量重试，避免长文一开始就彻底放弃。
+          consecutiveFailures++;
+          adaptiveBatchDelay = Math.min(adaptiveBatchDelay * 2, 12000);
+
+          if (isRateLimitError) {
+            abortedError = '请求过于频繁，剩余内容未完成翻译';
+            break;
+          }
+
+          if (consecutiveFailures >= 2) {
+            abortedError = '网络不稳定，剩余内容未完成翻译';
+            console.warn(`[LingoRecall PageTranslator] ${consecutiveFailures} consecutive batch failures, aborting remaining batches`);
+            break;
+          }
+
+          // 当前批次放弃，继续后续批次，最终会显示为 partial。
+          batchHandled = true;
         }
       }
 
+      if (abortedError) {
+        break;
+      }
+
       // 更新进度
-      const progress = Math.min((i + CONCURRENT_BATCHES) * BATCH_SIZE, totalCount);
-      progressCallback?.(progress, totalCount, 'translating');
+      progressCallback?.(processedUnitCount, totalUnitCount, 'translating');
 
       // 批次间延迟（使用自适应延迟），避免触发 API 速率限制
       if (i + CONCURRENT_BATCHES < batches.length) {
@@ -891,33 +1074,65 @@ export async function translatePage(
       }
     }
 
+    let translatedCount = 0;
+    plans.forEach((plan) => {
+      if (plan.translatedSegments.length !== plan.segments.length) {
+        return;
+      }
+
+      if (plan.translatedSegments.some((segment) => typeof segment !== 'string' || segment.length === 0)) {
+        return;
+      }
+
+      const translatedText = plan.segments.length === 1
+        ? plan.translatedSegments[0]
+        : joinTranslatedSegments(plan.translatedSegments, targetLanguage);
+
+      if (translatedText && normalizeText(translatedText) !== normalizeText(plan.nodeInfo.originalText)) {
+        applyTranslation(plan.nodeInfo, translatedText);
+        translatedCount++;
+      }
+    });
+
+    const completedAll = !abortedError && processedUnitCount === totalUnitCount;
+
     // 判断翻译是否有实际成果
     if (translatedCount > 0) {
       currentState = 'translated';
       showingTranslation = true;
-      progressCallback?.(totalCount, totalCount, 'translated');
+      progressCallback?.(
+        completedAll ? totalUnitCount : processedUnitCount,
+        totalUnitCount,
+        'translated'
+      );
 
       // 启动 MutationObserver 监听 DOM 变化，以便在 SPA 重新渲染时重新应用翻译
       startMutationObserver();
-    } else if (consecutiveFailures > 0) {
+    } else if (consecutiveFailures > 0 || abortedError) {
       // 所有批次都失败了，没有任何翻译成功
       currentState = 'error';
-      progressCallback?.(0, totalCount, 'error');
+      progressCallback?.(processedUnitCount, totalUnitCount, 'error');
     } else {
       // 没有需要翻译的内容（全部相同或为空）
       currentState = 'translated';
       showingTranslation = true;
-      progressCallback?.(totalCount, totalCount, 'translated');
+      progressCallback?.(totalUnitCount, totalUnitCount, 'translated');
     }
 
-    console.log(`[LingoRecall PageTranslator] Translated ${translatedCount}/${totalCount} nodes, registry size: ${translationRegistry.size}`);
+    console.log(
+      `[LingoRecall PageTranslator] Translated ${translatedCount}/${totalNodeCount} nodes, ` +
+      `processed ${processedUnitCount}/${totalUnitCount} units, registry size: ${translationRegistry.size}`
+    );
 
     return {
-      success: translatedCount > 0 || consecutiveFailures === 0,
+      success: completedAll,
       translatedCount,
-      totalCount,
-      error: consecutiveFailures > 0 && translatedCount === 0
-        ? '翻译部分失败，请稍后重试' : undefined,
+      totalCount: totalNodeCount,
+      partial: translatedCount > 0 && !completedAll,
+      completedAll,
+      error: !completedAll
+        ? abortedError || '翻译部分失败，请稍后重试'
+        : undefined,
     };
   } catch (error) {
     currentState = 'error';
